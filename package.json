@@ -1,12 +1,12 @@
 {
-  "name": "elm-webpack-starter",
-  "description": "Webpack setup for writing Elm apps",
-  "version": "0.6.2",
+  "name": "elm-narrative-engine",
+  "description": "Narrative engine for building interactive stories",
+  "version": "0.0.1",
   "license": "MIT",
-  "author": "Peter Morawiec",
+  "author": "Jeff Schomay",
   "repository": {
     "type": "git",
-    "url": "https://github.com/moarwick/elm-webpack-starter"
+    "url": "https://github.com/jschomay/elm-narrative-engine"
   },
   "scripts": {
     "start": "webpack-dev-server --hot --inline --content-base src/",
@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "autoprefixer": "^6.3.6",
-    "bootstrap-sass": "^3.3.6",
     "copy-webpack-plugin": "^3.0.1",
     "css-loader": "^0.23.1",
     "elm": "^0.17.0",
@@ -24,10 +23,8 @@
     "extract-text-webpack-plugin": "^1.0.1",
     "file-loader": "^0.8.5",
     "html-webpack-plugin": "^2.17.0",
-    "node-sass": "^3.7.0",
     "postcss-loader": "^0.9.1",
     "rimraf": "^2.5.2",
-    "sass-loader": "^3.2.0",
     "style-loader": "^0.13.1",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.1",

@@ -74,8 +74,7 @@ if ( TARGET_ENV === 'development' ) {
           loaders: [
             'style-loader',
             'css-loader',
-            'postcss-loader',
-            'sass-loader'
+            'postcss-loader'
           ]
         }
       ]
@@ -100,11 +99,10 @@ if ( TARGET_ENV === 'production' ) {
           loader:  'elm-webpack'
         },
         {
-          test: /\.(css|scss)$/,
+          test: /\.css$/,
           loader: ExtractTextPlugin.extract( 'style-loader', [
             'css-loader',
-            'postcss-loader',
-            'sass-loader'
+            'postcss-loader'
           ])
         }
       ]
