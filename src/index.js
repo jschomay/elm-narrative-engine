@@ -1,5 +1,5 @@
 require( './styles/main.css' );
 
-// inject bundled Elm app into div#main
+// inject bundled Elm app
 var Elm = require( './Main' );
-Elm.Main.embed( document.getElementById( 'main' ) );
+Elm.Main.fullscreen();
