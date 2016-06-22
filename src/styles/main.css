@@ -63,7 +63,14 @@ body {
 .Storyline {
   padding: 20px;
   flex: 4;
-  overflow: scroll;
+  overflow: auto;
+}
+
+.Storyline::before {
+  content: ". . .";
+  text-align: center;
+  display: block;
+  margin-bottom: 10px;
 }
 
 .Storyline__Prose {
@@ -124,8 +131,12 @@ body {
   padding-bottom: 5px;
 }
 
-.Locations__list li:hover {
+.Location:hover {
   color: green;
+}
+
+.Location--unavailable, .Location--unavailable:hover {
+  color: #aaa;
 }
 
 .Item:hover, .Inventory__list li:hover {

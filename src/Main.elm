@@ -1,67 +1,51 @@
 module Main exposing (..)
 
-import Html exposing (..)
-import Html.App as Html
-import Html.Attributes exposing (..)
-import Components.CurrentSummary exposing (currentSummary)
-import Components.Storyline exposing (storyline)
-import Components.Locations exposing (locations)
-import Components.Inventory exposing (inventory)
-
-
--- APP
+import Engine exposing (..)
+import Components.Locations exposing (..)
+import Components.Inventory exposing (..)
+import Components.Storyline exposing (..)
 
 
 main : Program Never
 main =
-    Html.beginnerProgram { model = model, view = view, update = update }
+    Engine.load
+        { locations = initialLocations
+        , inventory = initialItems
+        , story = initialStory
+        }
 
 
-
--- MODEL
-
-
-type alias Model =
-    String
+type PinkletonStoryLocations
+    = Marsh
+    | Greenhouse
+    | Moon
 
 
-model : String
-model =
-    "Elm Narrative Engine"
+initialLocations : Locations PinkletonStoryLocations
+initialLocations =
+    [ Location Marsh "Grassy Marsh" True
+    , Location Greenhouse "Greenhouse" True
+    , Location Moon "The Moon" False
+    ]
 
 
-
--- UPDATE
-
-
-type Msg
-    = NoOp
+type PinkletonStoryItems
+    = Marble
+    | Photograph
+    | Umbrella
 
 
-update : Msg -> Model -> Model
-update msg model =
-    case msg of
-        NoOp ->
-            model
+initialItems : Items PinkletonStoryItems
+initialItems =
+    [ Item Marble "Shiny marble"
+    , Item Photograph "Torn Photograph"
+    , Item Umbrella "Umbrella"
+    ]
 
 
+type PinkletonStoryProse
+    = Beginning
 
--- main layout
 
-
-view : Model -> Html Msg
-view model =
-    div [ class "Page" ]
-        [ h1 [ class "Title" ]
-            [ text "The Peculiar Adventures of Pinkleton Short" ]
-        , div [ class "Layout" ]
-            [ div [ class "Layout__Main" ]
-                [ currentSummary model
-                , storyline model
-                ]
-            , div [ class "Layout__Sidebar" ]
-                [ locations model
-                , inventory model
-                ]
-            ]
-        ]
+initialStory =
+    [ Story Beginning "It all started this morning over tea in the greenhouse.  I got a message from my friend Barrowmore to meet him in the marsh." ]

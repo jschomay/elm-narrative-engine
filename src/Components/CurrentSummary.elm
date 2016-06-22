@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 
 
-currentSummary : String -> Html a
+currentSummary : m -> Html msg
 currentSummary model =
     div [ class "CurrentSummary" ]
         [ h2 [] [ text "Rocky marsh" ]
