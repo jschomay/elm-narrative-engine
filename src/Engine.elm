@@ -13,8 +13,8 @@ import Components.Inventory exposing (inventory, Item, Items)
 -- load : { locations : Locations a } -> Program Never
 
 
-load initialData =
-    Html.beginnerProgram { model = init initialData, view = view, update = update }
+start initialData clientUpdate =
+    Html.beginnerProgram { model = init initialData, view = view, update = engineUpdate clientUpdate }
 
 
 
@@ -27,8 +27,9 @@ type alias Model location item story character =
     , storyline : Storyline story
     , title : String
     , current :
-        { locationName : String
-        , locationDescription : String
+        { location :
+            String
+            -- Location location
         , characters : List (Character character)
         , items : Items item
         }
@@ -49,8 +50,7 @@ init initialData =
     , storyline = initialData.story
     , title = ""
     , current =
-        { locationName = ""
-        , locationDescription = ""
+        { location = ""
         , characters = []
         , items = []
         }
@@ -61,22 +61,31 @@ init initialData =
 -- UPDATE
 
 
-type Msg
+type Msg action
     = NoOp
+    | UseItem action
 
 
-update : Msg -> Model location item story character -> Model location item story character
-update msg model =
+
+-- update : Msg action -> Model location item story character -> Model location item story character
+
+
+engineUpdate clientUpdate msg model =
     case msg of
         NoOp ->
             model
 
+        UseItem action ->
+            { model
+                | storyline = clientUpdate action model :: model.storyline
+            }
+
 
 
 -- main layout
+-- view : Model location item story character -> Html (Msg a)
 
 
-view : Model location item story character -> Html Msg
 view model =
     div [ class "Page" ]
         [ h1 [ class "Title" ]
@@ -88,7 +97,7 @@ view model =
                 ]
             , div [ class "Layout__Sidebar" ]
                 [ locations model.locations
-                , inventory model.inventory
+                , Html.map (UseItem) <| inventory model.inventory
                 ]
             ]
         ]

@@ -2,6 +2,7 @@ module Components.Inventory exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
 
 type Item a
@@ -12,11 +13,18 @@ type alias Items a =
     List (Item a)
 
 
-inventory : Items a -> Html msg
+type Msg itemType
+    = InteractWithItem itemType
+
+
+inventory : Items a -> Html (Msg a)
 inventory items =
     let
-        inventoryItem (Item _ name) =
-            li [ class "Item" ]
+        inventoryItem (Item itemType name) =
+            li
+                [ class "Item"
+                , onClick <| InteractWithItem itemType
+                ]
                 [ text name ]
     in
         div [ class "Inventory" ]
