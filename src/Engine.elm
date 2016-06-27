@@ -3,28 +3,44 @@ module Engine exposing (..)
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
-import Components.CurrentSummary exposing (currentSummary)
-import Components.Storyline exposing (storyline, Story, Storyline)
-import Components.Locations exposing (locations, Location, Locations)
-import Components.Inventory exposing (inventory, Item, Items)
+import Components.CurrentSummary exposing (..)
+import Components.Storyline exposing (..)
+import Components.Locations exposing (..)
+import Components.Inventory exposing (..)
 
 
 -- APP
 -- load : { locations : Locations a } -> Program Never
 
 
-start initialData clientUpdate =
-    Html.beginnerProgram { model = init initialData, view = view, update = engineUpdate clientUpdate }
+start narrativeContent storyProgressionLogic storyStartingPoint =
+    Html.beginnerProgram
+        { model = init narrativeContent storyStartingPoint
+        , view = view
+        , update = update storyProgressionLogic
+        }
 
 
 
 -- MODEL
+-- StoryElement details:
+-- Item, Location, Character
+-- StoryElement clientTag displayName text
 
 
-type alias Model location item story character =
-    { locations : Locations location
+type StoryElement a
+    = StoryElement a String String
+
+
+type alias NarrativeContent a =
+    List (StoryElement a)
+
+
+type alias Model storyElement location item character =
+    { narrativeContent : NarrativeContent storyElement
+    , knownLocations : KnownLocations location
     , inventory : Items item
-    , storyline : Storyline story
+    , storyline : Storyline
     , title : String
     , current :
         { location :
@@ -33,21 +49,19 @@ type alias Model location item story character =
         , characters : List (Character character)
         , items : Items item
         }
+    , narrativeContent : NarrativeContent storyElement
     }
-
-
-type Character a
-    = Character a
 
 
 
 -- init : Locations a -> Model location item story character
 
 
-init initialData =
-    { locations = initialData.locations
-    , inventory = initialData.inventory
-    , storyline = initialData.story
+init narrativeContent storyStartingPoint =
+    { narrativeContent = narrativeContent
+    , knownLocations = storyStartingPoint.knownLocations
+    , inventory = storyStartingPoint.inventory
+    , storyline = storyStartingPoint.story
     , title = ""
     , current =
         { location = ""
@@ -61,24 +75,72 @@ init initialData =
 -- UPDATE
 
 
-type Msg action
+type Msg storyItem
     = NoOp
-    | UseItem action
+    | Interact storyItem
+
+
+type CycleType
+    = Randomly
+    | InOrder
+
+
+type ClientCommand subject
+    = ContinueStory subject
+    | ContinueStoryFrom subject CycleType
+    | AddToInventory subject
+    | RemoveFromInventory subject
+    | None
 
 
 
 -- update : Msg action -> Model location item story character -> Model location item story character
 
 
-engineUpdate clientUpdate msg model =
-    case msg of
+update storyProgressionLogic action model =
+    case action of
         NoOp ->
             model
 
-        UseItem action ->
-            { model
-                | storyline = clientUpdate action model :: model.storyline
-            }
+        Interact storyItem ->
+            updateModelFromClientCommands model <| storyProgressionLogic storyItem
+
+
+
+-- updateModelFromClientCommands : Model -> List StoryUpdateCommands -> Model
+-- todo, make cmd a batched list to map over
+
+
+updateModelFromClientCommands model cmd =
+    let
+        getStoryElement subject =
+            List.head
+                <| List.filter
+                    (\(StoryElement tag name text) ->
+                        tag == subject
+                    )
+                    model.narrativeContent
+    in
+        case cmd of
+            ContinueStory subject ->
+                { model
+                    | storyline = addToStoryline model.storyline (getStoryElement subject)
+                }
+
+            None ->
+                model
+
+            _ ->
+                model
+
+
+addToStoryline storyline storyElement =
+    case storyElement of
+        Just (StoryElement tag name text) ->
+            Components.Storyline.update storyline text
+
+        Nothing ->
+            storyline
 
 
 
@@ -96,8 +158,8 @@ view model =
                 , storyline model.storyline
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ locations model.locations
-                , Html.map (UseItem) <| inventory model.inventory
+                [ locations model.knownLocations
+                , Html.map (\(InteractWithItem storyItem) -> Interact storyItem) <| inventory model.inventory
                 ]
             ]
         ]

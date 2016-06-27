@@ -4,18 +4,18 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 
 
-type Location a
-    = Location a String Bool
+type KnownLocation a
+    = KnownLocation a String Bool
 
 
-type alias Locations a =
-    List (Location a)
+type alias KnownLocations a =
+    List (KnownLocation a)
 
 
-locations : Locations a -> Html msg
+locations : KnownLocations a -> Html msg
 locations locations =
     let
-        locationItem (Location _ name available) =
+        locationItem (KnownLocation _ name available) =
             li
                 [ classList
                     [ ( "Location", True )

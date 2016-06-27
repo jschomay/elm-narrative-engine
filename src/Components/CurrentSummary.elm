@@ -4,6 +4,14 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 
 
+type Character a
+    = Character a
+
+
+type alias Characters a =
+    List (Character a)
+
+
 currentSummary : m -> Html msg
 currentSummary model =
     div [ class "CurrentSummary" ]

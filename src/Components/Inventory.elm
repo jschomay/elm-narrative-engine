@@ -5,25 +5,25 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 
-type Item a
-    = Item a String
+type Item storyItem
+    = Item storyItem String
 
 
-type alias Items a =
-    List (Item a)
+type alias Items storyItem =
+    List (Item storyItem)
 
 
-type Msg itemType
-    = InteractWithItem itemType
+type Msg storyItem
+    = InteractWithItem storyItem
 
 
 inventory : Items a -> Html (Msg a)
 inventory items =
     let
-        inventoryItem (Item itemType name) =
+        inventoryItem (Item storyItem name) =
             li
                 [ class "Item"
-                , onClick <| InteractWithItem itemType
+                , onClick <| InteractWithItem storyItem
                 ]
                 [ text name ]
     in
