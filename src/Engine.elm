@@ -28,12 +28,56 @@ start narrativeContent storyProgressionLogic storyStartingPoint =
 -- StoryElement clientTag displayName text
 
 
-type StoryElement a
-    = StoryElement a String String
+type Subject
+    = Item
+    | Location
+    | Character
 
 
-type alias NarrativeContent a =
-    List (StoryElement a)
+type alias Scenario =
+    List Condition
+
+
+type Condition a
+    = Matcher (Subject a)
+
+
+type StoryRule
+    = StoryRule Subject Scenario (List StoryCommand)
+
+
+type Scene
+    = List StoryRule
+
+
+type alias NarrativeContent =
+    List Scene
+
+
+
+--
+-- type StoryElement a
+--     = StoryElement a String String
+-- type alias NarrativeContent a =
+--     List (StoryElement a)
+
+
+type Msg storyItem
+    = NoOp
+    | Interact storyItem
+
+
+type CycleType
+    = Randomly
+    | InOrder
+
+
+type ClientCommand subject
+    = Narrate String
+    | NarrateOneOf (List String) CycleType
+    | AddToInventory subject
+    | RemoveFromInventory subject
+    | None
 
 
 type alias Model storyElement location item character =
@@ -73,27 +117,6 @@ init narrativeContent storyStartingPoint =
 
 
 -- UPDATE
-
-
-type Msg storyItem
-    = NoOp
-    | Interact storyItem
-
-
-type CycleType
-    = Randomly
-    | InOrder
-
-
-type ClientCommand subject
-    = ContinueStory subject
-    | ContinueStoryFrom subject CycleType
-    | AddToInventory subject
-    | RemoveFromInventory subject
-    | None
-
-
-
 -- update : Msg action -> Model location item story character -> Model location item story character
 
 
