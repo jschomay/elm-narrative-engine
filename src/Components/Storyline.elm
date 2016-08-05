@@ -4,23 +4,10 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 
 
-type StoryText
-    = StoryText String
-
-
-type alias Storyline =
-    List StoryText
-
-
-update : Storyline -> String -> Storyline
-update storyline text =
-    (StoryText text) :: storyline
-
-
-storyline : Storyline -> Html a
+storyline : List String -> Html a
 storyline storyLine =
     let
-        storyItem (StoryText storyText) =
+        storyItem storyText =
             li [ class "Storyline__Prose" ]
                 [ text storyText ]
     in

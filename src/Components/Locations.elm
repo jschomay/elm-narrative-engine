@@ -2,27 +2,22 @@ module Components.Locations exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import StoryWorld exposing (StoryWorld, getName)
 
 
-type KnownLocation a
-    = KnownLocation a String Bool
+type Msg a
+    = InteractWithLocation a
 
-
-type alias KnownLocations a =
-    List (KnownLocation a)
-
-
-locations : KnownLocations a -> Html msg
-locations locations =
+locations : StoryWorld -> List a -> Html (Msg a)
+locations storyWorld locations =
     let
-        locationItem (KnownLocation _ name available) =
+        locationItem tag =
             li
-                [ classList
-                    [ ( "Location", True )
-                    , ( "Location--unavailable", not available )
-                    ]
+                [ class "Location"
+                , onClick <| InteractWithLocation tag
                 ]
-                [ text name ]
+                [ text <| getName storyWorld tag]
     in
         div [ class "Locations" ]
             [ h3 [] [ text "Locations" ]

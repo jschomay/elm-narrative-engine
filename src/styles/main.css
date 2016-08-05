@@ -9,6 +9,10 @@ ul, li {
   list-style: none;
 }
 
+p {
+  margin-bottom: 15px;
+}
+
 html, body { height: 100%; }
 
 body {
@@ -62,7 +66,7 @@ body {
 
 .Storyline {
   padding: 20px;
-  flex: 4;
+  flex: 6;
   overflow: auto;
 }
 

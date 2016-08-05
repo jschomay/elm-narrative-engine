@@ -3,29 +3,22 @@ module Components.Inventory exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import StoryWorld exposing (StoryWorld, getName)
 
 
-type Item storyItem
-    = Item storyItem String
+type Msg a
+    = InteractWithItem a
 
 
-type alias Items storyItem =
-    List (Item storyItem)
-
-
-type Msg storyItem
-    = InteractWithItem storyItem
-
-
-inventory : Items a -> Html (Msg a)
-inventory items =
+inventory : StoryWorld -> List a -> Html (Msg a)
+inventory storyWorld items =
     let
-        inventoryItem (Item storyItem name) =
+        inventoryItem tag =
             li
                 [ class "Item"
-                , onClick <| InteractWithItem storyItem
+                , onClick <| InteractWithItem tag
                 ]
-                [ text name ]
+                [ text <| getName storyWorld tag ]
     in
         div [ class "Inventory" ]
             [ h3 [] [ text "Inventory" ]

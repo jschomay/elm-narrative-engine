@@ -1,84 +1,80 @@
 module Main exposing (..)
 
 import Engine exposing (..)
-import Components.Locations exposing (..)
-import Components.Inventory exposing (..)
-import Components.Storyline exposing (..)
-
--- import Engine exposing (loadStory)
--- import Engine.StaticElements exposing (Item, Location, Character)
--- import Engine.DynamicElements exposing (Narrative, Scene, StoryRule, ChangeWorldCommand(..), Condition(..))
-
--- main : Program Never
+import Engine exposing (..)
+import StoryWorld exposing (..)
+import Scenes exposing (..)
 
 
+main : Program Never
 main =
-    loadStory ...
+    loadStory "Stage Fright" storyElements initialSetup
 
-
-type alias Name = String
-type alias Description = String
-
-type StoryElement a
-    = StoryElement a Name Description
-
-type alias Location a = StoryElement a
-type alias Item a = StoryElement a
-type alias Character a = StoryElement a
-
-
-type alias Scene a b
-    = { rules : List (StoryRule a b)
-      , narration : List (Narration b)
-      }
-
-type Narration a
-  = Narration a DisplayText
-
-
-type DisplayText =
-  Just String
-  | InOrder (List String)
-
-type StoryRule (StoryElement a) (Narration b)
-    = StoryRule (Trigger a) (Condition a) List (ChangeWorldCommand a) b
-
-type Trigger (StoryElement a)
-    = Always
-    | InteractWith (a)
-
-type Condition a
-    = Always
-    | With (List a)
-    | WithOut (List a)
-
-
-type ChangeWorldCommand a
-    = LoadScene (Scene a)
-    | GoTo (Location a)
-    | AddLocation (Location a)
-    | RemoveLocation (Location a)
-    | AddInventory (Item a)
-    | RemoveInventory (Item a)
-    | EnterCharacter (Character a)
-    | ExitCharacter (Character a)
-    | AddProp (Item a)
-    | RemoveProp (Item a)
-
-
-type alias Model =
-    { currentScene : Scene a
-    , currentLocation : Location a
-    , storyWorld : List (StoryElement a)
-    , inventory : List (Item a)
-    , knownLocations : List (Location a)
-    , stage :
-        { characters : List (Character a)
-        , props : List (Item a)
-        }
+initialSetup : InitialSetup MyStoryElements
+initialSetup =
+    { scene = introScene
+    , location = Kitchen
+    , inventory = [Envelope, Watch]
+    , knownLocations = [Kitchen, BackDoor, Auditorium]
+    , characters = [Stranger]
+    , intro = "Well, here I am..."
+    , props = [Envelope, Kitchen, Kitchen]
     }
 
+storyElements : List (StoryElement MyStoryElements)
+storyElements =
+    [ StoryElement Envelope "Unfamilar Envelope" "You find an unfamilar envelope in your pocket, stuffed with thickly folded papers."
+    , StoryElement Kitchen "Commercial kitchen" "Clean and steril, with rows of oversized ovens, stainless steel counters, and lots of pots and pans.  No chefs or cooks of any kind though."
+    , StoryElement Stranger "A stranger" "I've never seen him before, but he seems very adamant about getting my attention."
+    , StoryElement Watch "Wristwatch" "That's strange, it doesn't have any numbers on it..."
+    , StoryElement BackDoor "Back door" "It looks like an exit out of here."
+    , StoryElement Auditorium "Auditorium" "Oh crap this room is huge.  There must be over a hundred people in the audience... all looking at me expectedly.  Yikes."
+    ]
 
--- StoryRule (InteractWith Envelope) (With Podium) [] ReadSpeach
--- StoryRule (InteractWith MysteryMan) (WithOut Auditorium) [AddLocation Auditorium)
+introScene : Scene MyStoryElements
+introScene =
+    []
 
+type MyStoryElements
+    = Envelope
+    | Watch
+    | Kitchen
+    | Stranger
+    | BackDoor
+    | Auditorium
+
+-- type MyItems
+--     = Umbrella
+
+
+-- type MyCharacters
+--     = Bosco
+
+
+
+-- storyWorld : StoryWorld a
+-- storyWorld =
+--     [ item Umbrella "My Brolly" "I take it everywhere"
+--     , character Bosco "Mr. Bosco" "What a jerk"
+--     ]
+--
+
+
+
+
+
+--
+{-
+
+   StoryRule (InteractionWith Envelope) (With Podium) [] ReadSpeach
+   StoryRule
+     Given
+       ((InteractionWith MysteryMan) (WithOut Auditorium))
+     Then
+       [AddLocation Auditorium]
+       Narrate InOrder
+         [ "They're all waiting for you, go out there!"
+         , "Get moving!"
+         ]
+   -
+-}
