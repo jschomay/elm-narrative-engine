@@ -10,16 +10,18 @@ main : Program Never
 main =
     loadStory "Stage Fright" storyElements initialSetup
 
+
 initialSetup : InitialSetup MyStoryElements
 initialSetup =
     { scene = introScene
     , location = Kitchen
-    , inventory = [Envelope, Watch]
-    , knownLocations = [Kitchen, BackDoor, Auditorium]
-    , characters = [Stranger]
+    , inventory = [ Watch ]
+    , knownLocations = [ Kitchen, BackDoor, Auditorium ]
+    , characters = [ Stranger ]
     , intro = "Well, here I am..."
-    , props = [Envelope, Kitchen, Kitchen]
+    , props = [ Envelope ]
     }
+
 
 storyElements : List (StoryElement MyStoryElements)
 storyElements =
@@ -29,52 +31,30 @@ storyElements =
     , StoryElement Watch "Wristwatch" "That's strange, it doesn't have any numbers on it..."
     , StoryElement BackDoor "Back door" "It looks like an exit out of here."
     , StoryElement Auditorium "Auditorium" "Oh crap this room is huge.  There must be over a hundred people in the audience... all looking at me expectedly.  Yikes."
+    , StoryElement Podium "Podium" "The scariest seat in the house.  Looks like it's reserved for me."
+    , StoryElement NervousPresenter "Nervous man" "Pacing back and forth, he looks even more nervous than me.  He keeps muttering to himself."
     ]
+
 
 introScene : Scene MyStoryElements
 introScene =
-    []
+    [ StoryRule (Given (InteractionWith Envelope) (WithOut [Envelope]))
+        (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
+    , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
+        (Do [] (Narrate (Simple "Ladies and gentlemen.... my speech...")))
+    , StoryRule (Given (InteractionWith Envelope) (Near [ NervousPresenter ]))
+        (Do [] (Narrate (Simple "Is this yours?  Yes!! Thanks!!")))
+    , StoryRule (Given (InteractionWith Auditorium) (Always))
+        (Do [ MoveTo Auditorium, AddProp Podium ] (Narrate (Simple "I hesitantly went into the auditorium...")))
+    ]
+
 
 type MyStoryElements
     = Envelope
     | Watch
     | Kitchen
     | Stranger
+    | Podium
     | BackDoor
+    | NervousPresenter
     | Auditorium
-
--- type MyItems
---     = Umbrella
-
-
--- type MyCharacters
---     = Bosco
-
-
-
--- storyWorld : StoryWorld a
--- storyWorld =
---     [ item Umbrella "My Brolly" "I take it everywhere"
---     , character Bosco "Mr. Bosco" "What a jerk"
---     ]
---
-
-
-
-
-
---
-{-
-
-   StoryRule (InteractionWith Envelope) (With Podium) [] ReadSpeach
-   StoryRule
-     Given
-       ((InteractionWith MysteryMan) (WithOut Auditorium))
-     Then
-       [AddLocation Auditorium]
-       Narrate InOrder
-         [ "They're all waiting for you, go out there!"
-         , "Get moving!"
-         ]
-   -
--}

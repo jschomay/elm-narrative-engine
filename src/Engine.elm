@@ -73,14 +73,20 @@ type Msg storyItem
 
 
 update action model =
-    case action of
-        NoOp ->
-            model
-
-        Interact tag ->
+    let
+        defaultUpdate tag =
             { model
                 | storyLine = (getDescription model.storyWorld tag) :: model.storyLine
             }
+
+    in
+        case action of
+            NoOp ->
+                model
+
+            Interact tag ->
+                Maybe.withDefault (defaultUpdate tag)
+                    <| updateFromRules tag model.currentScene model
 
 
 
