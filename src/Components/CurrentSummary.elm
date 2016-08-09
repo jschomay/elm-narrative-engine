@@ -10,7 +10,7 @@ type Msg a
     = InteractWithStage a
 
 
-currentSummary : StoryWorld -> a -> List a -> List a -> Html (Msg a)
+currentSummary : StoryWorld a -> a -> List a -> List a -> Html (Msg a)
 currentSummary storyWorld location characters props =
     let
         locationName =

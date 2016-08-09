@@ -10,7 +10,7 @@ type Msg a
     = InteractWithItem a
 
 
-inventory : StoryWorld -> List a -> Html (Msg a)
+inventory : StoryWorld a -> List a -> Html (Msg a)
 inventory storyWorld items =
     let
         inventoryItem tag =

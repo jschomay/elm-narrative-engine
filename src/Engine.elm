@@ -15,7 +15,7 @@ type alias Model a =
     { title : String
     , currentScene : Scene a
     , currentLocation : a
-    , storyWorld : StoryWorld
+    , storyWorld : StoryWorld a
     , inventory : List a
     , knownLocations : List a
     , storyLine : List String
@@ -37,10 +37,10 @@ type alias InitialSetup a =
     }
 
 
-init : String -> List (StoryElement a) -> InitialSetup a -> Model a
-init title storyElements initialSetup =
+init : String -> (a -> DisplayInformation) -> InitialSetup a -> Model a
+init title display initialSetup =
     { title = title
-    , storyWorld = buildWorld storyElements
+    , storyWorld = StoryWorld display
     , currentScene = initialSetup.scene
     , currentLocation = initialSetup.location
     , inventory = initialSetup.inventory
@@ -53,10 +53,10 @@ init title storyElements initialSetup =
     }
 
 
-loadStory : String -> List (StoryElement a) -> InitialSetup a -> Program Never
-loadStory title storyElements initialSetup =
+loadStory : String -> (a -> DisplayInformation) -> InitialSetup a -> Program Never
+loadStory title display initialSetup =
     Html.beginnerProgram
-        { model = init title storyElements initialSetup
+        { model = init title display initialSetup
         , view = view
         , update = update
         }
