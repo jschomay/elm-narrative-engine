@@ -3,60 +3,43 @@ module Engine exposing (..)
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
+import Dict exposing (..)
 import Components.CurrentSummary exposing (..)
 import Components.Storyline exposing (..)
 import Components.Locations exposing (..)
 import Components.Inventory exposing (..)
-import StoryWorld exposing (..)
-import Scenes exposing (..)
+import StoryElements exposing (..)
+import StoryRules exposing (..)
+import StoryState exposing (..)
 
 
 type alias Model a =
     { title : String
+    , byline : String
+    , preface : String
     , currentScene : Scene a
-    , currentLocation : a
-    , storyWorld : StoryWorld
-    , inventory : List a
-    , knownLocations : List a
-    , storyLine : List String
-    , onStage :
-        { characters : List a
-        , props : List a
-        }
+    , storyElements : StoryElements
+    , interationsCount : Dict String Int
+    , storyState : StoryState a
     }
 
 
-type alias InitialSetup a =
-    { scene : Scene a
-    , location : a
-    , inventory : List a
-    , knownLocations : List a
-    , characters : List a
-    , intro : String
-    , props : List a
-    }
-
-
-init : String -> List (StoryElement a) -> InitialSetup a -> Model a
-init title storyElements initialSetup =
+init : String -> Scene a -> List (StoryElement a) -> StoryState a -> Model a
+init title startingScene storyElements initialState =
     { title = title
-    , storyWorld = buildWorld storyElements
-    , currentScene = initialSetup.scene
-    , currentLocation = initialSetup.location
-    , inventory = initialSetup.inventory
-    , knownLocations = initialSetup.knownLocations
-    , storyLine = initialSetup.intro :: []
-    , onStage =
-        { characters = initialSetup.characters
-        , props = initialSetup.props
-        }
+    , byline = "byline"
+    , preface = "preface"
+    , currentScene = startingScene
+    , storyElements = buildStoryElements storyElements
+    , interationsCount = Dict.empty
+    , storyState = initialState
     }
 
 
-loadStory : String -> List (StoryElement a) -> InitialSetup a -> Program Never
-loadStory title storyElements initialSetup =
+loadStory : String -> Scene a -> List (StoryElement a) -> StoryState a -> Program Never
+loadStory title startingScene storyElements initialState =
     Html.beginnerProgram
-        { model = init title storyElements initialSetup
+        { model = init title startingScene storyElements initialState
         , view = view
         , update = update
         }
@@ -72,13 +55,12 @@ type Msg storyItem
 -- update : Msg action -> Model location item story character -> Model location item story character
 
 
-update action model =
+update action ({ storyState } as model) =
     let
         defaultUpdate tag =
             { model
-                | storyLine = (getDescription model.storyWorld tag) :: model.storyLine
+                | storyState = { storyState | storyLine = (getDescription model.storyElements tag) :: model.storyState.storyLine }
             }
-
     in
         case action of
             NoOp ->
@@ -86,7 +68,9 @@ update action model =
 
             Interact tag ->
                 Maybe.withDefault (defaultUpdate tag)
-                    <| updateFromRules tag model.currentScene model
+                    <| updateFromRules tag model.currentScene model.storyState
+                    `Maybe.andThen` \newStoryState ->
+                                        Just { model | storyState = newStoryState }
 
 
 
@@ -100,12 +84,12 @@ view model =
             [ text model.title ]
         , div [ class "Layout" ]
             [ div [ class "Layout__Main" ]
-                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary model.storyWorld model.currentLocation model.onStage.characters model.onStage.props
-                , storyline model.storyLine
+                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary model.storyElements model.storyState
+                , storyline model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations model.storyWorld model.knownLocations
-                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory model.storyWorld model.inventory
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations model.storyElements model.storyState.knownLocations
+                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory model.storyElements model.storyState.inventory
                 ]
             ]
         ]

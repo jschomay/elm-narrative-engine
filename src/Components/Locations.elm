@@ -3,21 +3,22 @@ module Components.Locations exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import StoryWorld exposing (StoryWorld, getName)
+import StoryElements exposing (StoryElements, getName)
 
 
 type Msg a
     = InteractWithLocation a
 
-locations : StoryWorld -> List a -> Html (Msg a)
-locations storyWorld locations =
+
+locations : StoryElements -> List a -> Html (Msg a)
+locations storyElements locations =
     let
         locationItem tag =
             li
                 [ class "Location"
                 , onClick <| InteractWithLocation tag
                 ]
-                [ text <| getName storyWorld tag]
+                [ text <| getName storyElements tag ]
     in
         div [ class "Locations" ]
             [ h3 [] [ text "Locations" ]

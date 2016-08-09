@@ -3,51 +3,60 @@ module Components.CurrentSummary exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import StoryWorld exposing (..)
+import StoryElements exposing (..)
+import StoryState exposing (..)
 
 
 type Msg a
     = InteractWithStage a
 
 
-currentSummary : StoryWorld -> a -> List a -> List a -> Html (Msg a)
-currentSummary storyWorld location characters props =
+currentSummary : StoryElements -> StoryState a -> Html (Msg a)
+currentSummary storyElements { currentLocation, itemsByLocation, charactersByLocation } =
     let
         locationName =
-            getName storyWorld location
+            getName storyElements currentLocation
 
         locationDescription =
-            getDescription storyWorld location
+            getDescription storyElements currentLocation
 
         charactersDescription =
             let
+                charactersPresent =
+                    Maybe.withDefault []
+                        <| getCharactersByLocation charactersByLocation currentLocation
+
                 propElement character =
                     span
                         [ class "Character"
                         , onClick <| InteractWithStage character
                         ]
-                        [ text <| getName storyWorld character ]
+                        [ text <| getName storyElements character ]
             in
-                if List.length characters < 1 then
+                if List.length charactersPresent < 1 then
                     span [] []
                 else
-                    List.map propElement characters
+                    List.map propElement charactersPresent
                         |> format
                         |> p []
 
         propsDescription =
             let
+                itemsPresent =
+                    Maybe.withDefault []
+                        <| getItemsByLocation itemsByLocation currentLocation
+
                 propElement item =
                     span
                         [ class "Item"
                         , onClick <| InteractWithStage item
                         ]
-                        [ text <| getName storyWorld item ]
+                        [ text <| getName storyElements item ]
             in
-                if List.length props < 1 then
+                if List.length itemsPresent < 1 then
                     span [] []
                 else
-                    List.map propElement props
+                    List.map propElement itemsPresent
                         |> format
                         |> p []
 

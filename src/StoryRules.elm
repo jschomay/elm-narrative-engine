@@ -1,4 +1,6 @@
-module Scenes exposing (..)
+module StoryRules exposing (..)
+
+import StoryState exposing (..)
 
 
 type alias Scene a =
@@ -38,8 +40,7 @@ type Condition a
 
 
 type ChangeWorldCommand a
-    = LoadScene a
-    | MoveTo a
+    = MoveTo a
     | AddLocation a
     | RemoveLocation a
     | AddInventory a
@@ -48,6 +49,14 @@ type ChangeWorldCommand a
     | RemoveCharacter a
     | AddProp a
     | RemoveProp a
+
+
+
+-- todo, fit StoryCommand into the Do along with ChangeWorldCommand and NarrateCommand
+
+
+type StoryCommand a
+    = LoadScene a
     | EndStory
 
 
@@ -60,10 +69,10 @@ type DisplayText
     | InOrder (List String)
 
 
-updateFromRules : a -> Scene a -> { b | inventory : List a, storyLine : List String } -> Maybe { b | inventory : List a, storyLine : List String }
-updateFromRules tag currentRules model =
+updateFromRules : a -> Scene a -> StoryState a -> Maybe (StoryState a)
+updateFromRules tag currentRules storyState =
     findFirstMatchingRule currentRules tag
-        `Maybe.andThen` (Just << do model)
+        `Maybe.andThen` (Just << updateStoryState storyState)
 
 
 findFirstMatchingRule : Scene a -> a -> Maybe (Do a)
@@ -107,8 +116,8 @@ matchesCondition condition tag =
             False
 
 
-do : { b | inventory : List a, storyLine : List String } -> Do a -> { b | inventory : List a, storyLine : List String }
-do model (Do changeWorldCommands narrateCommand) =
+updateStoryState : StoryState a -> Do a -> StoryState a
+updateStoryState storyState (Do changeWorldCommands narrateCommand) =
     let
         addNarration (Narrate narration) =
             case narration of
@@ -118,15 +127,15 @@ do model (Do changeWorldCommands narrateCommand) =
                 _ ->
                     "Other DisplayText not implmented"
 
-        doCommand command model =
+        doCommand command storyState =
             case command of
                 AddInventory item ->
-                    { model
-                        | inventory = item :: model.inventory
-                        , storyLine = (addNarration narrateCommand) :: model.storyLine
+                    { storyState
+                        | inventory = item :: storyState.inventory
+                        , storyLine = (addNarration narrateCommand) :: storyState.storyLine
                     }
 
                 _ ->
-                    model
+                    storyState
     in
-        List.foldl doCommand model changeWorldCommands
+        List.foldl doCommand storyState changeWorldCommands

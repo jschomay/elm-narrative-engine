@@ -1,25 +1,26 @@
 module Main exposing (..)
 
+import Dict exposing (..)
 import Engine exposing (..)
 import Engine exposing (..)
-import StoryWorld exposing (..)
-import Scenes exposing (..)
+import StoryElements exposing (..)
+import StoryRules exposing (..)
+import StoryState exposing (..)
 
 
 main : Program Never
 main =
-    loadStory "Stage Fright" storyElements initialSetup
+    loadStory "Stage Fright" introScene storyElements initialStoryState
 
 
-initialSetup : InitialSetup MyStoryElements
-initialSetup =
-    { scene = introScene
-    , location = Kitchen
+initialStoryState : StoryState MyStoryElements
+initialStoryState =
+    { currentLocation = Kitchen
     , inventory = [ Watch ]
     , knownLocations = [ Kitchen, BackDoor, Auditorium ]
-    , characters = [ Stranger ]
-    , intro = "Well, here I am..."
-    , props = [ Envelope ]
+    , storyLine = "Well, here I am..." :: []
+    , itemsByLocation = Dict.singleton (toString Kitchen) [ Envelope ]
+    , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ]
     }
 
 
@@ -38,7 +39,7 @@ storyElements =
 
 introScene : Scene MyStoryElements
 introScene =
-    [ StoryRule (Given (InteractionWith Envelope) (WithOut [Envelope]))
+    [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
         (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
     , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
         (Do [] (Narrate (Simple "Ladies and gentlemen.... my speech...")))
