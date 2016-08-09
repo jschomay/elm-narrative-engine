@@ -9,7 +9,7 @@ import StoryWorld exposing (StoryWorld, getName)
 type Msg a
     = InteractWithLocation a
 
-locations : StoryWorld -> List a -> Html (Msg a)
+locations : StoryWorld a -> List a -> Html (Msg a)
 locations storyWorld locations =
     let
         locationItem tag =
