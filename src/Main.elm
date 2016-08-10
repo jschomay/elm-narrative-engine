@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Dict exposing (..)
+import String exposing (..)
 import Engine exposing (..)
 import Engine exposing (..)
 import StoryElements exposing (..)
@@ -10,10 +11,10 @@ import StoryState exposing (..)
 
 main : Program Never
 main =
-    loadStory "Stage Fright" introScene storyElements initialStoryState
+    loadStory "Stage Fright" storyElements introScene initialStoryState
 
 
-initialStoryState : StoryState MyStoryElements
+initialStoryState : StoryState MyStoryElement
 initialStoryState =
     { currentLocation = Kitchen
     , inventory = [ Watch ]
@@ -24,20 +25,38 @@ initialStoryState =
     }
 
 
-storyElements : List (StoryElement MyStoryElements)
-storyElements =
-    [ StoryElement Envelope "Unfamilar Envelope" "You find an unfamilar envelope in your pocket, stuffed with thickly folded papers."
-    , StoryElement Kitchen "Commercial kitchen" "Clean and steril, with rows of oversized ovens, stainless steel counters, and lots of pots and pans.  No chefs or cooks of any kind though."
-    , StoryElement Stranger "A stranger" "I've never seen him before, but he seems very adamant about getting my attention."
-    , StoryElement Watch "Wristwatch" "That's strange, it doesn't have any numbers on it..."
-    , StoryElement BackDoor "Back door" "It looks like an exit out of here."
-    , StoryElement Auditorium "Auditorium" "Oh crap this room is huge.  There must be over a hundred people in the audience... all looking at me expectedly.  Yikes."
-    , StoryElement Podium "Podium" "The scariest seat in the house.  Looks like it's reserved for me."
-    , StoryElement NervousPresenter "Nervous man" "Pacing back and forth, he looks even more nervous than me.  He keeps muttering to himself."
-    ]
+storyElements : MyStoryElement -> DisplayInformation
+storyElements element =
+    case element of
+        Envelope ->
+            DisplayInformation "Unfamilar Envelope" "You find an unfamilar envelope in your pocket, stuffed with thickly folded papers."
+
+        Kitchen ->
+            DisplayInformation "Commercial kitchen" "Clean and steril, with rows of oversized ovens, stainless steel counters, and lots of pots and pans.  No chefs or cooks of any kind though."
+
+        Stranger ->
+            DisplayInformation "A stranger" "I've never seen him before, but he seems very adamant about getting my attention."
+
+        Watch ->
+            DisplayInformation "Wristwatch" "That's strange, it doesn't have any numbers on it..."
+
+        BackDoor ->
+            DisplayInformation "Back door" "It looks like an exit out of here."
+
+        Auditorium ->
+            DisplayInformation "Auditorium" "Oh crap this room is huge.  There must be over a hundred people in the audience... all looking at me expectedly.  Yikes."
+
+        Podium ->
+            DisplayInformation "Podium" "The scariest seat in the house.  Looks like it's reserved for me."
+
+        NervousPresenter ->
+            DisplayInformation "Nervous man" "Pacing back and forth, he looks even more nervous than me.  He keeps muttering to himself."
+
+        missing ->
+            DisplayInformation ((missing |> toString |> String.toUpper) ++ " name missing***") ((missing |> toString |> String.toUpper) ++ " description missing***")
 
 
-introScene : Scene MyStoryElements
+introScene : Scene MyStoryElement
 introScene =
     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
         (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
@@ -50,7 +69,7 @@ introScene =
     ]
 
 
-type MyStoryElements
+type MyStoryElement
     = Envelope
     | Watch
     | Kitchen
@@ -59,3 +78,4 @@ type MyStoryElements
     | BackDoor
     | NervousPresenter
     | Auditorium
+    | SomethingElse

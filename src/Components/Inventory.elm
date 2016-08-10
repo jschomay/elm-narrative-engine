@@ -3,14 +3,14 @@ module Components.Inventory exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import StoryElements exposing (StoryElements, getName)
+import StoryElements exposing (..)
 
 
 type Msg a
     = InteractWithItem a
 
 
-inventory : StoryElements -> List a -> Html (Msg a)
+inventory : StoryElementsConfig a -> List a -> Html (Msg a)
 inventory storyElements items =
     let
         inventoryItem tag =

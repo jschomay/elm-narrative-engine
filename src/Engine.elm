@@ -18,30 +18,28 @@ type alias Model a =
     , byline : String
     , preface : String
     , currentScene : Scene a
-    , storyElements : StoryElements
     , interationsCount : Dict String Int
     , storyState : StoryState a
     }
 
 
-init : String -> Scene a -> List (StoryElement a) -> StoryState a -> Model a
-init title startingScene storyElements initialState =
+init : String -> Scene a -> StoryState a -> Model a
+init title startingScene initialState =
     { title = title
     , byline = "byline"
     , preface = "preface"
     , currentScene = startingScene
-    , storyElements = buildStoryElements storyElements
     , interationsCount = Dict.empty
     , storyState = initialState
     }
 
 
-loadStory : String -> Scene a -> List (StoryElement a) -> StoryState a -> Program Never
-loadStory title startingScene storyElements initialState =
+loadStory : String -> StoryElementsConfig a -> Scene a -> StoryState a -> Program Never
+loadStory title storyElements startingScene initialState =
     Html.beginnerProgram
-        { model = init title startingScene storyElements initialState
-        , view = view
-        , update = update
+        { model = init title startingScene initialState
+        , view =  view storyElements
+        , update = update storyElements
         }
 
 
@@ -52,14 +50,13 @@ type Msg storyItem
 
 
 -- UPDATE
--- update : Msg action -> Model location item story character -> Model location item story character
 
 
-update action ({ storyState } as model) =
+update storyElements action ({ storyState } as model) =
     let
         defaultUpdate tag =
             { model
-                | storyState = { storyState | storyLine = (getDescription model.storyElements tag) :: model.storyState.storyLine }
+                | storyState = { storyState | storyLine = (getDescription storyElements tag) :: model.storyState.storyLine }
             }
     in
         case action of
@@ -78,18 +75,18 @@ update action ({ storyState } as model) =
 -- view : Model location item story character -> Html (Msg a)
 
 
-view model =
+view storyElements model =
     div [ class "Page" ]
         [ h1 [ class "Title" ]
             [ text model.title ]
         , div [ class "Layout" ]
             [ div [ class "Layout__Main" ]
-                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary model.storyElements model.storyState
+                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary storyElements model.storyState
                 , storyline model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations model.storyElements model.storyState.knownLocations
-                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory model.storyElements model.storyState.inventory
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations storyElements model.storyState.knownLocations
+                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory storyElements model.storyState.inventory
                 ]
             ]
         ]
