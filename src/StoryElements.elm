@@ -1,8 +1,8 @@
 module StoryElements exposing (..)
 
 
-type alias StoryElementsConfig element =
-    element -> DisplayInformation
+type alias StoryElementsConfig a =
+    a -> DisplayInformation
 
 
 type alias DisplayInformation =

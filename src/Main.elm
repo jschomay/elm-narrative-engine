@@ -11,12 +11,13 @@ import StoryState exposing (..)
 
 main : Program Never
 main =
-    loadStory "Stage Fright" storyElements introScene initialStoryState
+    loadStory "Stage Fright" storyElements storyRules initialStoryState
 
 
-initialStoryState : StoryState MyStoryElement
+initialStoryState : StoryState MyStoryElement MyScene
 initialStoryState =
     { currentLocation = Kitchen
+    , currentScene = Intro
     , inventory = [ Watch ]
     , knownLocations = [ Kitchen, BackDoor, Auditorium ]
     , storyLine = "Well, here I am..." :: []
@@ -25,7 +26,7 @@ initialStoryState =
     }
 
 
-storyElements : MyStoryElement -> DisplayInformation
+storyElements : StoryElementsConfig MyStoryElement
 storyElements element =
     case element of
         Envelope ->
@@ -56,8 +57,15 @@ storyElements element =
             DisplayInformation ((missing |> toString |> String.toUpper) ++ " name missing***") ((missing |> toString |> String.toUpper) ++ " description missing***")
 
 
-introScene : Scene MyStoryElement
-introScene =
+storyRules : StoryRulesConfig MyScene MyStoryElement
+storyRules scene =
+    case scene of
+        Intro ->
+            introSceneRules
+
+
+introSceneRules : Scene MyStoryElement
+introSceneRules =
     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
         (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
     , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
@@ -67,6 +75,10 @@ introScene =
     , StoryRule (Given (InteractionWith Auditorium) (Always))
         (Do [ MoveTo Auditorium, AddProp Podium ] (Narrate (Simple "I hesitantly went into the auditorium...")))
     ]
+
+
+type MyScene
+    = Intro
 
 
 type MyStoryElement

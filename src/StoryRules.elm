@@ -3,6 +3,10 @@ module StoryRules exposing (..)
 import StoryState exposing (..)
 
 
+type alias StoryRulesConfig a b =
+    a -> Scene b
+
+
 type alias Scene a =
     List (StoryRule a)
 
@@ -69,42 +73,42 @@ type DisplayText
     | InOrder (List String)
 
 
-updateFromRules : a -> Scene a -> StoryState a -> Maybe (StoryState a)
-updateFromRules tag currentRules storyState =
-    findFirstMatchingRule currentRules tag
+updateFromRules : a -> StoryRulesConfig b a -> StoryState a b -> Maybe (StoryState a b)
+updateFromRules storyElement storyRules storyState =
+    findFirstMatchingRule (storyRules storyState.currentScene) storyElement
         `Maybe.andThen` (Just << updateStoryState storyState)
 
 
 findFirstMatchingRule : Scene a -> a -> Maybe (Do a)
-findFirstMatchingRule rules tag =
+findFirstMatchingRule rules storyElement =
     case rules of
         [] ->
             Nothing
 
         ((StoryRule given do) as x) :: xs ->
-            if matchesGiven given tag then
+            if matchesGiven given storyElement then
                 Just do
             else
-                findFirstMatchingRule xs tag
+                findFirstMatchingRule xs storyElement
 
 
 matchesGiven : Given a -> a -> Bool
-matchesGiven (Given trigger condition) tag =
-    matchesTrigger trigger tag && matchesCondition condition tag
+matchesGiven (Given trigger condition) storyElement =
+    matchesTrigger trigger storyElement && matchesCondition condition storyElement
 
 
 matchesTrigger : Trigger a -> a -> Bool
-matchesTrigger trigger tag =
+matchesTrigger trigger storyElement =
     case trigger of
-        InteractionWith tagToMatch ->
-            tagToMatch == tag
+        InteractionWith storyElementToMatch ->
+            storyElementToMatch == storyElement
 
         _ ->
             False
 
 
 matchesCondition : Condition a -> a -> Bool
-matchesCondition condition tag =
+matchesCondition condition storyElement =
     case condition of
         Always ->
             True
@@ -116,7 +120,7 @@ matchesCondition condition tag =
             False
 
 
-updateStoryState : StoryState a -> Do a -> StoryState a
+updateStoryState : StoryState a b -> Do a -> StoryState a b
 updateStoryState storyState (Do changeWorldCommands narrateCommand) =
     let
         addNarration (Narrate narration) =

@@ -13,68 +13,67 @@ import StoryRules exposing (..)
 import StoryState exposing (..)
 
 
-type alias Model a =
+type alias Model a b =
     { title : String
     , byline : String
     , preface : String
-    , currentScene : Scene a
     , interationsCount : Dict String Int
-    , storyState : StoryState a
+    , storyState : StoryState a b
     }
 
 
-init : String -> Scene a -> StoryState a -> Model a
-init title startingScene initialState =
+init : String -> StoryState a b -> Model a b
+init title initialState =
     { title = title
     , byline = "byline"
     , preface = "preface"
-    , currentScene = startingScene
     , interationsCount = Dict.empty
     , storyState = initialState
     }
 
 
-loadStory : String -> StoryElementsConfig a -> Scene a -> StoryState a -> Program Never
-loadStory title storyElements startingScene initialState =
+loadStory : String -> StoryElementsConfig a -> StoryRulesConfig b a -> StoryState a b -> Program Never
+loadStory title storyElements storyRules initialState =
     Html.beginnerProgram
-        { model = init title startingScene initialState
-        , view =  view storyElements
-        , update = update storyElements
+        { model = init title initialState
+        , view = view storyElements
+        , update = update storyElements storyRules
         }
 
 
-type Msg storyItem
+type Msg a
     = NoOp
-    | Interact storyItem
+    | Interact a
 
 
 
 -- UPDATE
 
 
-update storyElements action ({ storyState } as model) =
+update : StoryElementsConfig a -> StoryRulesConfig b a -> Msg a -> Model a b -> Model a b
+update storyElements storyRules action ({ storyState } as model) =
     let
-        defaultUpdate tag =
+        defaultUpdate storyElement =
             { model
-                | storyState = { storyState | storyLine = (getDescription storyElements tag) :: model.storyState.storyLine }
+                | storyState = { storyState | storyLine = (getDescription storyElements storyElement) :: model.storyState.storyLine }
             }
     in
         case action of
             NoOp ->
                 model
 
-            Interact tag ->
-                Maybe.withDefault (defaultUpdate tag)
-                    <| updateFromRules tag model.currentScene model.storyState
+            Interact storyElement ->
+                Maybe.withDefault (defaultUpdate storyElement)
+                    <| updateFromRules storyElement storyRules model.storyState
                     `Maybe.andThen` \newStoryState ->
                                         Just { model | storyState = newStoryState }
 
 
 
 -- main layout
--- view : Model location item story character -> Html (Msg a)
 
 
+view : StoryElementsConfig a -> Model a b -> Html (Msg a)
 view storyElements model =
     div [ class "Page" ]
         [ h1 [ class "Title" ]

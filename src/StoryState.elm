@@ -3,8 +3,9 @@ module StoryState exposing (..)
 import Dict exposing (..)
 
 
-type alias StoryState a =
+type alias StoryState a b =
     { currentLocation : a
+    , currentScene : b
     , inventory : List a
     , knownLocations : List a
     , storyLine : List String

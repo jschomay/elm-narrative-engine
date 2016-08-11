@@ -11,7 +11,7 @@ type Msg a
     = InteractWithStage a
 
 
-currentSummary : StoryElementsConfig a -> StoryState a -> Html (Msg a)
+currentSummary : StoryElementsConfig a -> StoryState a b -> Html (Msg a)
 currentSummary storyElements { currentLocation, itemsByLocation, charactersByLocation } =
     let
         locationName =
