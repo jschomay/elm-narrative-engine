@@ -32,7 +32,7 @@ init title initialState =
     }
 
 
-loadStory : String -> StoryElementsConfig a -> StoryRulesConfig b a -> StoryState a b -> Program Never
+loadStory : String -> StoryElementsConfig a -> StoryRulesConfig a b -> StoryState a b -> Program Never
 loadStory title storyElements storyRules initialState =
     Html.beginnerProgram
         { model = init title initialState
@@ -50,7 +50,7 @@ type Msg a
 -- UPDATE
 
 
-update : StoryElementsConfig a -> StoryRulesConfig b a -> Msg a -> Model a b -> Model a b
+update : StoryElementsConfig a -> StoryRulesConfig a b -> Msg a -> Model a b -> Model a b
 update storyElements storyRules action ({ storyState } as model) =
     let
         defaultUpdate storyElement =

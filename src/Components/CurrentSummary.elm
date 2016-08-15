@@ -24,7 +24,7 @@ currentSummary storyElements { currentLocation, itemsByLocation, charactersByLoc
             let
                 charactersPresent =
                     Maybe.withDefault []
-                        <| getCharactersByLocation charactersByLocation currentLocation
+                        <| getCharactersByLocation currentLocation charactersByLocation
 
                 propElement character =
                     span
@@ -44,7 +44,7 @@ currentSummary storyElements { currentLocation, itemsByLocation, charactersByLoc
             let
                 itemsPresent =
                     Maybe.withDefault []
-                        <| getItemsByLocation itemsByLocation currentLocation
+                        <| getItemsByLocation currentLocation itemsByLocation
 
                 propElement item =
                     span

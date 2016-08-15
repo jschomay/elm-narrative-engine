@@ -19,7 +19,7 @@ initialStoryState =
     { currentLocation = Kitchen
     , currentScene = Intro
     , inventory = [ Watch ]
-    , knownLocations = [ Kitchen, BackDoor, Auditorium ]
+    , knownLocations = [ Kitchen, BackDoor ]
     , storyLine = "Well, here I am..." :: []
     , itemsByLocation = Dict.singleton (toString Kitchen) [ Envelope ]
     , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ]
@@ -37,6 +37,9 @@ storyElements element =
 
         Stranger ->
             DisplayInformation "A stranger" "I've never seen him before, but he seems very adamant about getting my attention."
+
+        Bob ->
+            DisplayInformation "Bob" "Just a guy"
 
         Watch ->
             DisplayInformation "Wristwatch" "That's strange, it doesn't have any numbers on it..."
@@ -57,14 +60,36 @@ storyElements element =
             DisplayInformation ((missing |> toString |> String.toUpper) ++ " name missing***") ((missing |> toString |> String.toUpper) ++ " description missing***")
 
 
-storyRules : StoryRulesConfig MyScene MyStoryElement
+storyRules : StoryRulesConfig MyStoryElement MyScene
 storyRules scene =
     case scene of
         Intro ->
             introSceneRules
 
+        ActionsTest ->
+            actionsTestRules
 
-introSceneRules : Scene MyStoryElement
+
+actionsTestRules : Scene MyStoryElement MyScene
+actionsTestRules =
+    [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
+        (Do [ AddInventory Envelope, RemoveProp Envelope Kitchen ] (Narrate (Simple "taking the envelope")))
+    , StoryRule (Given (InteractionWith Watch) (Always))
+        (Do [ RemoveInventory Watch, AddProp Watch Kitchen ] (Narrate (Simple "dropping watch")))
+    , StoryRule (Given (InteractionWith Stranger) (Always))
+        (Do [ AddLocation Auditorium, RemoveLocation BackDoor ] (Narrate (Simple "learn about auditorium, forget back door")))
+    , StoryRule (Given (InteractionWith BackDoor) (Always))
+        (Do [ AddCharacter Bob Auditorium ] (Narrate (Simple "bob is in the auditorium")))
+    , StoryRule (Given (InteractionWith Kitchen) (Always))
+        (Do [ MoveTo Kitchen ] (Narrate (Simple "back to kitchen")))
+    , StoryRule (Given (InteractionWith Auditorium) (Always))
+        (Do [ MoveTo Auditorium ] (Narrate (Simple "go to auditorium")))
+    , StoryRule (Given (InteractionWith Bob) (Always))
+        (Do [ RemoveCharacter Bob Auditorium ] (Narrate (Simple "bob leaves")))
+    ]
+
+
+introSceneRules : Scene MyStoryElement MyScene
 introSceneRules =
     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
         (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
@@ -73,12 +98,15 @@ introSceneRules =
     , StoryRule (Given (InteractionWith Envelope) (Near [ NervousPresenter ]))
         (Do [] (Narrate (Simple "Is this yours?  Yes!! Thanks!!")))
     , StoryRule (Given (InteractionWith Auditorium) (Always))
-        (Do [ MoveTo Auditorium, AddProp Podium ] (Narrate (Simple "I hesitantly went into the auditorium...")))
+        (Do [ MoveTo Auditorium, AddProp Podium Auditorium ] (Narrate (Simple "I hesitantly went into the auditorium...")))
+    , StoryRule (Given (InteractionWith Watch) (Always))
+        (Do [ LoadScene ActionsTest ] (Narrate (Simple "switch to testing scene")))
     ]
 
 
 type MyScene
     = Intro
+    | ActionsTest
 
 
 type MyStoryElement
@@ -86,6 +114,7 @@ type MyStoryElement
     | Watch
     | Kitchen
     | Stranger
+    | Bob
     | Podium
     | BackDoor
     | NervousPresenter

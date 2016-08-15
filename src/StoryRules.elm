@@ -4,23 +4,23 @@ import StoryState exposing (..)
 
 
 type alias StoryRulesConfig a b =
-    a -> Scene b
+    b -> Scene a b
 
 
-type alias Scene a =
-    List (StoryRule a)
+type alias Scene a b =
+    List (StoryRule a b)
 
 
-type StoryRule a
-    = StoryRule (Given a) (Do a)
+type StoryRule a b
+    = StoryRule (Given a) (Do a b)
 
 
 type Given a
     = Given (Trigger a) (Condition a)
 
 
-type Do a
-    = Do (List (ChangeWorldCommand a)) NarrateCommand
+type Do a b
+    = Do (List (ChangeWorldCommand a b)) NarrateCommand
 
 
 type Trigger a
@@ -43,24 +43,17 @@ type Condition a
     | Or (Condition a) (Condition a)
 
 
-type ChangeWorldCommand a
+type ChangeWorldCommand a b
     = MoveTo a
     | AddLocation a
     | RemoveLocation a
     | AddInventory a
     | RemoveInventory a
-    | AddCharacter a
-    | RemoveCharacter a
-    | AddProp a
-    | RemoveProp a
-
-
-
--- todo, fit StoryCommand into the Do along with ChangeWorldCommand and NarrateCommand
-
-
-type StoryCommand a
-    = LoadScene a
+    | AddCharacter a a
+    | RemoveCharacter a a
+    | AddProp a a
+    | RemoveProp a a
+    | LoadScene b
     | EndStory
 
 
@@ -73,13 +66,13 @@ type DisplayText
     | InOrder (List String)
 
 
-updateFromRules : a -> StoryRulesConfig b a -> StoryState a b -> Maybe (StoryState a b)
+updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
 updateFromRules storyElement storyRules storyState =
     findFirstMatchingRule (storyRules storyState.currentScene) storyElement
         `Maybe.andThen` (Just << updateStoryState storyState)
 
 
-findFirstMatchingRule : Scene a -> a -> Maybe (Do a)
+findFirstMatchingRule : Scene a b -> a -> Maybe (Do a b)
 findFirstMatchingRule rules storyElement =
     case rules of
         [] ->
@@ -120,26 +113,51 @@ matchesCondition condition storyElement =
             False
 
 
-updateStoryState : StoryState a b -> Do a -> StoryState a b
+updateStoryState : StoryState a b -> Do a b -> StoryState a b
 updateStoryState storyState (Do changeWorldCommands narrateCommand) =
     let
-        addNarration (Narrate narration) =
-            case narration of
+        getNarration (Narrate displayText) =
+            case displayText of
                 Simple t ->
                     t
 
                 _ ->
-                    "Other DisplayText not implmented"
+                    Debug.crash "Other DisplayText not implmented"
 
         doCommand command storyState =
             case command of
-                AddInventory item ->
-                    { storyState
-                        | inventory = item :: storyState.inventory
-                        , storyLine = (addNarration narrateCommand) :: storyState.storyLine
-                    }
+                MoveTo location ->
+                    setCurrentLocation location storyState
 
-                _ ->
+                AddLocation location ->
+                    addLocation location storyState
+
+                RemoveLocation location ->
+                    removeLocation location storyState
+
+                AddInventory item ->
+                    addInventory item storyState
+
+                RemoveInventory item ->
+                    removeInventory item storyState
+
+                AddCharacter character location ->
+                    addCharacter character location storyState
+
+                RemoveCharacter character location ->
+                    removeCharacter character location storyState
+
+                AddProp prop location ->
+                    addProp prop location storyState
+
+                RemoveProp prop location ->
+                    removeProp prop location storyState
+
+                LoadScene scene ->
+                    setCurrentScene scene storyState
+
+                EndStory ->
                     storyState
     in
         List.foldl doCommand storyState changeWorldCommands
+            |> addNarration (getNarration narrateCommand)
