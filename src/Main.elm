@@ -17,7 +17,7 @@ main =
 initialStoryState : StoryState MyStoryElement MyScene
 initialStoryState =
     { currentLocation = Kitchen
-    , currentScene = Intro
+    , currentScene = RuleTest
     , inventory = [ Watch ]
     , knownLocations = [ Kitchen, BackDoor ]
     , storyLine = "Well, here I am..." :: []
@@ -69,6 +69,9 @@ storyRules scene =
         ActionsTest ->
             actionsTestRules
 
+        RuleTest ->
+            ruleTestScene
+
 
 actionsTestRules : Scene MyStoryElement MyScene
 actionsTestRules =
@@ -104,9 +107,31 @@ introSceneRules =
     ]
 
 
+ruleTestScene =
+    [ given (InteractionWith Envelope) (WithOut [ Envelope ])
+        `do` [ AddInventory Envelope ]
+        `narrate` Simple "it works!"
+    , given (InteractionWith Stranger) (Always)
+        `do` []
+        `narrate` Simple """
+        I met a stranger along the way... he was quite mysterious...
+
+        I wanted to ask him his name.
+
+        "You can call me 'Nobody'", he said.
+
+        I don't think that is his real name...
+        """
+    , given (InteractionWith Watch) (WithOut [ Stranger ])
+        `do` [ AddCharacter Stranger Kitchen ]
+        `narrate` Simple "test"
+    ]
+
+
 type MyScene
     = Intro
     | ActionsTest
+    | RuleTest
 
 
 type MyStoryElement

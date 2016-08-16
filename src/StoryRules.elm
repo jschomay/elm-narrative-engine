@@ -20,7 +20,11 @@ type Given a
 
 
 type Do a b
-    = Do (List (ChangeWorldCommand a b)) NarrateCommand
+    = Do (ChangeWorldCommands a b) NarrateCommand
+
+
+type alias ChangeWorldCommands a b =
+    List (ChangeWorldCommand a b)
 
 
 type Trigger a
@@ -64,6 +68,21 @@ type NarrateCommand
 type DisplayText
     = Simple String
     | InOrder (List String)
+
+
+given : Trigger a -> Condition a -> Do a b -> StoryRule a b
+given trigger condition =
+    StoryRule (Given trigger condition)
+
+
+do : (Do a b -> StoryRule a b) -> ChangeWorldCommands a b -> NarrateCommand -> StoryRule a b
+do f a b =
+    f (Do a b)
+
+
+narrate : (NarrateCommand -> StoryRule a b) -> DisplayText -> StoryRule a b
+narrate f a =
+    f (Narrate a)
 
 
 updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
