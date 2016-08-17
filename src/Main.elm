@@ -63,48 +63,48 @@ storyElements element =
 storyRules : StoryRulesConfig MyStoryElement MyScene
 storyRules scene =
     case scene of
-        Intro ->
-            introSceneRules
+        -- Intro ->
+        --     introSceneRules
 
-        ActionsTest ->
-            actionsTestRules
+        -- ActionsTest ->
+        --     actionsTestRules
 
         RuleTest ->
             ruleTestScene
 
 
-actionsTestRules : Scene MyStoryElement MyScene
-actionsTestRules =
-    [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
-        (Do [ AddInventory Envelope, RemoveProp Envelope Kitchen ] (Narrate (Simple "taking the envelope")))
-    , StoryRule (Given (InteractionWith Watch) (Always))
-        (Do [ RemoveInventory Watch, AddProp Watch Kitchen ] (Narrate (Simple "dropping watch")))
-    , StoryRule (Given (InteractionWith Stranger) (Always))
-        (Do [ AddLocation Auditorium, RemoveLocation BackDoor ] (Narrate (Simple "learn about auditorium, forget back door")))
-    , StoryRule (Given (InteractionWith BackDoor) (Always))
-        (Do [ AddCharacter Bob Auditorium ] (Narrate (Simple "bob is in the auditorium")))
-    , StoryRule (Given (InteractionWith Kitchen) (Always))
-        (Do [ MoveTo Kitchen ] (Narrate (Simple "back to kitchen")))
-    , StoryRule (Given (InteractionWith Auditorium) (Always))
-        (Do [ MoveTo Auditorium ] (Narrate (Simple "go to auditorium")))
-    , StoryRule (Given (InteractionWith Bob) (Always))
-        (Do [ RemoveCharacter Bob Auditorium ] (Narrate (Simple "bob leaves")))
-    ]
+-- actionsTestRules : Scene MyStoryElement MyScene
+-- actionsTestRules =
+--     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
+--         (Do [ AddInventory Envelope, RemoveProp Envelope Kitchen ] (Simple "taking the envelope"))
+--     , StoryRule (Given (InteractionWith Watch) (Always))
+--         (Do [ RemoveInventory Watch, AddProp Watch Kitchen ] (Simple "dropping watch"))
+--     , StoryRule (Given (InteractionWith Stranger) (Always))
+--         (Do [ AddLocation Auditorium, RemoveLocation BackDoor ] (Simple "learn about auditorium, forget back door"))
+--     , StoryRule (Given (InteractionWith BackDoor) (Always))
+--         (Do [ AddCharacter Bob Auditorium ] (Simple "bob is in the auditorium"))
+--     , StoryRule (Given (InteractionWith Kitchen) (Always))
+--         (Do [ MoveTo Kitchen ] (Simple "back to kitchen"))
+--     , StoryRule (Given (InteractionWith Auditorium) (Always))
+--         (Do [ MoveTo Auditorium ] (Simple "go to auditorium"))
+--     , StoryRule (Given (InteractionWith Bob) (Always))
+--         (Do [ RemoveCharacter Bob Auditorium ] (Simple "bob leaves"))
+--     ]
 
 
-introSceneRules : Scene MyStoryElement MyScene
-introSceneRules =
-    [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
-        (Do [ AddInventory Envelope ] (Narrate (Simple "A mysterious envelope, I'll take that.")))
-    , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
-        (Do [] (Narrate (Simple "Ladies and gentlemen.... my speech...")))
-    , StoryRule (Given (InteractionWith Envelope) (Near [ NervousPresenter ]))
-        (Do [] (Narrate (Simple "Is this yours?  Yes!! Thanks!!")))
-    , StoryRule (Given (InteractionWith Auditorium) (Always))
-        (Do [ MoveTo Auditorium, AddProp Podium Auditorium ] (Narrate (Simple "I hesitantly went into the auditorium...")))
-    , StoryRule (Given (InteractionWith Watch) (Always))
-        (Do [ LoadScene ActionsTest ] (Narrate (Simple "switch to testing scene")))
-    ]
+-- introSceneRules : Scene MyStoryElement MyScene
+-- introSceneRules =
+--     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
+--         (Do [ AddInventory Envelope ] (Simple "A mysterious envelope, I'll take that."))
+--     , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
+--         (Do [] (Simple "Ladies and gentlemen.... my speech..."))
+--     , StoryRule (Given (InteractionWith Envelope) (Near [ NervousPresenter ]))
+--         (Do [] (Simple "Is this yours?  Yes!! Thanks!!"))
+--     , StoryRule (Given (InteractionWith Auditorium) (Always))
+--         (Do [ MoveTo Auditorium, AddProp Podium Auditorium ] (Simple "I hesitantly went into the auditorium..."))
+--     , StoryRule (Given (InteractionWith Watch) (Always))
+--         (Do [ LoadScene ActionsTest ] (Simple "switch to testing scene"))
+--     ]
 
 
 ruleTestScene =
@@ -129,9 +129,9 @@ ruleTestScene =
 
 
 type MyScene
-    = Intro
-    | ActionsTest
-    | RuleTest
+    -- = Intro
+    -- | ActionsTest
+    = RuleTest
 
 
 type MyStoryElement

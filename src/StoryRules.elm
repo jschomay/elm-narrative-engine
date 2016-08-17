@@ -11,16 +11,13 @@ type alias Scene a b =
     List (StoryRule a b)
 
 
-type StoryRule a b
-    = StoryRule (Given a) (Do a b)
+type alias StoryRule a b = (Given a, Do a b)
 
 
-type Given a
-    = Given (Trigger a) (Condition a)
+type alias Given a = (Trigger a, Condition a)
 
 
-type Do a b
-    = Do (ChangeWorldCommands a b) NarrateCommand
+type alias Do a b = (ChangeWorldCommands a b, Narration)
 
 
 type alias ChangeWorldCommands a b =
@@ -61,28 +58,24 @@ type ChangeWorldCommand a b
     | EndStory
 
 
-type NarrateCommand
-    = Narrate DisplayText
-
-
-type DisplayText
+type Narration
     = Simple String
     | InOrder (List String)
 
 
 given : Trigger a -> Condition a -> Do a b -> StoryRule a b
 given trigger condition =
-    StoryRule (Given trigger condition)
+    (,) (trigger, condition)
 
 
-do : (Do a b -> StoryRule a b) -> ChangeWorldCommands a b -> NarrateCommand -> StoryRule a b
+do : (Do a b -> StoryRule a b) -> ChangeWorldCommands a b -> Narration -> StoryRule a b
 do f a b =
-    f (Do a b)
+    f (a, b)
 
 
-narrate : (NarrateCommand -> StoryRule a b) -> DisplayText -> StoryRule a b
+narrate : (Narration -> StoryRule a b) -> Narration -> StoryRule a b
 narrate f a =
-    f (Narrate a)
+    f a
 
 
 updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
@@ -97,7 +90,7 @@ findFirstMatchingRule rules storyElement =
         [] ->
             Nothing
 
-        ((StoryRule given do) as x) :: xs ->
+        ((given, do) as x) :: xs ->
             if matchesGiven given storyElement then
                 Just do
             else
@@ -105,7 +98,7 @@ findFirstMatchingRule rules storyElement =
 
 
 matchesGiven : Given a -> a -> Bool
-matchesGiven (Given trigger condition) storyElement =
+matchesGiven (trigger, condition) storyElement =
     matchesTrigger trigger storyElement && matchesCondition condition storyElement
 
 
@@ -133,10 +126,10 @@ matchesCondition condition storyElement =
 
 
 updateStoryState : StoryState a b -> Do a b -> StoryState a b
-updateStoryState storyState (Do changeWorldCommands narrateCommand) =
+updateStoryState storyState (changeWorldCommands, narration) =
     let
-        getNarration (Narrate displayText) =
-            case displayText of
+        getNarration (narration) =
+            case narration of
                 Simple t ->
                     t
 
@@ -179,4 +172,4 @@ updateStoryState storyState (Do changeWorldCommands narrateCommand) =
                     storyState
     in
         List.foldl doCommand storyState changeWorldCommands
-            |> addNarration (getNarration narrateCommand)
+            |> addNarration (getNarration narration)
