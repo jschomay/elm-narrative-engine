@@ -1,7 +1,6 @@
 module Main exposing (..)
 
 import Dict exposing (..)
-import String exposing (..)
 import Engine exposing (..)
 import Engine exposing (..)
 import StoryElements exposing (..)
@@ -17,128 +16,152 @@ main =
 initialStoryState : StoryState MyStoryElement MyScene
 initialStoryState =
     { currentLocation = Kitchen
-    , currentScene = RuleTest
-    , inventory = [ Watch ]
-    , knownLocations = [ Kitchen, BackDoor ]
-    , storyLine = "Well, here I am..." :: []
-    , itemsByLocation = Dict.singleton (toString Kitchen) [ Envelope ]
-    , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ]
+    , currentScene = Beginning
+    , inventory = [ Envelope ]
+    , knownLocations = [ Kitchen ]
+    , storyLine = [ """
+You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
+
+The only other person here is an anxious young man trying hard to get your attention.
+    """ ]
+    , itemsByLocation = Dict.singleton (toString Auditorium) [ Podium ] |> Dict.insert (toString Kitchen) [ KitchenExit ]
+    , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ] |> Dict.insert (toString Auditorium) [ Moderator ]
     }
 
 
 storyElements : StoryElementsConfig MyStoryElement
 storyElements element =
     case element of
-        Envelope ->
-            DisplayInformation "Unfamilar Envelope" "You find an unfamilar envelope in your pocket, stuffed with thickly folded papers."
+        Stranger ->
+            DisplayInformation "Anxious stranger" "He sure seems stressed.  You're not helping."
+
+        Moderator ->
+            DisplayInformation "Moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
 
         Kitchen ->
-            DisplayInformation "Commercial kitchen" "Clean and steril, with rows of oversized ovens, stainless steel counters, and lots of pots and pans.  No chefs or cooks of any kind though."
-
-        Stranger ->
-            DisplayInformation "A stranger" "I've never seen him before, but he seems very adamant about getting my attention."
-
-        Bob ->
-            DisplayInformation "Bob" "Just a guy"
-
-        Watch ->
-            DisplayInformation "Wristwatch" "That's strange, it doesn't have any numbers on it..."
-
-        BackDoor ->
-            DisplayInformation "Back door" "It looks like an exit out of here."
+            DisplayInformation "Commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
 
         Auditorium ->
-            DisplayInformation "Auditorium" "Oh crap this room is huge.  There must be over a hundred people in the audience... all looking at me expectedly.  Yikes."
+            DisplayInformation "Auditorium" "The room is huge, every seat filled with the eager audience."
+
+        Hallway ->
+            DisplayInformation "Hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
+
+        KitchenExit ->
+            DisplayInformation "Emergency exit" "The handle has a warning: \"Opening will sound the alarm\""
+
+        Envelope ->
+            DisplayInformation "Thick envelope" "You found it crammed in your pocket, but you don't recoginze it."
 
         Podium ->
-            DisplayInformation "Podium" "The scariest seat in the house.  Looks like it's reserved for me."
+            DisplayInformation "Podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
 
-        NervousPresenter ->
-            DisplayInformation "Nervous man" "Pacing back and forth, he looks even more nervous than me.  He keeps muttering to himself."
-
-        missing ->
-            DisplayInformation ((missing |> toString |> String.toUpper) ++ " name missing***") ((missing |> toString |> String.toUpper) ++ " description missing***")
+        Mic ->
+            DisplayInformation "Microphone" "\"Testing one, two.\" Yup, it works fine."
 
 
 storyRules : StoryRulesConfig MyStoryElement MyScene
 storyRules scene =
     case scene of
-        -- Intro ->
-        --     introSceneRules
-        -- ActionsTest ->
-        --     actionsTestRules
-        RuleTest ->
-            ruleTestScene
+        Beginning ->
+            beginning
+
+        Middle ->
+            middle
 
 
-
--- actionsTestRules : Scene MyStoryElement MyScene
--- actionsTestRules =
---     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
---         (Do [ AddInventory Envelope, RemoveProp Envelope Kitchen ] (Simple "taking the envelope"))
---     , StoryRule (Given (InteractionWith Watch) (Always))
---         (Do [ RemoveInventory Watch, AddProp Watch Kitchen ] (Simple "dropping watch"))
---     , StoryRule (Given (InteractionWith Stranger) (Always))
---         (Do [ AddLocation Auditorium, RemoveLocation BackDoor ] (Simple "learn about auditorium, forget back door"))
---     , StoryRule (Given (InteractionWith BackDoor) (Always))
---         (Do [ AddCharacter Bob Auditorium ] (Simple "bob is in the auditorium"))
---     , StoryRule (Given (InteractionWith Kitchen) (Always))
---         (Do [ MoveTo Kitchen ] (Simple "back to kitchen"))
---     , StoryRule (Given (InteractionWith Auditorium) (Always))
---         (Do [ MoveTo Auditorium ] (Simple "go to auditorium"))
---     , StoryRule (Given (InteractionWith Bob) (Always))
---         (Do [ RemoveCharacter Bob Auditorium ] (Simple "bob leaves"))
---     ]
--- introSceneRules : Scene MyStoryElement MyScene
--- introSceneRules =
---     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
---         (Do [ AddInventory Envelope ] (Simple "A mysterious envelope, I'll take that."))
---     , StoryRule (Given (InteractionWith Envelope) (In [ Auditorium ]))
---         (Do [] (Simple "Ladies and gentlemen.... my speech..."))
---     , StoryRule (Given (InteractionWith Envelope) (Near [ NervousPresenter ]))
---         (Do [] (Simple "Is this yours?  Yes!! Thanks!!"))
---     , StoryRule (Given (InteractionWith Auditorium) (Always))
---         (Do [ MoveTo Auditorium, AddProp Podium Auditorium ] (Simple "I hesitantly went into the auditorium..."))
---     , StoryRule (Given (InteractionWith Watch) (Always))
---         (Do [ LoadScene ActionsTest ] (Simple "switch to testing scene"))
---     ]
-
-
-ruleTestScene =
-    [ given (InteractionWith Envelope) (WithItem Watch)
-        `do` [ AddInventory Envelope ]
-        `narrate` Simple "it works!"
-    , given (InteractionWith Stranger) (Always)
+beginning : Scene MyStoryElement MyScene
+beginning =
+    [ given (InteractionWith KitchenExit) (Always)
         `do` []
         `narrate` Simple """
-        I met a stranger along the way... he was quite mysterious...
+A way out.  You head for the emergency exit, but the stranger stops you.
 
-        I wanted to ask him his name.
+"You can't leave!  Everyone is waiting for you!"
+"""
+    , given (InteractionWith Stranger) (InLocation Kitchen)
+        `do` [ AddLocation Auditorium ]
+        `narrate` Simple """
+"Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
+"""
+    , given (InteractionWith Auditorium) (InLocation Kitchen)
+        `do` [ MoveTo Auditorium, AddCharacter Stranger Auditorium, AddLocation Hallway ]
+        `narrate` Simple """
+You follow the stranger into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
 
-        "You can call me 'Nobody'", he said.
+A woman at the podium addresses the audience.  "... and it looks like our next speaker has just arrived!  I'll hand it over to him."
 
-        I don't think that is his real name...
-        """
-    , given (InteractionWith Watch) (WithItem Stranger)
-        `do` [ AddCharacter Stranger Kitchen ]
-        `narrate` Simple "test"
+She steps back, leading the audience in a welcoming applause, as they all turn and look, right at you.
+"""
+    , given (InteractionWith Moderator) (Always)
+        `do` []
+        `narrate` Simple """
+She smiles and nods at you politely, but her eyes say *"If you stall one more minute I'm going to wring your neck!*"
+"""
+    , given (InteractionWith Podium) (Not (WithItem Mic))
+        `do` [ AddInventory Mic ]
+        `narrate` Simple """
+You take a deep breath and make your way on stage.  The audience falls silent.  All eyes are on you.  Better say something quick.
+
+"Ahem.  Ladies, gentlemen, distinguished guests..."
+
+Um... what now?
+"""
+    , given (InteractionWith Hallway) (All [NearProp Podium])
+        `do` []
+        `narrate` Simple strangerPreventsYouFromLeaving
+    , given (InteractionWith Kitchen) (All [NearProp Podium])
+        `do` []
+        `narrate` Simple strangerPreventsYouFromLeaving
+    , given (InteractionWith Envelope) (WithItem Mic)
+        `do` [ RemoveInventory Mic, LoadScene Middle ]
+        `narrate` Simple """
+Ahh yes, the envelope.  Now must be the time.
+
+You pull out the folded sheets of paper and flip to the first one.
+
+"Filliment mitochondriosus in nocturnal invertebrates."
+
+Oh boy, this seems headdy.  Well, better give them what they want.
+
+"When studying nicrofilates in laboratory conditions, we were able to detect minute levels of monochrio-deteriation..."
+
+That goes on for at least 20 minutes.  Finally you finish the last page.
+
+"... concluding our study, which returned an insignificant correlation to our hypothesis.
+
+Any questions?  No.  Thank you very much, I'm off!"
+
+The audience stares back, every eye in the room glazed over.  The moderator tries to recover, but doesn't seem to know what to say.  You slink off to the back of the room.  At least that's done.
+"""
     ]
 
 
+middle : Scene MyStoryElement MyScene
+middle =
+    [ given (InteractionWith Envelope) (Always)
+        `do` []
+        `narrate` Simple "That went as well as could be expected.  Wonder where it came from?"
+    ]
+
+
+strangerPreventsYouFromLeaving : String
+strangerPreventsYouFromLeaving =
+    "You think about escaping, but both the moderator and the anxious stranger glare at you as if to say *\"Don't even think about it!\"*"
+
+
 type MyScene
-    -- = Intro
-    -- | ActionsTest
-    = RuleTest
+    = Beginning
+    | Middle
 
 
 type MyStoryElement
     = Envelope
-    | Watch
-    | Kitchen
-    | Stranger
-    | Bob
     | Podium
-    | BackDoor
-    | NervousPresenter
+    | Mic
+    | Stranger
+    | Moderator
+    | Kitchen
     | Auditorium
-    | SomethingElse
+    | Hallway
+    | KitchenExit
