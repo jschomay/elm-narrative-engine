@@ -3,31 +3,199 @@ module Tests.StoryRulesTests exposing (all)
 import Test exposing (..)
 import Expect exposing (..)
 import StoryState exposing (..)
+import StoryRules exposing (..)
 
 
-type TestLocation
-    = Earth
+type TestStoryElements
+    = ThingOne
+    | ThingTwo
+    | Jack
+    | Jill
+    | Earth
     | Moon
-    | Mars
 
 
 type TestScene
     = Begining
-    | Middle
-    | End
+
+
+startingState : StoryState TestStoryElements TestScene
+startingState =
+    StoryState.init Earth Begining
 
 
 all : Test
 all =
     describe "StoryRulesTests"
-        [ describe "updateFromRules"
-            [ test "..."
-                <| \() ->
-                      Expect.equal True True
-            ]
+        [ updateFromRulesTests
+        , matchesTriggerTests
+        , matchesConditionTests
         ]
 
--- always adds exactely one narration to storyline
--- only runs one rule
--- runs first matching rule
 
+updateFromRulesTests : Test.Test
+updateFromRulesTests =
+    describe "updateFromRules"
+        [ test "with no matches returns nothing"
+            <| \() ->
+                let
+                    rules =
+                        [ given (InteractionWith ThingTwo) (Always)
+                            `do` [ AddInventory ThingOne ]
+                            `narrate` Simple "thing one"
+                        ]
+                in
+                    Expect.equal (updateFromRules ThingOne (always rules) startingState)
+                        Nothing
+        , test "only runs first matching rule"
+            <| \() ->
+                let
+                    rules =
+                        [ given (InteractionWith ThingTwo) (Always)
+                            `do` [ AddInventory ThingOne ]
+                            `narrate` Simple "no match"
+                        , given (InteractionWith ThingOne) (Always)
+                            `do` [ AddInventory ThingOne ]
+                            `narrate` Simple "first match"
+                        , given (InteractionWith ThingOne) (Always)
+                            `do` [ AddInventory ThingTwo ]
+                            `narrate` Simple "also matches"
+                        ]
+
+                    expected =
+                        { startingState
+                            | inventory = [ ThingOne ]
+                            , storyLine = [ "first match" ]
+                        }
+                in
+                    Expect.equal (updateFromRules ThingOne (always rules) startingState)
+                        (Just expected)
+        ]
+
+
+matchesTriggerTests : Test.Test
+matchesTriggerTests =
+    describe "matchesTrigger"
+        [ test "InteractionWith a match"
+            <| \() ->
+                Expect.true "match"
+                    (matchesTrigger (InteractionWith ThingOne) ThingOne)
+        , test "InteractionWith no match"
+            <| \() ->
+                Expect.false "no match"
+                    (matchesTrigger (InteractionWith ThingOne) ThingTwo)
+        ]
+
+
+matchesConditionTests : Test.Test
+matchesConditionTests =
+    describe "matchesCondition"
+        [ test "Always"
+            <| \() ->
+                Expect.true "always true"
+                    <| matchesCondition Always startingState
+        , describe "WithItem"
+            [ test "match"
+                <| \() ->
+                    Expect.true "match"
+                        <| matchesCondition (WithItem ThingOne)
+                        <| addInventory ThingOne startingState
+            , test "no match"
+                <| \() ->
+                    Expect.false "no match"
+                        <| matchesCondition (WithItem ThingOne)
+                        <| addInventory ThingTwo startingState
+            ]
+        , describe "NearCharacter"
+            [ test "match"
+                <| \() ->
+                    addCharacter Jack Earth startingState
+                        |> matchesCondition (NearCharacter Jack)
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    addCharacter Jill Earth startingState
+                        |> matchesCondition (NearCharacter Jack)
+                        |> Expect.false "no match"
+            ]
+        , describe "NearProp"
+            [ test "match"
+                <| \() ->
+                    addProp ThingOne Earth startingState
+                        |> matchesCondition (NearProp ThingOne)
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    addProp ThingTwo Earth startingState
+                        |> matchesCondition (NearProp ThingOne)
+                        |> Expect.false "no match"
+            ]
+        , describe "InLocation"
+            [ test "match"
+                <| \() ->
+                    startingState
+                        |> matchesCondition (InLocation Earth)
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    startingState
+                        |> matchesCondition (InLocation Moon)
+                        |> Expect.false "no match"
+            ]
+        , describe "All"
+            [ test "match"
+                <| \() ->
+                    addProp ThingOne Earth startingState
+                        |> matchesCondition
+                            (All
+                                [ (InLocation Earth)
+                                , (NearProp ThingOne)
+                                ]
+                            )
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    addProp ThingTwo Earth startingState
+                        |> matchesCondition
+                            (All
+                                [ (InLocation Earth)
+                                , (NearProp ThingOne)
+                                ]
+                            )
+                        |> Expect.false "no match"
+            ]
+        , describe "Any"
+            [ test "match"
+                <| \() ->
+                    addProp ThingOne Earth startingState
+                        |> matchesCondition
+                            (Any
+                                [ (InLocation Moon)
+                                , (NearProp ThingOne)
+                                ]
+                            )
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    addProp ThingOne Earth startingState
+                        |> matchesCondition
+                            (Any
+                                [ (InLocation Moon)
+                                , (NearProp ThingTwo)
+                                ]
+                            )
+                        |> Expect.false "no match"
+            ]
+        , describe "Not"
+            [ test "match"
+                <| \() ->
+                    startingState
+                        |> matchesCondition (Not (InLocation Moon))
+                        |> Expect.true "match"
+            , test "no match"
+                <| \() ->
+                    startingState
+                        |> matchesCondition (Not (InLocation Earth))
+                        |> Expect.false "no match"
+            ]
+        ]

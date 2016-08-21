@@ -11,13 +11,16 @@ type alias Scene a b =
     List (StoryRule a b)
 
 
-type alias StoryRule a b = (Given a, Do a b)
+type alias StoryRule a b =
+    ( Given a, Do a b )
 
 
-type alias Given a = (Trigger a, Condition a)
+type alias Given a =
+    ( Trigger a, Condition a )
 
 
-type alias Do a b = (ChangeWorldCommands a b, Narration)
+type alias Do a b =
+    ( ChangeWorldCommands a b, Narration )
 
 
 type alias ChangeWorldCommands a b =
@@ -25,23 +28,18 @@ type alias ChangeWorldCommands a b =
 
 
 type Trigger a
-    = EveryTurn
-    | AfterTurn Int
-    | UntilTurn Int
-    | OnTurn Int
-    | InteractionWith a
+    = InteractionWith a
 
 
 type Condition a
     = Always
-    | With (List a)
-    | WithOut (List a)
-    | Near (List a)
-    | NotNear (List a)
-    | In (List a)
-    | NotIn (List a)
-    | And (Condition a) (Condition a)
-    | Or (Condition a) (Condition a)
+    | WithItem a
+    | NearCharacter a
+    | NearProp a
+    | InLocation a
+    | All (List (Condition a))
+    | Any (List (Condition a))
+    | Not (Condition a)
 
 
 type ChangeWorldCommand a b
@@ -65,12 +63,12 @@ type Narration
 
 given : Trigger a -> Condition a -> Do a b -> StoryRule a b
 given trigger condition =
-    (,) (trigger, condition)
+    (,) ( trigger, condition )
 
 
 do : (Do a b -> StoryRule a b) -> ChangeWorldCommands a b -> Narration -> StoryRule a b
 do f a b =
-    f (a, b)
+    f ( a, b )
 
 
 narrate : (Narration -> StoryRule a b) -> Narration -> StoryRule a b
@@ -80,26 +78,26 @@ narrate f a =
 
 updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
 updateFromRules storyElement storyRules storyState =
-    findFirstMatchingRule (storyRules storyState.currentScene) storyElement
+    findFirstMatchingRule (storyRules storyState.currentScene) storyElement storyState
         `Maybe.andThen` (Just << updateStoryState storyState)
 
 
-findFirstMatchingRule : Scene a b -> a -> Maybe (Do a b)
-findFirstMatchingRule rules storyElement =
+findFirstMatchingRule : Scene a b -> a -> StoryState a b -> Maybe (Do a b)
+findFirstMatchingRule rules storyElement storyState =
     case rules of
         [] ->
             Nothing
 
-        ((given, do) as x) :: xs ->
-            if matchesGiven given storyElement then
+        (( given, do ) as x) :: xs ->
+            if matchesGiven given storyElement storyState then
                 Just do
             else
-                findFirstMatchingRule xs storyElement
+                findFirstMatchingRule xs storyElement storyState
 
 
-matchesGiven : Given a -> a -> Bool
-matchesGiven (trigger, condition) storyElement =
-    matchesTrigger trigger storyElement && matchesCondition condition storyElement
+matchesGiven : Given a -> a -> StoryState a b -> Bool
+matchesGiven ( trigger, condition ) storyElement storyState =
+    matchesTrigger trigger storyElement && matchesCondition condition storyState
 
 
 matchesTrigger : Trigger a -> a -> Bool
@@ -108,27 +106,39 @@ matchesTrigger trigger storyElement =
         InteractionWith storyElementToMatch ->
             storyElementToMatch == storyElement
 
-        _ ->
-            False
 
-
-matchesCondition : Condition a -> a -> Bool
-matchesCondition condition storyElement =
+matchesCondition : Condition a -> StoryState a b -> Bool
+matchesCondition condition storyState =
     case condition of
         Always ->
             True
 
-        WithOut iventory ->
-            True
+        WithItem item ->
+            List.member item storyState.inventory
 
-        _ ->
-            False
+        NearCharacter character ->
+            List.member character <| getCharactersInCurrentLocation storyState
+
+        NearProp prop ->
+            List.member prop <| getPropsInCurrentLocation storyState
+
+        InLocation location ->
+            storyState.currentLocation == location
+
+        All conditions ->
+            List.all (flip matchesCondition storyState) conditions
+
+        Any conditions ->
+            List.any (flip matchesCondition storyState) conditions
+
+        Not condition ->
+            not <| matchesCondition condition storyState
 
 
 updateStoryState : StoryState a b -> Do a b -> StoryState a b
-updateStoryState storyState (changeWorldCommands, narration) =
+updateStoryState storyState ( changeWorldCommands, narration ) =
     let
-        getNarration (narration) =
+        getNarration narration =
             case narration of
                 Simple t ->
                     t

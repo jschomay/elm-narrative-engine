@@ -14,7 +14,8 @@ type Msg a
 currentSummary : StoryElementsConfig a -> StoryState a b -> Html (Msg a)
 currentSummary storyElements storyState =
     let
-        currentLocation = storyState.currentLocation
+        currentLocation =
+            storyState.currentLocation
 
         locationName =
             getName storyElements currentLocation
@@ -25,7 +26,7 @@ currentSummary storyElements storyState =
         charactersDescription =
             let
                 charactersPresent =
-                        getCharactersByLocation currentLocation storyState
+                    getCharactersByLocation currentLocation storyState
 
                 propElement character =
                     span
@@ -44,7 +45,7 @@ currentSummary storyElements storyState =
         propsDescription =
             let
                 itemsPresent =
-                        getItemsByLocation currentLocation storyState
+                    getItemsByLocation currentLocation storyState
 
                 propElement item =
                     span

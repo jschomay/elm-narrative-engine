@@ -65,12 +65,11 @@ storyRules scene =
     case scene of
         -- Intro ->
         --     introSceneRules
-
         -- ActionsTest ->
         --     actionsTestRules
-
         RuleTest ->
             ruleTestScene
+
 
 
 -- actionsTestRules : Scene MyStoryElement MyScene
@@ -90,8 +89,6 @@ storyRules scene =
 --     , StoryRule (Given (InteractionWith Bob) (Always))
 --         (Do [ RemoveCharacter Bob Auditorium ] (Simple "bob leaves"))
 --     ]
-
-
 -- introSceneRules : Scene MyStoryElement MyScene
 -- introSceneRules =
 --     [ StoryRule (Given (InteractionWith Envelope) (WithOut [ Envelope ]))
@@ -108,7 +105,7 @@ storyRules scene =
 
 
 ruleTestScene =
-    [ given (InteractionWith Envelope) (WithOut [ Envelope ])
+    [ given (InteractionWith Envelope) (WithItem Watch)
         `do` [ AddInventory Envelope ]
         `narrate` Simple "it works!"
     , given (InteractionWith Stranger) (Always)
@@ -122,7 +119,7 @@ ruleTestScene =
 
         I don't think that is his real name...
         """
-    , given (InteractionWith Watch) (WithOut [ Stranger ])
+    , given (InteractionWith Watch) (WithItem Stranger)
         `do` [ AddCharacter Stranger Kitchen ]
         `narrate` Simple "test"
     ]
