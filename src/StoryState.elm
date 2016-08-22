@@ -8,7 +8,7 @@ type alias StoryState a b =
     , currentScene : b
     , inventory : List a
     , knownLocations : List a
-    , storyLine : List String
+    , storyLine : List ( a, String )
     , itemsByLocation : Dict String (List a)
     , charactersByLocation : Dict String (List a)
     }
@@ -145,7 +145,7 @@ removeProp prop location storyState =
         }
 
 
-addNarration : String -> StoryState a b -> StoryState a b
+addNarration : ( a, String ) -> StoryState a b -> StoryState a b
 addNarration narration storyState =
     { storyState
         | storyLine = narration :: storyState.storyLine

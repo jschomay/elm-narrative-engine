@@ -79,7 +79,7 @@ narrate f a =
 updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
 updateFromRules storyElement storyRules storyState =
     findFirstMatchingRule (storyRules storyState.currentScene) storyElement storyState
-        `Maybe.andThen` (Just << updateStoryState storyState)
+        `Maybe.andThen` (Just << updateStoryState storyElement storyState)
 
 
 findFirstMatchingRule : Scene a b -> a -> StoryState a b -> Maybe (Do a b)
@@ -135,8 +135,8 @@ matchesCondition condition storyState =
             not <| matchesCondition condition storyState
 
 
-updateStoryState : StoryState a b -> Do a b -> StoryState a b
-updateStoryState storyState ( changeWorldCommands, narration ) =
+updateStoryState : a -> StoryState a b -> Do a b -> StoryState a b
+updateStoryState storyElement storyState ( changeWorldCommands, narration ) =
     let
         getNarration narration =
             case narration of
@@ -182,4 +182,4 @@ updateStoryState storyState ( changeWorldCommands, narration ) =
                     storyState
     in
         List.foldl doCommand storyState changeWorldCommands
-            |> addNarration (getNarration narration)
+            |> addNarration ( storyElement, getNarration narration )

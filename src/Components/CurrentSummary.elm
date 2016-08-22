@@ -23,71 +23,43 @@ currentSummary storyElements storyState =
         locationDescription =
             getDescription storyElements currentLocation
 
-        charactersDescription =
+        propsAndCharactersInLocation =
             let
-                charactersPresent =
+                propsAndCharactersPresent =
                     getCharactersByLocation currentLocation storyState
+                        ++ getItemsByLocation currentLocation storyState
 
                 propElement character =
                     span
-                        [ class "Character"
+                        [ class "CurrentSummary__StoryElement"
                         , onClick <| InteractWithStage character
                         ]
                         [ text <| getName storyElements character ]
             in
-                if List.length charactersPresent < 1 then
+                if List.length propsAndCharactersPresent < 1 then
                     span [] []
                 else
-                    List.map propElement charactersPresent
-                        |> format
-                        |> p []
-
-        propsDescription =
-            let
-                itemsPresent =
-                    getItemsByLocation currentLocation storyState
-
-                propElement item =
-                    span
-                        [ class "Item"
-                        , onClick <| InteractWithStage item
-                        ]
-                        [ text <| getName storyElements item ]
-            in
-                if List.length itemsPresent < 1 then
-                    span [] []
-                else
-                    List.map propElement itemsPresent
+                    List.map propElement propsAndCharactersPresent
                         |> format
                         |> p []
 
         format list =
-            if List.length list > 1 then
-                (List.take (List.length list - 1) list
-                    |> List.intersperse (text ", ")
-                )
-                    ++ (text ", and ")
-                    :: (List.drop (List.length list - 1) list)
-                    |> (flip (++))
-                        [ text
-                            <| if List.length list > 1 then
-                                " are here."
-                               else
-                                " is here."
-                        ]
-            else
-                List.intersperse (text ", ") list
-                    |> (flip (++))
-                        [ text
-                            <| if List.length list > 1 then
-                                " are here."
-                               else
-                                " is here."
-                        ]
+            let
+                storyElements =
+                    if List.length list > 2 then
+                        (List.take (List.length list - 1) list
+                            |> List.intersperse (text ", ")
+                        )
+                            ++ (text " and ")
+                            :: (List.drop (List.length list - 1) list)
+                    else
+                        List.intersperse (text " and ") list
+            in
+                (text <| "In location: ")
+                    :: storyElements
+                    ++ [ text "." ]
     in
         div [ class "CurrentSummary" ]
-            <| [ h2 [] [ text locationName ]
-               , p [] [ text locationDescription ]
-               , charactersDescription
-               , propsDescription
+            <| [ p [ class "Location-description" ] [ text locationDescription ]
+               , propsAndCharactersInLocation
                ]

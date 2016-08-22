@@ -43,30 +43,28 @@ body {
 .Title {
   text-align: center;
   color: white;
-  background-color: #ccc;
+  background-color: #555;
   margin-bottom: 20px;
+  text-transform: capitalize;
 }
 
 .Layout__Main {
   flex: 4 1;
+  margin-right: 50px;
   display: flex;
   flex-direction: column;
-  margin-right: 50px;
 }
 
 .CurrentSummary {
-  padding: 20px;
-  flex: 1;
+  margin: 10px 20px;
 }
 
-.CurrentSummary h2 {
-  color: #777;
-  margin-bottom: 10px;
+.CurrentSummary__StoryElement {
+  font-weight: bold;
 }
 
 .Storyline {
-  padding: 20px;
-  flex: 6;
+  margin: 0 20px;
   overflow: auto;
 }
 
@@ -75,23 +73,28 @@ body {
   text-align: center;
   display: block;
   margin-bottom: 10px;
-}
-
-.Storyline__Prose {
-  color: #aaa;
-  padding-bottom: 25px;
-}
-
-.Storyline__Prose p {
-  margin-bottom: 7px;
-}
-
-.Storyline__Prose:first-of-type {
   font-weight: bold;
-  color: #555;
 }
 
+.Storyline__Item {
+  opacity: 0.3;
+  padding-bottom: 10px;
+}
 
+.Storyline__Item:first-of-type {
+  opacity: 1;
+}
+
+.Storyline__Item__Action {
+  font-size: 12px;
+  font-weight: normal;
+  margin-bottom: 5px;
+  font-style: italic;
+  text-transform: capitalize;
+}
+
+.Storyline__Item__Narration {
+}
 
 .Layout__Sidebar {
   flex: 1 1;
@@ -112,6 +115,20 @@ body {
   overflow: auto;
 }
 
+.Locations__Location {
+  margin-bottom: 10px;
+  padding: 0px;
+  text-transform: capitalize;
+}
+
+.Locations__Location.Locations__Location--current {
+  font-weight: bold;
+  color: white;
+  background: #555;
+  padding: 2px;
+}
+
+
 .Inventory {
   display: flex;
   flex-direction: column;
@@ -124,29 +141,15 @@ body {
   overflow: auto;
 }
 
+.Inventory__Item {
+  margin-bottom: 10px;
+  padding: 0px;
+  text-transform: capitalize;
+}
+
 .Layout__Sidebar h3 {
   color: #999;
   border-bottom: 4px solid;
   margin-bottom: 10px;
   flex: 0 0 auto;
-}
-
-.Layout__Sidebar li {
-  padding-bottom: 5px;
-}
-
-.Location:hover {
-  color: green;
-}
-
-.Location--unavailable, .Location--unavailable:hover {
-  color: #aaa;
-}
-
-.Item:hover, .Inventory__list li:hover {
-  color: orange;
-}
-
-.Character:hover {
-  color: purple;
 }

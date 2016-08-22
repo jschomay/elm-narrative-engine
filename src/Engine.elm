@@ -55,7 +55,7 @@ update storyElements storyRules action ({ storyState } as model) =
     let
         defaultUpdate storyElement =
             { model
-                | storyState = { storyState | storyLine = (getDescription storyElements storyElement) :: model.storyState.storyLine }
+                | storyState = { storyState | storyLine = ( storyElement, getDescription storyElements storyElement ) :: model.storyState.storyLine }
             }
     in
         case action of
@@ -77,14 +77,14 @@ view : StoryElementsConfig a -> Model a b -> Html (Msg a)
 view storyElements model =
     div [ class "Page" ]
         [ h1 [ class "Title" ]
-            [ text model.title ]
+            [ text <| getName storyElements model.storyState.currentLocation ]
         , div [ class "Layout" ]
             [ div [ class "Layout__Main" ]
                 [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary storyElements model.storyState
-                , storyline model.storyState.storyLine
+                , storyline storyElements model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations storyElements model.storyState.knownLocations
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations storyElements model.storyState.knownLocations model.storyState.currentLocation
                 , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory storyElements model.storyState.inventory
                 ]
             ]

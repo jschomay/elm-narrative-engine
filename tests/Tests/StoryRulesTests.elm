@@ -65,7 +65,7 @@ updateFromRulesTests =
                     expected =
                         { startingState
                             | inventory = [ ThingOne ]
-                            , storyLine = [ "first match" ]
+                            , storyLine = [ (ThingOne, "first match") ]
                         }
                 in
                     Expect.equal (updateFromRules ThingOne (always rules) startingState)

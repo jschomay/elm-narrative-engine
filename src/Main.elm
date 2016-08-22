@@ -19,11 +19,11 @@ initialStoryState =
     , currentScene = Beginning
     , inventory = [ Envelope ]
     , knownLocations = [ Kitchen ]
-    , storyLine = [ """
+    , storyLine = [ ( Kitchen, """
 You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
 
 The only other person here is an anxious young man trying hard to get your attention.
-    """ ]
+    """ ) ]
     , itemsByLocation = Dict.singleton (toString Auditorium) [ Podium ] |> Dict.insert (toString Kitchen) [ KitchenExit ]
     , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ] |> Dict.insert (toString Auditorium) [ Moderator ]
     }
@@ -33,31 +33,31 @@ storyElements : StoryElementsConfig MyStoryElement
 storyElements element =
     case element of
         Stranger ->
-            DisplayInformation "Anxious stranger" "He sure seems stressed.  You're not helping."
+            DisplayInformation "volunteer" "He sure seems stressed.  You're not helping."
 
         Moderator ->
-            DisplayInformation "Moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
+            DisplayInformation "moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
 
         Kitchen ->
-            DisplayInformation "Commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
+            DisplayInformation "commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
 
         Auditorium ->
-            DisplayInformation "Auditorium" "The room is huge, every seat filled with the eager audience."
+            DisplayInformation "auditorium" "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
 
         Hallway ->
-            DisplayInformation "Hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
+            DisplayInformation "hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
 
         KitchenExit ->
-            DisplayInformation "Emergency exit" "The handle has a warning: \"Opening will sound the alarm\""
+            DisplayInformation "emergency exit" "The handle has a warning: \"Opening will sound the alarm\""
 
         Envelope ->
-            DisplayInformation "Thick envelope" "You found it crammed in your pocket, but you don't recoginze it."
+            DisplayInformation "thick envelope" "You found it crammed in your pocket, but you don't recoginze it."
 
         Podium ->
-            DisplayInformation "Podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
+            DisplayInformation "podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
 
         Mic ->
-            DisplayInformation "Microphone" "\"Testing one, two.\" Yup, it works fine."
+            DisplayInformation "microphone" "\"Testing one, two.\" Yup, it works fine."
 
 
 storyRules : StoryRulesConfig MyStoryElement MyScene
@@ -107,10 +107,10 @@ You take a deep breath and make your way on stage.  The audience falls silent.  
 
 Um... what now?
 """
-    , given (InteractionWith Hallway) (All [NearProp Podium])
+    , given (InteractionWith Hallway) (All [ NearProp Podium ])
         `do` []
         `narrate` Simple strangerPreventsYouFromLeaving
-    , given (InteractionWith Kitchen) (All [NearProp Podium])
+    , given (InteractionWith Kitchen) (All [ NearProp Podium ])
         `do` []
         `narrate` Simple strangerPreventsYouFromLeaving
     , given (InteractionWith Envelope) (WithItem Mic)

@@ -10,15 +10,21 @@ type Msg a
     = InteractWithLocation a
 
 
-locations : StoryElementsConfig a -> List a -> Html (Msg a)
-locations storyElements locations =
+locations : StoryElementsConfig a -> List a -> a -> Html (Msg a)
+locations storyElements locations currentLocation =
     let
-        locationItem tag =
-            li
-                [ class "Location"
-                , onClick <| InteractWithLocation tag
+        classes location =
+            classList
+                [ ( "Locations__Location", True )
+                , ( "Locations__Location--current", location == currentLocation )
                 ]
-                [ text <| getName storyElements tag ]
+
+        locationItem location =
+            li
+                [ classes location
+                , onClick <| InteractWithLocation location
+                ]
+                [ text <| getName storyElements location ]
     in
         div [ class "Locations" ]
             [ h3 [] [ text "Locations" ]

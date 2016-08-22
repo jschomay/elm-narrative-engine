@@ -13,12 +13,12 @@ type Msg a
 inventory : StoryElementsConfig a -> List a -> Html (Msg a)
 inventory storyElements items =
     let
-        inventoryItem tag =
+        inventoryItem storyElement =
             li
-                [ class "Item"
-                , onClick <| InteractWithItem tag
+                [ class "Inventory__Item"
+                , onClick <| InteractWithItem storyElement
                 ]
-                [ text <| getName storyElements tag ]
+                [ text <| getName storyElements storyElement ]
     in
         div [ class "Inventory" ]
             [ h3 [] [ text "Inventory" ]
