@@ -5,6 +5,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import StoryElements exposing (..)
 import StoryState exposing (..)
+import Markdown
 
 
 type Msg a
@@ -29,17 +30,17 @@ currentSummary storyElements storyState =
                     getCharactersByLocation currentLocation storyState
                         ++ getItemsByLocation currentLocation storyState
 
-                propElement character =
+                interactableElements storyElement =
                     span
-                        [ class "CurrentSummary__StoryElement"
-                        , onClick <| InteractWithStage character
+                        [ class "CurrentSummary__StoryElement u-selectable"
+                        , onClick <| InteractWithStage storyElement
                         ]
-                        [ text <| getName storyElements character ]
+                        [ text <| getName storyElements storyElement ]
             in
                 if List.length propsAndCharactersPresent < 1 then
                     span [] []
                 else
-                    List.map propElement propsAndCharactersPresent
+                    List.map interactableElements propsAndCharactersPresent
                         |> format
                         |> p []
 
@@ -55,11 +56,11 @@ currentSummary storyElements storyState =
                     else
                         List.intersperse (text " and ") list
             in
-                (text <| "In location: ")
+                (text <| "Also here: ")
                     :: storyElements
                     ++ [ text "." ]
     in
         div [ class "CurrentSummary" ]
-            <| [ p [ class "Location-description" ] [ text locationDescription ]
+            <| [ p [ class "Location-description" ] [ Markdown.toHtml [] locationDescription ]
                , propsAndCharactersInLocation
                ]

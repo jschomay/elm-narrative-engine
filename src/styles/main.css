@@ -21,6 +21,11 @@ body {
   background-color: white;
 }
 
+img {
+  max-width: 100%;
+  margin: 5px;
+}
+
 .Page {
   height: 100%;
   width: 900px;
@@ -44,13 +49,13 @@ body {
   text-align: center;
   color: white;
   background-color: #555;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
   text-transform: capitalize;
 }
 
 .Layout__Main {
   flex: 4 1;
-  margin-right: 50px;
+  margin-right: 10px;
   display: flex;
   flex-direction: column;
 }
@@ -68,14 +73,6 @@ body {
   overflow: auto;
 }
 
-.Storyline::before {
-  content: ". . .";
-  text-align: center;
-  display: block;
-  margin-bottom: 10px;
-  font-weight: bold;
-}
-
 .Storyline__Item {
   opacity: 0.3;
   padding-bottom: 10px;
@@ -83,6 +80,13 @@ body {
 
 .Storyline__Item:first-of-type {
   opacity: 1;
+  margin-left: 40px;
+}
+
+li.Storyline__Item:first-of-type:before {
+  float: left;
+  content: '\25B8';
+  margin: 0px -25px;
 }
 
 .Storyline__Item__Action {
@@ -121,11 +125,17 @@ body {
   text-transform: capitalize;
 }
 
+.Locations__Location.Locations__Location--current:before {
+  content: '\25B8';
+  margin: 0px 5px 0px 0px;
+}
+
 .Locations__Location.Locations__Location--current {
   font-weight: bold;
   color: white;
   background: #555;
-  padding: 2px;
+  padding: 4px;
+  display: flex;
 }
 
 
@@ -153,3 +163,9 @@ body {
   margin-bottom: 10px;
   flex: 0 0 auto;
 }
+
+.u-selectable:hover {
+  cursor: pointer;
+  text-decoration: underline;
+}
+

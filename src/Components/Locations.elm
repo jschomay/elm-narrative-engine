@@ -17,13 +17,17 @@ locations storyElements locations currentLocation =
             classList
                 [ ( "Locations__Location", True )
                 , ( "Locations__Location--current", location == currentLocation )
+                , ( "u-selectable", location /= currentLocation )
                 ]
 
         locationItem location =
             li
-                [ classes location
-                , onClick <| InteractWithLocation location
-                ]
+                ([ classes location ]
+                    ++ if location /= currentLocation then
+                        [ onClick <| InteractWithLocation location ]
+                       else
+                        []
+                )
                 [ text <| getName storyElements location ]
     in
         div [ class "Locations" ]

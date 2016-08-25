@@ -15,7 +15,7 @@ inventory storyElements items =
     let
         inventoryItem storyElement =
             li
-                [ class "Inventory__Item"
+                [ class "Inventory__Item u-selectable"
                 , onClick <| InteractWithItem storyElement
                 ]
                 [ text <| getName storyElements storyElement ]
