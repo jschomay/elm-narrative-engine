@@ -11,8 +11,8 @@ type Msg a
     = InteractWithItem a
 
 
-inventory : StoryElementsConfig a -> List a -> Html (Msg a)
-inventory storyElements items =
+inventory : StoryElementsConfig a -> List a -> (a -> Bool) -> Html (Msg a)
+inventory storyElements items beenThereDoneThat =
     let
         numItems =
             List.length items
@@ -21,10 +21,15 @@ inventory storyElements items =
             let
                 key =
                     (toString item) ++ (toString <| numItems - i)
+
+                classes =
+                    [ ( "Inventory__Item u-selectable u-jump", True )
+                    , ( "u-new-story-element", not <| beenThereDoneThat item )
+                    ]
             in
                 ( key
                 , li
-                    [ class "Inventory__Item u-selectable u-jump"
+                    [ classList classes
                     , onClick <| InteractWithItem item
                     ]
                     [ text <| getName storyElements item ]

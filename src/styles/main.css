@@ -165,6 +165,10 @@ li.Storyline__Item:first-of-type:before {
   flex: 0 0 auto;
 }
 
+.u-new-story-element {
+  font-style: italic;
+}
+
 .u-selectable:hover {
   cursor: pointer;
   text-decoration: underline;

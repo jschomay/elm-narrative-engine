@@ -11,8 +11,8 @@ type Msg a
     = InteractWithLocation a
 
 
-locations : StoryElementsConfig a -> List a -> a -> Html (Msg a)
-locations storyElements locations currentLocation =
+locations : StoryElementsConfig a -> List a -> a -> (a -> Bool) -> Html (Msg a)
+locations storyElements locations currentLocation beenThereDoneThat =
     let
         classes location =
             classList
@@ -20,6 +20,7 @@ locations storyElements locations currentLocation =
                 , ( "Locations__Location--current", location == currentLocation )
                 , ( "u-selectable", location /= currentLocation )
                 , ( "u-jump", location /= currentLocation )
+                , ( "u-new-story-element", not <| beenThereDoneThat location )
                 ]
 
         numLocations =

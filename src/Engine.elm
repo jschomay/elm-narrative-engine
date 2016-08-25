@@ -3,7 +3,6 @@ module Engine exposing (..)
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
-import Dict exposing (..)
 import Components.CurrentSummary exposing (..)
 import Components.Storyline exposing (..)
 import Components.Locations exposing (..)
@@ -17,7 +16,7 @@ type alias Model a b =
     { title : String
     , byline : String
     , preface : String
-    , interationsCount : Dict String Int
+    , interactions : List a
     , storyState : StoryState a b
     }
 
@@ -27,7 +26,7 @@ init title initialState =
     { title = title
     , byline = "byline"
     , preface = "preface"
-    , interationsCount = Dict.empty
+    , interactions = []
     , storyState = initialState
     }
 
@@ -53,20 +52,34 @@ type Msg a
 update : StoryElementsConfig a -> StoryRulesConfig a b -> Msg a -> Model a b -> Model a b
 update storyElements storyRules action ({ storyState } as model) =
     let
-        defaultUpdate storyElement =
+        defaultUpdate storyElement model =
             { model
                 | storyState = { storyState | storyLine = ( storyElement, getDescription storyElements storyElement ) :: model.storyState.storyLine }
             }
+
+        updateInteractions storyElement model =
+            { model
+                | interactions =
+                    if not <| List.member storyElement model.interactions then
+                        storyElement :: model.interactions
+                    else
+                        model.interactions
+            }
+
+        updateStoryState storyElement model =
+            Maybe.withDefault (defaultUpdate storyElement model)
+                <| updateFromRules storyElement storyRules model.storyState (flip List.member model.interactions)
+                `Maybe.andThen` \newStoryState ->
+                                    Just { model | storyState = newStoryState }
     in
         case action of
             NoOp ->
                 model
 
             Interact storyElement ->
-                Maybe.withDefault (defaultUpdate storyElement)
-                    <| updateFromRules storyElement storyRules model.storyState
-                    `Maybe.andThen` \newStoryState ->
-                                        Just { model | storyState = newStoryState }
+                model
+                    |> updateStoryState storyElement
+                    |> updateInteractions storyElement
 
 
 
@@ -80,12 +93,15 @@ view storyElements model =
             [ text <| getName storyElements model.storyState.currentLocation ]
         , div [ class "Layout" ]
             [ div [ class "Layout__Main" ]
-                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a) <| currentSummary storyElements model.storyState
+                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a)
+                    <| currentSummary storyElements model.storyState (flip List.member model.interactions)
                 , storyline storyElements model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a) <| locations storyElements model.storyState.knownLocations model.storyState.currentLocation
-                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a) <| inventory storyElements model.storyState.inventory
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a)
+                    <| locations storyElements model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
+                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a)
+                    <| inventory storyElements model.storyState.inventory (flip List.member model.interactions)
                 ]
             ]
         ]

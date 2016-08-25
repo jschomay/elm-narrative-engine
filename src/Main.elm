@@ -25,14 +25,14 @@ You are in the commercial kitchen.  You don't know how you got here, or what you
 The only other person here is an anxious young man trying hard to get your attention.
     """ ) ]
     , itemsByLocation = Dict.singleton (toString Auditorium) [ Podium ] |> Dict.insert (toString Kitchen) [ KitchenExit ]
-    , charactersByLocation = Dict.singleton (toString Kitchen) [ Stranger ] |> Dict.insert (toString Auditorium) [ Moderator ]
+    , charactersByLocation = Dict.singleton (toString Kitchen) [ Volunteer ] |> Dict.insert (toString Auditorium) [ Moderator ]
     }
 
 
 storyElements : StoryElementsConfig MyStoryElement
 storyElements element =
     case element of
-        Stranger ->
+        Volunteer ->
             DisplayInformation "volunteer" "He sure seems stressed.  You're not helping."
 
         Moderator ->
@@ -75,19 +75,24 @@ beginning =
     [ given (InteractionWith KitchenExit) (Always)
         `do` []
         `narrate` Simple """
-A way out.  You head for the emergency exit, but the stranger stops you.
+A way out.  You head for the emergency exit, but the Volunteer stops you.
 
 "You can't leave!  Everyone is waiting for you!"
 """
-    , given (InteractionWith Stranger) (InLocation Kitchen)
+    , given (FirstInteractionWith Volunteer) (InLocation Kitchen)
         `do` [ AddLocation Auditorium ]
         `narrate` Simple """
 "Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
 """
-    , given (InteractionWith Auditorium) (InLocation Kitchen)
-        `do` [ MoveTo Auditorium, AddCharacter Stranger Auditorium, AddLocation Hallway ]
+    , given (InteractionWith Volunteer) (InLocation Kitchen)
+        `do` [ AddLocation Auditorium ]
         `narrate` Simple """
-You follow the stranger into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
+"What are you waiting for, get out there!"
+"""
+    , given (InteractionWith Auditorium) (InLocation Kitchen)
+        `do` [ MoveTo Auditorium, AddCharacter Volunteer Auditorium, AddLocation Hallway ]
+        `narrate` Simple """
+You follow the Volunteer into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
 
 A woman at the podium addresses the audience.  "... and it looks like our next speaker has just arrived!  I'll hand it over to him."
 
@@ -147,7 +152,7 @@ middle =
 
 strangerPreventsYouFromLeaving : String
 strangerPreventsYouFromLeaving =
-    "You think about escaping, but both the moderator and the anxious stranger glare at you as if to say *\"Don't even think about it!\"*"
+    "You think about escaping, but both the moderator and the anxious Volunteer glare at you as if to say *\"Don't even think about it!\"*"
 
 
 type MyScene
@@ -159,7 +164,7 @@ type MyStoryElement
     = Envelope
     | Podium
     | Mic
-    | Stranger
+    | Volunteer
     | Moderator
     | Kitchen
     | Auditorium

@@ -12,8 +12,8 @@ type Msg a
     = InteractWithStage a
 
 
-currentSummary : StoryElementsConfig a -> StoryState a b -> Html (Msg a)
-currentSummary storyElements storyState =
+currentSummary : StoryElementsConfig a -> StoryState a b -> (a -> Bool) -> Html (Msg a)
+currentSummary storyElements storyState beenThereDoneThat =
     let
         currentLocation =
             storyState.currentLocation
@@ -30,9 +30,14 @@ currentSummary storyElements storyState =
                     getCharactersByLocation currentLocation storyState
                         ++ getItemsByLocation currentLocation storyState
 
+                classes storyElement =
+                    [ ( "CurrentSummary__StoryElement u-selectable", True )
+                    , ( "u-new-story-element", not <| beenThereDoneThat storyElement )
+                    ]
+
                 interactableElements storyElement =
                     span
-                        [ class "CurrentSummary__StoryElement u-selectable"
+                        [ classList <| classes storyElement
                         , onClick <| InteractWithStage storyElement
                         ]
                         [ text <| getName storyElements storyElement ]

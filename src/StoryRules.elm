@@ -29,6 +29,7 @@ type alias ChangeWorldCommands a b =
 
 type Trigger a
     = InteractionWith a
+    | FirstInteractionWith a
 
 
 type Condition a
@@ -76,35 +77,38 @@ narrate f a =
     f a
 
 
-updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> Maybe (StoryState a b)
-updateFromRules storyElement storyRules storyState =
-    findFirstMatchingRule (storyRules storyState.currentScene) storyElement storyState
+updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> (a -> Bool) -> Maybe (StoryState a b)
+updateFromRules storyElement storyRules storyState beenThereDoneThat =
+    findFirstMatchingRule (storyRules storyState.currentScene) storyElement storyState beenThereDoneThat
         `Maybe.andThen` (Just << updateStoryState storyElement storyState)
 
 
-findFirstMatchingRule : Scene a b -> a -> StoryState a b -> Maybe (Do a b)
-findFirstMatchingRule rules storyElement storyState =
+findFirstMatchingRule : Scene a b -> a -> StoryState a b -> (a -> Bool) -> Maybe (Do a b)
+findFirstMatchingRule rules storyElement storyState beenThereDoneThat =
     case rules of
         [] ->
             Nothing
 
         (( given, do ) as x) :: xs ->
-            if matchesGiven given storyElement storyState then
+            if matchesGiven given storyElement storyState beenThereDoneThat then
                 Just do
             else
-                findFirstMatchingRule xs storyElement storyState
+                findFirstMatchingRule xs storyElement storyState beenThereDoneThat
 
 
-matchesGiven : Given a -> a -> StoryState a b -> Bool
-matchesGiven ( trigger, condition ) storyElement storyState =
-    matchesTrigger trigger storyElement && matchesCondition condition storyState
+matchesGiven : Given a -> a -> StoryState a b -> (a -> Bool) -> Bool
+matchesGiven ( trigger, condition ) storyElement storyState beenThereDoneThat =
+    matchesTrigger trigger storyElement beenThereDoneThat && matchesCondition condition storyState
 
 
-matchesTrigger : Trigger a -> a -> Bool
-matchesTrigger trigger storyElement =
+matchesTrigger : Trigger a -> a -> (a -> Bool) -> Bool
+matchesTrigger trigger storyElement beenThereDoneThat =
     case trigger of
         InteractionWith storyElementToMatch ->
             storyElementToMatch == storyElement
+
+        FirstInteractionWith storyElementToMatch ->
+            storyElementToMatch == storyElement && (not <| beenThereDoneThat storyElement)
 
 
 matchesCondition : Condition a -> StoryState a b -> Bool
