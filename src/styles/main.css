@@ -75,11 +75,12 @@ img {
 
 .Storyline__Item {
   opacity: 0.3;
+  width: 600px;
   padding-bottom: 10px;
+  transition: margin-left 0.1s;
 }
 
 .Storyline__Item:first-of-type {
-  opacity: 1;
   margin-left: 40px;
 }
 
@@ -169,3 +170,33 @@ li.Storyline__Item:first-of-type:before {
   text-decoration: underline;
 }
 
+.u-fade-in {
+  opacity: 0;
+  max-height: 0;
+  overflow: hidden;
+  animation: fadeIn 0.7s linear forwards,
+  slideDown 1s ease-out forwards;
+}
+
+.u-jump {
+  padding-left: 0px;
+  animation: jump alternate 0.1s 2 ease-out forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  to {
+    max-height: 800px;
+  }
+}
+
+@keyframes jump {
+  to {
+    padding-left: 10px;
+  }
+}
