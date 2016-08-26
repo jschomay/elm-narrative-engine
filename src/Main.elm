@@ -90,7 +90,11 @@ A way out.  You head for the emergency exit, but the Volunteer stops you.
 "What are you waiting for, get out there!"
 """
     , given (InteractionWith Auditorium) (InLocation Kitchen)
-        `do` [ MoveTo Auditorium, AddCharacter Volunteer Auditorium, AddLocation Hallway ]
+        `do` [ MoveTo Auditorium
+             , AddCharacter Volunteer Auditorium
+             , RemoveCharacter Volunteer Kitchen
+             , AddLocation Hallway
+             ]
         `narrate` Simple """
 You follow the Volunteer into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
 

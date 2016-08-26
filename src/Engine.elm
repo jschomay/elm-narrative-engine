@@ -43,6 +43,7 @@ loadStory title storyElements storyRules initialState =
 type Msg a
     = NoOp
     | Interact a
+    | InteractWithLocation a
 
 
 
@@ -50,11 +51,16 @@ type Msg a
 
 
 update : StoryElementsConfig a -> StoryRulesConfig a b -> Msg a -> Model a b -> Model a b
-update storyElements storyRules action ({ storyState } as model) =
+update storyElements storyRules action model =
     let
-        defaultUpdate storyElement model =
+        narrateTheDescription storyElement ({ storyState } as model) =
             { model
                 | storyState = { storyState | storyLine = ( storyElement, getDescription storyElements storyElement ) :: model.storyState.storyLine }
+            }
+
+        goToLocation location ({ storyState } as model) =
+            { model
+                | storyState = { storyState | currentLocation = location }
             }
 
         updateInteractions storyElement model =
@@ -66,9 +72,8 @@ update storyElements storyRules action ({ storyState } as model) =
                         model.interactions
             }
 
-        updateStoryState storyElement model =
-            Maybe.withDefault (defaultUpdate storyElement model)
-                <| updateFromRules storyElement storyRules model.storyState (flip List.member model.interactions)
+        tryUpdatingFromRules storyElement model =
+            updateFromRules storyElement storyRules model.storyState (flip List.member model.interactions)
                 `Maybe.andThen` \newStoryState ->
                                     Just { model | storyState = newStoryState }
     in
@@ -76,9 +81,16 @@ update storyElements storyRules action ({ storyState } as model) =
             NoOp ->
                 model
 
+            InteractWithLocation location ->
+                model
+                    |> tryUpdatingFromRules location
+                    |> Maybe.withDefault (goToLocation location model)
+                    |> updateInteractions location
+
             Interact storyElement ->
                 model
-                    |> updateStoryState storyElement
+                    |> tryUpdatingFromRules storyElement
+                    |> Maybe.withDefault (narrateTheDescription storyElement model)
                     |> updateInteractions storyElement
 
 
@@ -98,7 +110,7 @@ view storyElements model =
                 , storyline storyElements model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interact a)
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> InteractWithLocation a)
                     <| locations storyElements model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
                 , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a)
                     <| inventory storyElements model.storyState.inventory (flip List.member model.interactions)
