@@ -19,7 +19,7 @@ locations storyElements locations currentLocation beenThereDoneThat =
                 [ ( "Locations__Location", True )
                 , ( "Locations__Location--current", location == currentLocation )
                 , ( "u-selectable", location /= currentLocation )
-                , ( "u-jump", location /= currentLocation )
+                , ( "u-jump", not <| beenThereDoneThat location )
                 , ( "u-new-story-element", not <| beenThereDoneThat location )
                 ]
 

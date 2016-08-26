@@ -77,11 +77,11 @@ img {
   opacity: 0.3;
   width: 600px;
   padding-bottom: 10px;
-  transition: margin-left 0.1s;
+  transition: padding-left 0.1s;
 }
 
 .Storyline__Item:first-of-type {
-  margin-left: 40px;
+  padding-left: 40px;
 }
 
 li.Storyline__Item:first-of-type:before {

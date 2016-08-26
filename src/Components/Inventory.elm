@@ -23,7 +23,8 @@ inventory storyElements items beenThereDoneThat =
                     (toString item) ++ (toString <| numItems - i)
 
                 classes =
-                    [ ( "Inventory__Item u-selectable u-jump", True )
+                    [ ( "Inventory__Item u-selectable", True )
+                    , ( "u-jump", not <| beenThereDoneThat item )
                     , ( "u-new-story-element", not <| beenThereDoneThat item )
                     ]
             in
