@@ -11,16 +11,16 @@ type Msg a
     = InteractWithLocation a
 
 
-locations : StoryElementsConfig a -> List a -> a -> (a -> Bool) -> Html (Msg a)
-locations storyElements locations currentLocation beenThereDoneThat =
+locations : LocationsInfo b -> List b -> b -> (StoryElement a b c -> Bool) -> Html (Msg b)
+locations locationsInfo locations currentLocation beenThereDoneThat =
     let
         classes location =
             classList
                 [ ( "Locations__Location", True )
                 , ( "Locations__Location--current", location == currentLocation )
                 , ( "u-selectable", location /= currentLocation )
-                , ( "u-jump", not <| beenThereDoneThat location )
-                , ( "u-new-story-element", not <| beenThereDoneThat location )
+                , ( "u-jump", not <| beenThereDoneThat (Location location) )
+                , ( "u-new-story-element", not <| beenThereDoneThat (Location location) )
                 ]
 
         numLocations =
@@ -39,7 +39,7 @@ locations storyElements locations currentLocation beenThereDoneThat =
                            else
                             []
                     )
-                    [ text <| getName storyElements location ]
+                    [ text <| getName <| locationsInfo location ]
                 )
     in
         div [ class "Locations" ]

@@ -10,16 +10,16 @@ import StoryState exposing (..)
 
 main : Program Never
 main =
-    loadStory "Stage Fright" storyElements storyRules initialStoryState
+    loadStory "Stage Fright" storyItems storyLocations storyCharacters storyRules initialStoryState
 
 
-initialStoryState : StoryState MyStoryElement MyScene
+initialStoryState : StoryState MyItem MyLocation MyCharacter MyScene
 initialStoryState =
     { currentLocation = Kitchen
     , currentScene = Beginning
     , inventory = [ Envelope ]
     , knownLocations = [ Kitchen ]
-    , storyLine = [ ( Kitchen, """
+    , storyLine = [ ( getName <| storyLocations Kitchen, """
 You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
 
 The only other person here is an anxious young man trying hard to get your attention.
@@ -29,38 +29,46 @@ The only other person here is an anxious young man trying hard to get your atten
     }
 
 
-storyElements : StoryElementsConfig MyStoryElement
-storyElements element =
-    case element of
-        Volunteer ->
-            DisplayInformation "volunteer" "He sure seems stressed.  You're not helping."
-
-        Moderator ->
-            DisplayInformation "moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
-
-        Kitchen ->
-            DisplayInformation "commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
-
-        Auditorium ->
-            DisplayInformation "auditorium" "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
-
-        Hallway ->
-            DisplayInformation "hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
-
+storyItems : ItemsInfo MyItem
+storyItems tag =
+    case tag of
         KitchenExit ->
-            DisplayInformation "emergency exit" "The handle has a warning: \"Opening will sound the alarm\""
+            item "emergency exit" "The handle has a warning: \"Opening will sound the alarm\""
 
         Envelope ->
-            DisplayInformation "thick envelope" "You found it crammed in your pocket, but you don't recoginze it."
+            item "thick envelope" "You found it crammed in your pocket, but you don't recoginze it."
 
         Podium ->
-            DisplayInformation "podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
+            item "podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
 
         Mic ->
-            DisplayInformation "microphone" "\"Testing one, two.\" Yup, it works fine."
+            item "microphone" "\"Testing one, two.\" Yup, it works fine."
 
 
-storyRules : StoryRulesConfig MyStoryElement MyScene
+storyLocations : LocationsInfo MyLocation
+storyLocations tag =
+    case tag of
+        Kitchen ->
+            location "commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
+
+        Auditorium ->
+            location "auditorium" "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
+
+        Hallway ->
+            location "hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
+
+
+storyCharacters : CharactersInfo MyCharacter
+storyCharacters tag =
+    case tag of
+        Volunteer ->
+            character "volunteer" "He sure seems stressed.  You're not helping."
+
+        Moderator ->
+            character "moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
+
+
+storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene
 storyRules scene =
     case scene of
         Beginning ->
@@ -70,26 +78,26 @@ storyRules scene =
             middle
 
 
-beginning : Scene MyStoryElement MyScene
+beginning : Scene MyItem MyLocation MyCharacter MyScene
 beginning =
-    [ given (InteractionWith KitchenExit) (Always)
+    [ given (InteractionWithItem KitchenExit) (Always)
         `do` []
         `narrate` Simple """
 A way out.  You head for the emergency exit, but the Volunteer stops you.
 
 "You can't leave!  Everyone is waiting for you!"
 """
-    , given (FirstInteractionWith Volunteer) (InLocation Kitchen)
+    , given (FirstInteractionWithCharacter Volunteer) (InLocation Kitchen)
         `do` [ AddLocation Auditorium ]
         `narrate` Simple """
 "Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
 """
-    , given (InteractionWith Volunteer) (InLocation Kitchen)
+    , given (InteractionWithCharacter Volunteer) (InLocation Kitchen)
         `do` [ AddLocation Auditorium ]
         `narrate` Simple """
 "What are you waiting for, get out there!"
 """
-    , given (InteractionWith Auditorium) (InLocation Kitchen)
+    , given (InteractionWithLocation Auditorium) (InLocation Kitchen)
         `do` [ MoveTo Auditorium
              , AddCharacter Volunteer Auditorium
              , RemoveCharacter Volunteer Kitchen
@@ -102,12 +110,12 @@ A woman at the podium addresses the audience.  "... and it looks like our next s
 
 She steps back, leading the audience in a welcoming applause, as they all turn and look, right at you.
 """
-    , given (InteractionWith Moderator) (Always)
+    , given (InteractionWithCharacter Moderator) (Always)
         `do` []
         `narrate` Simple """
 She smiles and nods at you politely, but her eyes say *"If you stall one more minute I'm going to wring your neck!*"
 """
-    , given (InteractionWith Podium) (Not (WithItem Mic))
+    , given (InteractionWithItem Podium) (Not (WithItem Mic))
         `do` [ AddInventory Mic ]
         `narrate` Simple """
 You take a deep breath and make your way on stage.  The audience falls silent.  All eyes are on you.  Better say something quick.
@@ -116,13 +124,13 @@ You take a deep breath and make your way on stage.  The audience falls silent.  
 
 Um... what now?
 """
-    , given (InteractionWith Hallway) (All [ NearProp Podium ])
+    , given (InteractionWithLocation Hallway) (All [ NearProp Podium ])
         `do` []
         `narrate` Simple strangerPreventsYouFromLeaving
-    , given (InteractionWith Kitchen) (All [ NearProp Podium ])
+    , given (InteractionWithLocation Kitchen) (All [ NearProp Podium ])
         `do` []
         `narrate` Simple strangerPreventsYouFromLeaving
-    , given (InteractionWith Envelope) (WithItem Mic)
+    , given (InteractionWithItem Envelope) (WithItem Mic)
         `do` [ RemoveInventory Mic, LoadScene Middle ]
         `narrate` Simple """
 Ahh yes, the envelope.  Now must be the time.
@@ -146,9 +154,9 @@ The audience stares back, every eye in the room glazed over.  The moderator trie
     ]
 
 
-middle : Scene MyStoryElement MyScene
+middle : Scene MyItem MyLocation MyCharacter MyScene
 middle =
-    [ given (InteractionWith Envelope) (Always)
+    [ given (InteractionWithItem Envelope) (Always)
         `do` []
         `narrate` Simple "That went as well as could be expected.  Wonder where it came from?"
     ]
@@ -164,13 +172,19 @@ type MyScene
     | Middle
 
 
-type MyStoryElement
+type MyItem
     = Envelope
     | Podium
     | Mic
-    | Volunteer
-    | Moderator
-    | Kitchen
+    | KitchenExit
+
+
+type MyLocation
+    = Kitchen
     | Auditorium
     | Hallway
-    | KitchenExit
+
+
+type MyCharacter
+    = Volunteer
+    | Moderator

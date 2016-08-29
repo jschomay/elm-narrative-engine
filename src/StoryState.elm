@@ -3,59 +3,59 @@ module StoryState exposing (..)
 import Dict exposing (..)
 
 
-type alias StoryState a b =
-    { currentLocation : a
-    , currentScene : b
+type alias StoryState a b c d =
+    { currentLocation : b
+    , currentScene : d
     , inventory : List a
-    , knownLocations : List a
-    , storyLine : List ( a, String )
+    , knownLocations : List b
+    , storyLine : List ( String, String )
     , itemsByLocation : Dict String (List a)
-    , charactersByLocation : Dict String (List a)
+    , charactersByLocation : Dict String (List c)
     }
 
 
-init : a -> b -> StoryState a b
+init : b -> d -> StoryState a b c d
 init startingLocation startingScene =
     StoryState startingLocation startingScene [] [] [] Dict.empty Dict.empty
 
 
-getCharactersInCurrentLocation : StoryState a b -> List a
+getCharactersInCurrentLocation : StoryState a b c d -> List c
 getCharactersInCurrentLocation storyState =
     getCharactersByLocation storyState.currentLocation storyState
 
 
-getPropsInCurrentLocation : StoryState a b -> List a
+getPropsInCurrentLocation : StoryState a b c d -> List a
 getPropsInCurrentLocation storyState =
     getItemsByLocation storyState.currentLocation storyState
 
 
-getCharactersByLocation : a -> StoryState a b -> List a
+getCharactersByLocation : b -> StoryState a b c d -> List c
 getCharactersByLocation location storyState =
     Maybe.withDefault []
         <| Dict.get (toString location) storyState.charactersByLocation
 
 
-getItemsByLocation : a -> StoryState a b -> List a
+getItemsByLocation : b -> StoryState a b c d -> List a
 getItemsByLocation location storyState =
     Maybe.withDefault []
         <| Dict.get (toString location) storyState.itemsByLocation
 
 
-setCurrentLocation : a -> StoryState a b -> StoryState a b
+setCurrentLocation : b -> StoryState a b c d -> StoryState a b c d
 setCurrentLocation location storyState =
     { storyState
         | currentLocation = location
     }
 
 
-setCurrentScene : b -> StoryState a b -> StoryState a b
+setCurrentScene : d -> StoryState a b c d -> StoryState a b c d
 setCurrentScene scene storyState =
     { storyState
         | currentScene = scene
     }
 
 
-addLocation : a -> StoryState a b -> StoryState a b
+addLocation : b -> StoryState a b c d -> StoryState a b c d
 addLocation location storyState =
     if List.member location storyState.knownLocations then
         storyState
@@ -65,14 +65,14 @@ addLocation location storyState =
         }
 
 
-removeLocation : a -> StoryState a b -> StoryState a b
+removeLocation : b -> StoryState a b c d -> StoryState a b c d
 removeLocation location storyState =
     { storyState
         | knownLocations = List.filter ((/=) location) storyState.knownLocations
     }
 
 
-addInventory : a -> StoryState a b -> StoryState a b
+addInventory : a -> StoryState a b c d -> StoryState a b c d
 addInventory item storyState =
     if List.member item storyState.inventory then
         storyState
@@ -82,14 +82,14 @@ addInventory item storyState =
         }
 
 
-removeInventory : a -> StoryState a b -> StoryState a b
+removeInventory : a -> StoryState a b c d -> StoryState a b c d
 removeInventory item storyState =
     { storyState
         | inventory = List.filter ((/=) item) storyState.inventory
     }
 
 
-addCharacter : a -> a -> StoryState a b -> StoryState a b
+addCharacter : c -> b -> StoryState a b c d -> StoryState a b c d
 addCharacter character location storyState =
     if List.member character (getCharactersByLocation location storyState) then
         storyState
@@ -102,7 +102,7 @@ addCharacter character location storyState =
         }
 
 
-removeCharacter : a -> a -> StoryState a b -> StoryState a b
+removeCharacter : c -> b -> StoryState a b c d -> StoryState a b c d
 removeCharacter character location storyState =
     if not <| Dict.member (toString location) storyState.charactersByLocation then
         storyState
@@ -117,7 +117,7 @@ removeCharacter character location storyState =
         }
 
 
-addProp : a -> a -> StoryState a b -> StoryState a b
+addProp : a -> b -> StoryState a b c d -> StoryState a b c d
 addProp prop location storyState =
     if List.member prop (getItemsByLocation location storyState) then
         storyState
@@ -130,7 +130,7 @@ addProp prop location storyState =
         }
 
 
-removeProp : a -> a -> StoryState a b -> StoryState a b
+removeProp : a -> b -> StoryState a b c d -> StoryState a b c d
 removeProp prop location storyState =
     if not <| Dict.member (toString location) storyState.itemsByLocation then
         storyState
@@ -145,7 +145,7 @@ removeProp prop location storyState =
         }
 
 
-addNarration : ( a, String ) -> StoryState a b -> StoryState a b
+addNarration : ( String, String ) -> StoryState a b c d -> StoryState a b c d
 addNarration narration storyState =
     { storyState
         | storyLine = narration :: storyState.storyLine

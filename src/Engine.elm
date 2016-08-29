@@ -12,16 +12,16 @@ import StoryRules exposing (..)
 import StoryState exposing (..)
 
 
-type alias Model a b =
+type alias Model a b c d =
     { title : String
     , byline : String
     , preface : String
-    , interactions : List a
-    , storyState : StoryState a b
+    , interactions : List (StoryElement a b c)
+    , storyState : StoryState a b c d
     }
 
 
-init : String -> StoryState a b -> Model a b
+init : String -> StoryState a b c d -> Model a b c d
 init title initialState =
     { title = title
     , byline = "byline"
@@ -31,31 +31,31 @@ init title initialState =
     }
 
 
-loadStory : String -> StoryElementsConfig a -> StoryRulesConfig a b -> StoryState a b -> Program Never
-loadStory title storyElements storyRules initialState =
+loadStory : String -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> StoryState a b c d -> Program Never
+loadStory title itemsInfo locationsInfo charactersInfo storyRules initialState =
     Html.beginnerProgram
         { model = init title initialState
-        , view = view storyElements
-        , update = update storyElements storyRules
+        , view = view itemsInfo locationsInfo charactersInfo
+        , update = update itemsInfo locationsInfo charactersInfo storyRules
         }
 
 
-type Msg a
+type Msg a b c
     = NoOp
-    | Interact a
-    | InteractWithLocation a
+    | Interaction (StoryElement a b c)
 
 
 
 -- UPDATE
 
 
-update : StoryElementsConfig a -> StoryRulesConfig a b -> Msg a -> Model a b -> Model a b
-update storyElements storyRules action model =
+update : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Msg a b c -> Model a b c d -> Model a b c d
+update itemsInfo locationsInfo charactersInfo storyRules action model =
     let
-        narrateTheDescription storyElement ({ storyState } as model) =
+        defaultNarration : String -> String -> Model a b c d -> Model a b c d
+        defaultNarration name description ({ storyState } as model) =
             { model
-                | storyState = { storyState | storyLine = ( storyElement, getDescription storyElements storyElement ) :: model.storyState.storyLine }
+                | storyState = { storyState | storyLine = ( name, description ) :: model.storyState.storyLine }
             }
 
         goToLocation location ({ storyState } as model) =
@@ -72,48 +72,91 @@ update storyElements storyRules action model =
                         model.interactions
             }
 
+        storyElementName storyElement =
+            case storyElement of
+                Item item ->
+                    getName <| itemsInfo item
+
+                Location location ->
+                    getName <| locationsInfo location
+
+                Character character ->
+                    getName <| charactersInfo character
+
+        storyElementDescription storyElement =
+            case storyElement of
+                Item item ->
+                    getDescription <| itemsInfo item
+
+                Location location ->
+                    getDescription <| locationsInfo location
+
+                Character character ->
+                    getDescription <| charactersInfo character
+
         tryUpdatingFromRules storyElement model =
-            updateFromRules storyElement storyRules model.storyState (flip List.member model.interactions)
-                `Maybe.andThen` \newStoryState ->
-                                    Just { model | storyState = newStoryState }
+            let
+                scene =
+                    (storyRules model.storyState.currentScene)
+
+                beenThereDoneThat =
+                    (List.member storyElement model.interactions)
+            in
+                updateFromRules storyElement scene model.storyState beenThereDoneThat (storyElementName storyElement)
+                    `Maybe.andThen` \newStoryState ->
+                                        Just { model | storyState = newStoryState }
     in
         case action of
             NoOp ->
                 model
 
-            InteractWithLocation location ->
+            Interaction ((Item _) as item) ->
                 model
-                    |> tryUpdatingFromRules location
-                    |> Maybe.withDefault (goToLocation location model)
-                    |> updateInteractions location
+                    |> tryUpdatingFromRules item
+                    |> Maybe.withDefault (defaultNarration (storyElementName item) (storyElementDescription item) model)
+                    |> updateInteractions item
 
-            Interact storyElement ->
+            Interaction (Location location) ->
                 model
-                    |> tryUpdatingFromRules storyElement
-                    |> Maybe.withDefault (narrateTheDescription storyElement model)
-                    |> updateInteractions storyElement
+                    |> tryUpdatingFromRules (Location location)
+                    |> Maybe.withDefault (goToLocation location model)
+                    |> updateInteractions (Location location)
+
+            Interaction ((Character _) as character) ->
+                model
+                    |> tryUpdatingFromRules character
+                    |> Maybe.withDefault (defaultNarration (storyElementName character) (storyElementDescription character) model)
+                    |> updateInteractions character
 
 
 
 -- main layout
 
 
-view : StoryElementsConfig a -> Model a b -> Html (Msg a)
-view storyElements model =
+view : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d -> Html (Msg a b c)
+view itemsInfo locationsInfo charactersInfo model =
     div [ class "Page" ]
         [ h1 [ class "Title" ]
-            [ text <| getName storyElements model.storyState.currentLocation ]
+            [ text <| getName <| locationsInfo model.storyState.currentLocation ]
         , div [ class "Layout" ]
             [ div [ class "Layout__Main" ]
-                [ Html.map (\(Components.CurrentSummary.InteractWithStage a) -> Interact a)
-                    <| currentSummary storyElements model.storyState (flip List.member model.interactions)
-                , storyline storyElements model.storyState.storyLine
+                [ Html.map
+                    (\msg ->
+                        case msg of
+                            Components.CurrentSummary.InteractWithProp a ->
+                                Interaction (Item a)
+
+                            Components.CurrentSummary.InteractWithCharacter a ->
+                                Interaction (Character a)
+                    )
+                    <| currentSummary itemsInfo locationsInfo charactersInfo model.storyState (flip List.member model.interactions)
+                , storyline model.storyState.storyLine
                 ]
             , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> InteractWithLocation a)
-                    <| locations storyElements model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
-                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interact a)
-                    <| inventory storyElements model.storyState.inventory (flip List.member model.interactions)
+                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interaction (Location a))
+                    <| locations locationsInfo model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
+                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interaction (Item a))
+                    <| inventory itemsInfo model.storyState.inventory (flip List.member model.interactions)
                 ]
             ]
         ]

@@ -3,23 +3,30 @@ module Tests.StoryRulesTests exposing (all)
 import Test exposing (..)
 import Expect exposing (..)
 import StoryState exposing (..)
+import StoryElements exposing (..)
 import StoryRules exposing (..)
 
 
-type TestStoryElements
+type TestItem
     = ThingOne
     | ThingTwo
-    | Jack
-    | Jill
-    | Earth
+
+
+type TestLocation
+    = Earth
     | Moon
+
+
+type TestCharacter
+    = Jack
+    | Jill
 
 
 type TestScene
     = Begining
 
 
-startingState : StoryState TestStoryElements TestScene
+startingState : StoryState TestItem TestLocation TestCharacter TestScene
 startingState =
     StoryState.init Earth Begining
 
@@ -40,24 +47,24 @@ updateFromRulesTests =
             <| \() ->
                 let
                     rules =
-                        [ given (InteractionWith ThingTwo) (Always)
+                        [ given (InteractionWithItem ThingTwo) (Always)
                             `do` [ AddInventory ThingOne ]
                             `narrate` Simple "thing one"
                         ]
                 in
-                    Expect.equal (updateFromRules ThingOne (always rules) startingState (always True))
+                    Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
                         Nothing
         , test "only runs first matching rule"
             <| \() ->
                 let
                     rules =
-                        [ given (InteractionWith ThingTwo) (Always)
+                        [ given (InteractionWithItem ThingTwo) (Always)
                             `do` [ AddInventory ThingOne ]
                             `narrate` Simple "no match"
-                        , given (InteractionWith ThingOne) (Always)
+                        , given (InteractionWithItem ThingOne) (Always)
                             `do` [ AddInventory ThingOne ]
                             `narrate` Simple "first match"
-                        , given (InteractionWith ThingOne) (Always)
+                        , given (InteractionWithItem ThingOne) (Always)
                             `do` [ AddInventory ThingTwo ]
                             `narrate` Simple "also matches"
                         ]
@@ -65,10 +72,10 @@ updateFromRulesTests =
                     expected =
                         { startingState
                             | inventory = [ ThingOne ]
-                            , storyLine = [ ( ThingOne, "first match" ) ]
+                            , storyLine = [ ( "name", "first match" ) ]
                         }
                 in
-                    Expect.equal (updateFromRules ThingOne (always rules) startingState (always True))
+                    Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
                         (Just expected)
         ]
 
@@ -80,25 +87,25 @@ matchesTriggerTests =
             [ test "a match"
                 <| \() ->
                     Expect.true "match"
-                        (matchesTrigger (InteractionWith ThingOne) ThingOne (always True))
+                        (matchesTrigger (InteractionWithItem ThingOne) (Item ThingOne) True)
             , test "no match"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (InteractionWith ThingOne) ThingTwo (always True))
+                        (matchesTrigger (InteractionWithItem ThingOne) (Item ThingTwo) True)
             ]
         , describe "FirstInteractionWith"
             [ test "a match"
                 <| \() ->
                     Expect.true "match"
-                        (matchesTrigger (FirstInteractionWith ThingOne) ThingOne (always False))
+                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingOne) False)
             , test "no match (not first interaction)"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (FirstInteractionWith ThingOne) ThingOne (always True))
+                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingOne) True)
             , test "no match (different story element)"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (FirstInteractionWith ThingOne) ThingTwo (always False))
+                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingTwo) False)
             ]
         ]
 

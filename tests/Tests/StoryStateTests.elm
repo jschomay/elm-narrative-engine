@@ -5,14 +5,20 @@ import Expect exposing (..)
 import StoryState exposing (..)
 
 
-type TestStoryElements
+type TestItem
+    = ThingOne
+    | ThingTwo
+
+
+type TestLocation
     = Earth
     | Moon
     | Mars
-    | Jack
+
+
+type TestCharacter
+    = Jack
     | Jill
-    | ThingOne
-    | ThingTwo
 
 
 type TestScene
@@ -21,7 +27,7 @@ type TestScene
     | End
 
 
-init : StoryState TestStoryElements TestScene
+init : StoryState TestItem TestLocation TestCharacter TestScene
 init =
     StoryState.init Earth Begining
 

@@ -8,44 +8,71 @@ import StoryState exposing (..)
 import Markdown
 
 
-type Msg a
-    = InteractWithStage a
+type Msg a b
+    = InteractWithProp a
+    | InteractWithCharacter b
 
 
-currentSummary : StoryElementsConfig a -> StoryState a b -> (a -> Bool) -> Html (Msg a)
-currentSummary storyElements storyState beenThereDoneThat =
+currentSummary : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> StoryState a b c d -> (StoryElement a b c -> Bool) -> Html (Msg a c)
+currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneThat =
     let
         currentLocation =
             storyState.currentLocation
 
         locationName =
-            getName storyElements currentLocation
+            getName <| locationsInfo currentLocation
 
         locationDescription =
-            getDescription storyElements currentLocation
+            getDescription <| locationsInfo currentLocation
 
         propsAndCharactersInLocation =
             let
                 propsAndCharactersPresent =
-                    getCharactersByLocation currentLocation storyState
-                        ++ getItemsByLocation currentLocation storyState
+                    (getCharactersByLocation currentLocation storyState
+                        |> List.map (interactableElements << Character)
+                    )
+                        ++ (getItemsByLocation currentLocation storyState
+                                |> List.map (interactableElements << Item)
+                           )
 
                 classes storyElement =
                     [ ( "CurrentSummary__StoryElement u-selectable", True )
                     , ( "u-new-story-element", not <| beenThereDoneThat storyElement )
                     ]
 
+                getStoryElementName storyElement =
+                    case storyElement of
+                        Item item ->
+                            getName <| itemsInfo item
+
+                        Location location ->
+                            Debug.crash <| "Error: A location should never appear here: " ++ (toString location)
+
+                        Character character ->
+                            getName <| charactersInfo character
+
+                getStoryElementMsg storyElement =
+                    case storyElement of
+                        Item item ->
+                            InteractWithProp item
+
+                        Location location ->
+                            Debug.crash <| "Error: A location should never appear here: " ++ (toString location)
+
+                        Character character ->
+                            InteractWithCharacter character
+
                 interactableElements storyElement =
                     span
                         [ classList <| classes storyElement
-                        , onClick <| InteractWithStage storyElement
+                        , onClick <| getStoryElementMsg storyElement
                         ]
-                        [ text <| getName storyElements storyElement ]
+                        [ text <| getStoryElementName storyElement ]
             in
                 if List.length propsAndCharactersPresent < 1 then
                     span [] []
                 else
-                    List.map interactableElements propsAndCharactersPresent
+                    propsAndCharactersPresent
                         |> format
                         |> p []
 

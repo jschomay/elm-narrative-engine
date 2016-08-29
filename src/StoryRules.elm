@@ -1,59 +1,64 @@
 module StoryRules exposing (..)
 
 import StoryState exposing (..)
+import StoryElements exposing (..)
 
 
-type alias StoryRulesConfig a b =
-    b -> Scene a b
+type alias SceneSelector a b c d =
+    d -> Scene a b c d
 
 
-type alias Scene a b =
-    List (StoryRule a b)
+type alias Scene a b c d =
+    List (StoryRule a b c d)
 
 
-type alias StoryRule a b =
-    ( Given a, Do a b )
+type alias StoryRule a b c d =
+    ( Given a b c, Do a b c d )
 
 
-type alias Given a =
-    ( Trigger a, Condition a )
+type alias Given a b c =
+    ( Trigger a b c, Condition a b c )
 
 
-type alias Do a b =
-    ( ChangeWorldCommands a b, Narration )
+type alias Do a b c d =
+    ( ChangeWorldCommands a b c d, Narration )
 
 
-type alias ChangeWorldCommands a b =
-    List (ChangeWorldCommand a b)
+type alias ChangeWorldCommands a b c d =
+    List (ChangeWorldCommand a b c d)
 
 
-type Trigger a
-    = InteractionWith a
-    | FirstInteractionWith a
+type Trigger a b c
+    = InteractionWithItem a
+    | InteractionWithLocation b
+    | InteractionWithCharacter c
+    | FirstInteractionWithItem a
+    | FirstInteractionWithLocation b
+    | FirstInteractionWithCharacter c
 
 
-type Condition a
+type Condition a b c
     = Always
     | WithItem a
-    | NearCharacter a
+    | NearCharacter c
     | NearProp a
-    | InLocation a
-    | All (List (Condition a))
-    | Any (List (Condition a))
-    | Not (Condition a)
+    | InLocation b
+    | All (List (Condition a b c))
+    | Any (List (Condition a b c))
+    | Not (Condition a b c)
 
 
-type ChangeWorldCommand a b
-    = MoveTo a
-    | AddLocation a
-    | RemoveLocation a
+type ChangeWorldCommand a b c d
+    = MoveTo b
+    | AddLocation b
+    | RemoveLocation b
     | AddInventory a
     | RemoveInventory a
-    | AddCharacter a a
-    | RemoveCharacter a a
-    | AddProp a a
-    | RemoveProp a a
-    | LoadScene b
+    | AddCharacter c b
+    | RemoveCharacter c b
+    | AddProp a b
+    | RemoveProp a b
+    | LoadScene d
     | EndStory
 
 
@@ -62,28 +67,28 @@ type Narration
     | InOrder (List String)
 
 
-given : Trigger a -> Condition a -> Do a b -> StoryRule a b
+given : Trigger a b c -> Condition a b c -> Do a b c d -> StoryRule a b c d
 given trigger condition =
     (,) ( trigger, condition )
 
 
-do : (Do a b -> StoryRule a b) -> ChangeWorldCommands a b -> Narration -> StoryRule a b
+do : (Do a b c d -> StoryRule a b c d) -> ChangeWorldCommands a b c d -> Narration -> StoryRule a b c d
 do f a b =
     f ( a, b )
 
 
-narrate : (Narration -> StoryRule a b) -> Narration -> StoryRule a b
+narrate : (Narration -> StoryRule a b c d) -> Narration -> StoryRule a b c d
 narrate f a =
     f a
 
 
-updateFromRules : a -> StoryRulesConfig a b -> StoryState a b -> (a -> Bool) -> Maybe (StoryState a b)
-updateFromRules storyElement storyRules storyState beenThereDoneThat =
-    findFirstMatchingRule (storyRules storyState.currentScene) storyElement storyState beenThereDoneThat
-        `Maybe.andThen` (Just << updateStoryState storyElement storyState)
+updateFromRules : StoryElement a b c -> Scene a b c d -> StoryState a b c d -> Bool -> String -> Maybe (StoryState a b c d)
+updateFromRules storyElement scene storyState beenThereDoneThat storyElementName =
+    findFirstMatchingRule scene storyElement storyState beenThereDoneThat
+        `Maybe.andThen` (Just << updateStoryState storyElementName storyState)
 
 
-findFirstMatchingRule : Scene a b -> a -> StoryState a b -> (a -> Bool) -> Maybe (Do a b)
+findFirstMatchingRule : Scene a b c d -> StoryElement a b c -> StoryState a b c d -> Bool -> Maybe (Do a b c d)
 findFirstMatchingRule rules storyElement storyState beenThereDoneThat =
     case rules of
         [] ->
@@ -96,22 +101,37 @@ findFirstMatchingRule rules storyElement storyState beenThereDoneThat =
                 findFirstMatchingRule xs storyElement storyState beenThereDoneThat
 
 
-matchesGiven : Given a -> a -> StoryState a b -> (a -> Bool) -> Bool
+matchesGiven : Given a b c -> StoryElement a b c -> StoryState a b c d -> Bool -> Bool
 matchesGiven ( trigger, condition ) storyElement storyState beenThereDoneThat =
     matchesTrigger trigger storyElement beenThereDoneThat && matchesCondition condition storyState
 
 
-matchesTrigger : Trigger a -> a -> (a -> Bool) -> Bool
+matchesTrigger : Trigger a b c -> StoryElement a b c -> Bool -> Bool
 matchesTrigger trigger storyElement beenThereDoneThat =
-    case trigger of
-        InteractionWith storyElementToMatch ->
-            storyElementToMatch == storyElement
+    case ( storyElement, trigger ) of
+        ( Item item, InteractionWithItem item' ) ->
+            item == item'
 
-        FirstInteractionWith storyElementToMatch ->
-            storyElementToMatch == storyElement && (not <| beenThereDoneThat storyElement)
+        ( Item item, FirstInteractionWithItem item' ) ->
+            item == item' && not beenThereDoneThat
+
+        ( Location location, InteractionWithLocation location' ) ->
+            location == location'
+
+        ( Location location, FirstInteractionWithLocation location' ) ->
+            location == location' && not beenThereDoneThat
+
+        ( Character character, InteractionWithCharacter character' ) ->
+            character == character'
+
+        ( Character character, FirstInteractionWithCharacter character' ) ->
+            character == character' && not beenThereDoneThat
+
+        _ ->
+            False
 
 
-matchesCondition : Condition a -> StoryState a b -> Bool
+matchesCondition : Condition a b c -> StoryState a b c d -> Bool
 matchesCondition condition storyState =
     case condition of
         Always ->
@@ -139,8 +159,8 @@ matchesCondition condition storyState =
             not <| matchesCondition condition storyState
 
 
-updateStoryState : a -> StoryState a b -> Do a b -> StoryState a b
-updateStoryState storyElement storyState ( changeWorldCommands, narration ) =
+updateStoryState : String -> StoryState a b c d -> Do a b c d -> StoryState a b c d
+updateStoryState storyElementName storyState ( changeWorldCommands, narration ) =
     let
         getNarration narration =
             case narration of
@@ -186,4 +206,4 @@ updateStoryState storyElement storyState ( changeWorldCommands, narration ) =
                     storyState
     in
         List.foldl doCommand storyState changeWorldCommands
-            |> addNarration ( storyElement, getNarration narration )
+            |> addNarration ( storyElementName, getNarration narration )

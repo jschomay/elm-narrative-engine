@@ -1,21 +1,56 @@
 module StoryElements exposing (..)
 
 
-type alias StoryElementsConfig a =
-    a -> DisplayInformation
+type StoryElement a b c
+    = Item a
+    | Location b
+    | Character c
 
 
-type alias DisplayInformation =
+type alias BasicInfo =
     { name : String
     , description : String
     }
 
 
-getName : StoryElementsConfig a -> a -> String
-getName displayConfig element =
-    .name <| displayConfig element
+type alias ItemsInfo a =
+    a -> BasicInfo
 
 
-getDescription : StoryElementsConfig a -> a -> String
-getDescription displayConfig element =
-    .description <| displayConfig element
+type alias LocationsInfo a =
+    a -> BasicInfo
+
+
+type alias CharactersInfo a =
+    a -> BasicInfo
+
+
+getName : { a | name : String } -> String
+getName { name } =
+    name
+
+
+getDescription : { a | description : String } -> String
+getDescription { description } =
+    description
+
+
+item : String -> String -> BasicInfo
+item name description =
+    { name = name
+    , description = description
+    }
+
+
+location : String -> String -> BasicInfo
+location name description =
+    { name = name
+    , description = description
+    }
+
+
+character : String -> String -> BasicInfo
+character name description =
+    { name = name
+    , description = description
+    }
