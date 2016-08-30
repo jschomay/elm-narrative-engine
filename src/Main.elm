@@ -1,6 +1,7 @@
 module Main exposing (..)
 
 import Dict exposing (..)
+import Color exposing (..)
 import Engine exposing (..)
 import Engine exposing (..)
 import StoryElements exposing (..)
@@ -49,13 +50,13 @@ storyLocations : LocationsInfo MyLocation
 storyLocations tag =
     case tag of
         Kitchen ->
-            location "commercial kitchen" "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
+            location "commercial kitchen" blue "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
 
         Auditorium ->
-            location "auditorium" "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
+            location "auditorium" purple "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
 
         Hallway ->
-            location "hallway" "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
+            location "hallway" darkOrange "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
 
 
 storyCharacters : CharactersInfo MyCharacter

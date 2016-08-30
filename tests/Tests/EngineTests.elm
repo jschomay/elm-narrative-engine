@@ -1,5 +1,6 @@
 module Tests.EngineTests exposing (all)
 
+import Color exposing (blue)
 import Test exposing (..)
 import Expect exposing (..)
 import Engine exposing (..)
@@ -43,6 +44,21 @@ all =
         [ updateTests ]
 
 
+itemInfo : a -> BasicInfo
+itemInfo a =
+    item "name" "description"
+
+
+locationInfo : a -> WithColor BasicInfo
+locationInfo a =
+    location "name" blue "description"
+
+
+characterInfo : a -> BasicInfo
+characterInfo a =
+    character "name" "description"
+
+
 updateTests : Test.Test
 updateTests =
     describe "update"
@@ -50,70 +66,52 @@ updateTests =
             [ test "tries to update from rules first"
                 <| \() ->
                     let
-                        info a =
-                            item "name" "description"
-
                         storyRules a =
                             [ given (InteractionWithItem ThingOne) (Always) `do` [] `narrate` Simple "custom" ]
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Item ThingOne) startingModel).storyState
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
                             { startingState | storyLine = [ ( "name", "custom" ) ] }
             , test "defaults to adding description to storyline"
                 <| \() ->
                     let
-                        info a =
-                            item "name" "description"
-
                         storyRules a =
                             []
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Item ThingOne) startingModel).storyState
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
                             { startingState | storyLine = [ ( "name", "description" ) ] }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
                     let
-                        info a =
-                            item "name" "description"
-
                         storyRules a =
                             []
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Item ThingOne) startingModel).interactions
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).interactions
                             [ Item ThingOne ]
             ]
         , describe "InteractWithLocation"
             [ test "tries to update from rules first"
                 <| \() ->
                     let
-                        info a =
-                            location "name" "description"
-
                         storyRules a =
                             [ given (InteractionWithLocation Earth) (Always) `do` [] `narrate` Simple "custom" ]
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Location Earth) startingModel).storyState
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).storyState
                             { startingState | storyLine = [ ( "name", "custom" ) ] }
             , test "defaults to moving to location"
                 <| \() ->
                     let
-                        info a =
-                            location "name" "description"
-
                         storyRules a =
                             []
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Location Moon) startingModel).storyState
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Moon) startingModel).storyState
                             { startingState | currentLocation = Moon }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
                     let
-                        info a =
-                            location "name" "description"
-
                         storyRules a =
                             []
                     in
-                        Expect.equal (update info info info storyRules (Interaction <| Location Earth) startingModel).interactions
+                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).interactions
                             [ Location Earth ]
             ]
         ]

@@ -91,8 +91,11 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                 (text <| "Also here: ")
                     :: storyElements
                     ++ [ text "." ]
+
+        cssColor =
+            toCssColor <| getColor <| locationsInfo currentLocation
     in
-        div [ class "CurrentSummary" ]
+        div [ class "CurrentSummary", style [ ( "color", cssColor ) ] ]
             <| [ p [ class "Location-description" ] [ Markdown.toHtml [] locationDescription ]
                , propsAndCharactersInLocation
                ]

@@ -1,5 +1,8 @@
 module StoryElements exposing (..)
 
+import Color exposing (..)
+import String exposing (join)
+
 
 type StoryElement a b c
     = Item a
@@ -13,12 +16,16 @@ type alias BasicInfo =
     }
 
 
+type alias WithColor a =
+    { a | color : Color }
+
+
 type alias ItemsInfo a =
     a -> BasicInfo
 
 
 type alias LocationsInfo a =
-    a -> BasicInfo
+    a -> WithColor BasicInfo
 
 
 type alias CharactersInfo a =
@@ -35,6 +42,16 @@ getDescription { description } =
     description
 
 
+getColor : WithColor a -> Color
+getColor { color } =
+    color
+
+
+toCssColor : Color -> String
+toCssColor =
+    toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
+
+
 item : String -> String -> BasicInfo
 item name description =
     { name = name
@@ -42,10 +59,11 @@ item name description =
     }
 
 
-location : String -> String -> BasicInfo
-location name description =
+location : String -> Color -> String -> WithColor BasicInfo
+location name color description =
     { name = name
     , description = description
+    , color = color
     }
 
 

@@ -135,28 +135,32 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
 
 view : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d -> Html (Msg a b c)
 view itemsInfo locationsInfo charactersInfo model =
-    div [ class "Page" ]
-        [ h1 [ class "Title" ]
-            [ text <| getName <| locationsInfo model.storyState.currentLocation ]
-        , div [ class "Layout" ]
-            [ div [ class "Layout__Main" ]
-                [ Html.map
-                    (\msg ->
-                        case msg of
-                            Components.CurrentSummary.InteractWithProp a ->
-                                Interaction (Item a)
+    let
+        cssColor =
+            toCssColor <| getColor <| locationsInfo model.storyState.currentLocation
+    in
+        div [ class "Page" ]
+            [ h1 [ class "Title", style [ ( "backgroundColor", cssColor ) ] ]
+                [ text <| getName <| locationsInfo model.storyState.currentLocation ]
+            , div [ class "Layout" ]
+                [ div [ class "Layout__Main" ]
+                    [ Html.map
+                        (\msg ->
+                            case msg of
+                                Components.CurrentSummary.InteractWithProp a ->
+                                    Interaction (Item a)
 
-                            Components.CurrentSummary.InteractWithCharacter a ->
-                                Interaction (Character a)
-                    )
-                    <| currentSummary itemsInfo locationsInfo charactersInfo model.storyState (flip List.member model.interactions)
-                , storyline model.storyState.storyLine
-                ]
-            , div [ class "Layout__Sidebar" ]
-                [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interaction (Location a))
-                    <| locations locationsInfo model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
-                , Html.map (\(Components.Inventory.InteractWithItem a) -> Interaction (Item a))
-                    <| inventory itemsInfo model.storyState.inventory (flip List.member model.interactions)
+                                Components.CurrentSummary.InteractWithCharacter a ->
+                                    Interaction (Character a)
+                        )
+                        <| currentSummary itemsInfo locationsInfo charactersInfo model.storyState (flip List.member model.interactions)
+                    , storyline model.storyState.storyLine
+                    ]
+                , div [ class "Layout__Sidebar" ]
+                    [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interaction (Location a))
+                        <| locations locationsInfo model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
+                    , Html.map (\(Components.Inventory.InteractWithItem a) -> Interaction (Item a))
+                        <| inventory itemsInfo model.storyState.inventory (flip List.member model.interactions)
+                    ]
                 ]
             ]
-        ]

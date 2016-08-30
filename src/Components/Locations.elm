@@ -30,6 +30,9 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
             let
                 key =
                     (toString location) ++ (toString <| numLocations - i)
+
+                cssColor =
+                    toCssColor <| getColor <| locationsInfo currentLocation
             in
                 ( key
                 , li
@@ -37,7 +40,7 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
                         ++ if location /= currentLocation then
                             [ onClick <| InteractWithLocation location ]
                            else
-                            []
+                            [ style [ ( "backgroundColor", cssColor ) ] ]
                     )
                     [ text <| getName <| locationsInfo location ]
                 )
