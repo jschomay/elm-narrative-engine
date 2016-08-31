@@ -14,7 +14,7 @@ p {
 }
 
 h1 {
-  font-size: 30px;
+  font-size: 22px;
   font-weight: bold;
   padding: 5px;
 }
@@ -58,7 +58,7 @@ img {
   overflow: auto;
 }
 
-.Title {
+.Current-location {
   text-align: center;
   color: white;
   background-color: #555;
@@ -74,7 +74,7 @@ img {
 }
 
 .CurrentSummary {
-  margin: 10px 20px;
+  margin: 10px 0px;
   font-size: 18px;
 }
 
@@ -141,11 +141,6 @@ li.Storyline__Item:first-of-type:before {
   margin-bottom: 10px;
   padding: 0px;
   text-transform: capitalize;
-}
-
-.Locations__Location.Locations__Location--current:before {
-  content: '\25B8';
-  margin: 0px 5px 0px 0px;
 }
 
 .Locations__Location.Locations__Location--current {

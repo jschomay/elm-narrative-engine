@@ -97,14 +97,17 @@ updateTests =
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).storyState
                             { startingState | storyLine = [ ( "name", "custom" ) ] }
-            , test "defaults to moving to location"
+            , test "defaults to moving to location and adding narration"
                 <| \() ->
                     let
                         storyRules a =
                             []
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Moon) startingModel).storyState
-                            { startingState | currentLocation = Moon }
+                            { startingState
+                                | currentLocation = Moon
+                                , storyLine = [ ( "name", "description" ) ]
+                            }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
                     let

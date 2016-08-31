@@ -5,7 +5,6 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import StoryElements exposing (..)
 import StoryState exposing (..)
-import Markdown
 
 
 type Msg a b
@@ -19,28 +18,22 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
         currentLocation =
             storyState.currentLocation
 
+        isEmpty =
+            (List.length <| getCharactersByLocation currentLocation storyState)
+                + (List.length <| getItemsByLocation currentLocation storyState)
+                |> (==) 0
+
         locationName =
             getName <| locationsInfo currentLocation
 
-        locationDescription =
-            getDescription <| locationsInfo currentLocation
-
-        propsAndCharactersInLocation =
+        storyElementDom storyElement =
             let
-                propsAndCharactersPresent =
-                    (getCharactersByLocation currentLocation storyState
-                        |> List.map (interactableElements << Character)
-                    )
-                        ++ (getItemsByLocation currentLocation storyState
-                                |> List.map (interactableElements << Item)
-                           )
-
-                classes storyElement =
+                classes =
                     [ ( "CurrentSummary__StoryElement u-selectable", True )
                     , ( "u-new-story-element", not <| beenThereDoneThat storyElement )
                     ]
 
-                getStoryElementName storyElement =
+                storyElementName =
                     case storyElement of
                         Item item ->
                             getName <| itemsInfo item
@@ -51,7 +44,7 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                         Character character ->
                             getName <| charactersInfo character
 
-                getStoryElementMsg storyElement =
+                storyElementMsg =
                     case storyElement of
                         Item item ->
                             InteractWithProp item
@@ -61,20 +54,12 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
 
                         Character character ->
                             InteractWithCharacter character
-
-                interactableElements storyElement =
-                    span
-                        [ classList <| classes storyElement
-                        , onClick <| getStoryElementMsg storyElement
-                        ]
-                        [ text <| getStoryElementName storyElement ]
             in
-                if List.length propsAndCharactersPresent < 1 then
-                    span [] []
-                else
-                    propsAndCharactersPresent
-                        |> format
-                        |> p []
+                span
+                    [ classList <| classes
+                    , onClick <| storyElementMsg
+                    ]
+                    [ text <| storyElementName ]
 
         format list =
             let
@@ -88,14 +73,33 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                     else
                         List.intersperse (text " and ") list
             in
-                (text <| "Also here: ")
-                    :: storyElements
-                    ++ [ text "." ]
+                storyElements ++ [ text "." ]
 
         cssColor =
             toCssColor <| getColor <| locationsInfo currentLocation
+
+        charactersList =
+            if not <| List.isEmpty <| getCharactersByLocation currentLocation storyState then
+                getCharactersByLocation currentLocation storyState
+                    |> List.map (storyElementDom << Character)
+                    |> format
+                    |> (::) (text "Characters here: ")
+                    |> p []
+            else
+                span [] []
+
+        itemsList =
+            if not <| List.isEmpty <| getItemsByLocation currentLocation storyState then
+                getItemsByLocation currentLocation storyState
+                    |> List.map (storyElementDom << Item)
+                    |> format
+                    |> (::) (text "Items here: ")
+                    |> p []
+            else
+                span [] []
     in
         div [ class "CurrentSummary", style [ ( "color", cssColor ) ] ]
-            <| [ p [ class "Location-description" ] [ Markdown.toHtml [] locationDescription ]
-               , propsAndCharactersInLocation
-               ]
+            <| if isEmpty then
+                [ p [] [ text "There is nothing here." ] ]
+               else
+                [ charactersList, itemsList ]

@@ -52,16 +52,20 @@ type Msg a b c
 update : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Msg a b c -> Model a b c d -> Model a b c d
 update itemsInfo locationsInfo charactersInfo storyRules action model =
     let
-        defaultNarration : String -> String -> Model a b c d -> Model a b c d
-        defaultNarration name description ({ storyState } as model) =
+        defaultNarration storyElement ({ storyState } as model) =
             { model
-                | storyState = { storyState | storyLine = ( name, description ) :: model.storyState.storyLine }
+                | storyState = { storyState | storyLine = ( toName storyElement, toDescription storyElement ) :: model.storyState.storyLine }
             }
 
         goToLocation location ({ storyState } as model) =
-            { model
-                | storyState = { storyState | currentLocation = location }
-            }
+            case location of
+                Location location ->
+                    { model
+                        | storyState = { storyState | currentLocation = location }
+                    }
+
+                _ ->
+                    Debug.crash "It should be impossible for a non-location element to get here"
 
         updateInteractions storyElement model =
             { model
@@ -72,7 +76,7 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
                         model.interactions
             }
 
-        storyElementName storyElement =
+        toName storyElement =
             case storyElement of
                 Item item ->
                     getName <| itemsInfo item
@@ -83,7 +87,7 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
                 Character character ->
                     getName <| charactersInfo character
 
-        storyElementDescription storyElement =
+        toDescription storyElement =
             case storyElement of
                 Item item ->
                     getDescription <| itemsInfo item
@@ -102,7 +106,7 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
                 beenThereDoneThat =
                     (List.member storyElement model.interactions)
             in
-                updateFromRules storyElement scene model.storyState beenThereDoneThat (storyElementName storyElement)
+                updateFromRules storyElement scene model.storyState beenThereDoneThat (toName storyElement)
                     `Maybe.andThen` \newStoryState ->
                                         Just { model | storyState = newStoryState }
     in
@@ -113,19 +117,19 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
             Interaction ((Item _) as item) ->
                 model
                     |> tryUpdatingFromRules item
-                    |> Maybe.withDefault (defaultNarration (storyElementName item) (storyElementDescription item) model)
+                    |> Maybe.withDefault (defaultNarration item model)
                     |> updateInteractions item
 
-            Interaction (Location location) ->
+            Interaction ((Location _) as location) ->
                 model
-                    |> tryUpdatingFromRules (Location location)
-                    |> Maybe.withDefault (goToLocation location model)
-                    |> updateInteractions (Location location)
+                    |> tryUpdatingFromRules location
+                    |> Maybe.withDefault (goToLocation location model |> defaultNarration location)
+                    |> updateInteractions location
 
             Interaction ((Character _) as character) ->
                 model
                     |> tryUpdatingFromRules character
-                    |> Maybe.withDefault (defaultNarration (storyElementName character) (storyElementDescription character) model)
+                    |> Maybe.withDefault (defaultNarration character model)
                     |> updateInteractions character
 
 
@@ -140,11 +144,11 @@ view itemsInfo locationsInfo charactersInfo model =
             toCssColor <| getColor <| locationsInfo model.storyState.currentLocation
     in
         div [ class "Page" ]
-            [ h1 [ class "Title", style [ ( "backgroundColor", cssColor ) ] ]
-                [ text <| getName <| locationsInfo model.storyState.currentLocation ]
-            , div [ class "Layout" ]
+            [ div [ class "Layout" ]
                 [ div [ class "Layout__Main" ]
-                    [ Html.map
+                    [ h1 [ class "Current-location", style [ ( "backgroundColor", cssColor ) ] ]
+                        [ text <| getName <| locationsInfo model.storyState.currentLocation ]
+                    , Html.map
                         (\msg ->
                             case msg of
                                 Components.CurrentSummary.InteractWithProp a ->

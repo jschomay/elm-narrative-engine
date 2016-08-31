@@ -46,7 +46,7 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
                 )
     in
         div [ class "Locations" ]
-            [ h3 [] [ text "Locations" ]
+            [ h3 [] [ text "Known locations" ]
             , div [ class "Locations__list" ]
                 [ Html.Keyed.ol []
                     (List.indexedMap locationItem locations)

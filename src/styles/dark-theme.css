@@ -1,0 +1,89 @@
+body.theme--dark {
+  background-color: #000;
+}
+
+.theme--dark .Page {
+  background-color: transparent;
+  color: #aaa;
+  line-height: 1.5em;
+}
+
+.theme--dark .Current-location {
+  text-transform: uppercase;
+  font-size: 24px;
+}
+
+.theme--dark .CurrentSummary__StoryElement {
+  color: #aaa;
+  text-decoration: underline;
+}
+
+.theme--dark .Layout__Sidebar h3 {
+  color: #555;
+  text-transform: uppercase;
+  font-size: 14px;
+}
+
+.theme--dark .Inventory, .theme--dark .Locations {
+  border-left-color: #333;
+  padding: 10px 20px;
+}
+
+.theme--dark .Inventory__list, .theme--dark .Locations__list {
+  box-shadow: 0 13px 18px -16px #aaa;
+}
+
+.theme--dark .Storyline__Item {
+  color: #aaa;
+  border-bottom: 1px solid #555;
+  padding: 10px;
+  opacity: 0.2;
+}
+
+.theme--dark .Storyline__Item:first-of-type:before {
+  float: left;
+  content: '\000BB';
+  color: #777;
+  font-size: 25px;
+  margin: -2px -22px;
+}
+
+.theme--dark .Storyline__Item:first-of-type {
+  padding-left: 40px;
+}
+
+.theme--dark .Storyline__Item__Action {
+  color: #777;
+}
+
+.theme--dark .u-selectable {
+  padding: 2px 4px;
+}
+
+.theme--dark .u-selectable:hover {
+  background: #111;
+}
+
+.theme--dark .u-new-story-element {
+  font-style: initial;
+}
+
+.theme--dark .u-new-story-element:before {
+  content: '\022C6';
+  font-size: 25px;
+  color: #ffc800;
+  margin-right: 4px;
+  vertical-align: bottom;
+  display: inline-block;
+}
+
+.theme--dark .u-jump {
+  padding-left: 0px;
+  animation: flash alternate 0.1s 2 ease-out forwards;
+}
+
+@keyframes flash {
+  to {
+    background-color: #777;
+  }
+}
