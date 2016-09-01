@@ -44,6 +44,10 @@ body.theme--dark {
   opacity: 0.2;
 }
 
+.theme--dark .Storyline__Item:hover {
+  opacity: 0.3;
+}
+
 .theme--dark .Storyline__Item:first-of-type:before {
   float: left;
   content: '\000BB';
@@ -83,11 +87,11 @@ body.theme--dark {
 
 .theme--dark .u-jump {
   padding-left: 0px;
-  animation: flash alternate 0.1s 2 ease-out forwards;
+  animation: flash alternate 0.2s 2 ease-out forwards;
 }
 
 @keyframes flash {
   to {
-    background-color: #777;
+    background-color: #999;
   }
 }

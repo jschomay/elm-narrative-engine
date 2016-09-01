@@ -18,7 +18,7 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
             classList
                 [ ( "Locations__Location", True )
                 , ( "Locations__Location--current", location == currentLocation )
-                , ( "u-selectable", location /= currentLocation )
+                , ( "u-selectable", True )
                 , ( "u-jump", not <| beenThereDoneThat (Location location) )
                 , ( "u-new-story-element", not <| beenThereDoneThat (Location location) )
                 ]
@@ -36,11 +36,13 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
             in
                 ( key
                 , li
-                    ([ classes location ]
-                        ++ if location /= currentLocation then
-                            [ onClick <| InteractWithLocation location ]
-                           else
+                    ([ classes location
+                     , onClick <| InteractWithLocation location
+                     ]
+                        ++ if location == currentLocation then
                             [ style [ ( "backgroundColor", cssColor ) ] ]
+                           else
+                            []
                     )
                     [ text <| getName <| locationsInfo location ]
                 )
