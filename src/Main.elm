@@ -11,7 +11,20 @@ import StoryState exposing (..)
 
 main : Program Never
 main =
-    loadStory "Stage Fright" storyItems storyLocations storyCharacters storyRules initialStoryState
+    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storyItems storyLocations storyCharacters storyRules initialStoryState
+
+
+prologue : String
+prologue =
+    """
+![](/img/audience.jpg)
+
+**Only two weeks left.**
+
+You've been practicing hard, running through your presentation over and over, trying to remember all the pieces.  You want to be ready when the time comes.
+
+You must have fallen asleep, because *something definitely doesn't seem right...*
+"""
 
 
 initialStoryState : StoryState MyItem MyLocation MyCharacter MyScene
@@ -120,6 +133,8 @@ She smiles and nods at you politely, but her eyes say *"If you stall one more mi
         `do` [ AddInventory Mic ]
         `narrate` Simple """
 You take a deep breath and make your way on stage.  The audience falls silent.  All eyes are on you.  Better say something quick.
+
+![](/img/stage-fright.jpg)
 
 "Ahem.  Ladies, gentlemen, distinguished guests..."
 

@@ -2,10 +2,14 @@ body.theme--dark {
   background-color: #000;
 }
 
-.theme--dark .Page {
+.theme--dark .GamePage, .theme--dark .TitlePage {
   background-color: transparent;
   color: #aaa;
   line-height: 1.5em;
+}
+
+.theme--dark .TitlePage__StartGame:hover {
+  color: #eee;
 }
 
 .theme--dark .Current-location {

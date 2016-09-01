@@ -30,7 +30,7 @@ type TestScene
 
 startingModel : Model TestItem TestLocation TestCharacter TestScene
 startingModel =
-    Engine.init "test" startingState
+    Engine.init "title" "byline" "prologue" startingState
 
 
 startingState : StoryState TestItem TestLocation TestCharacter TestScene

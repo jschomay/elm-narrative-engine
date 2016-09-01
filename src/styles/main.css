@@ -47,7 +47,60 @@ img {
   margin: 5px;
 }
 
-.Page {
+.TitlePage {
+  width: 900px;
+  min-height: 100%;
+  margin: auto;
+  padding: 20px;
+  color: #555;
+  font-family: helvetica;
+  font-size: 16px;
+  font-weight: normal;
+  background-color: white;
+}
+
+.TitlePage__Title {
+  text-align: center;
+  color: white;
+  background-color: #333;
+  padding: 10px;
+  font-size: 22px;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.TitlePage__ByLine {
+  text-align: center;
+  font-size: 14px;
+  font-weight: normal;
+  font-style: italic;
+  margin-bottom: 30px;
+}
+
+.TitlePage__Prologue {
+  margin-bottom: 50px;
+  padding: 0px 40px;
+}
+
+.TitlePage__StartGame {
+  font-weight: normal;
+  font-size: 30px;
+  text-align: center;
+  text-decoration: underline;
+  text-align: center;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 40px;
+  width: 90px;
+}
+
+.TitlePage__StartGame:hover {
+  color: #000;
+  cursor: pointer;
+}
+
+.GamePage {
   height: 100%;
   width: 900px;
   margin: auto;
