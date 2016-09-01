@@ -16,12 +16,21 @@ p {
 h1 {
   font-size: 22px;
   font-weight: bold;
+  line-height: 1.1em;
   padding: 5px;
+}
+
+h2 {
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 1.1em;
+  padding: 4px;
 }
 
 h3 {
   font-size: 18px;
   font-weight: bold;
+  line-height: 1.1em;
   padding: 3px;
 }
 

@@ -25,7 +25,7 @@ storyline storyLine =
                 ( key
                 , li [ classList classes ]
                     [ h4 [ class "Storyline__Item__Action" ] <| [ text storyElementName ]
-                    , Markdown.toHtml [ class "Storyline__Item__Narration" ] storyText
+                    , Markdown.toHtml [ class "Storyline__Item__Narration markdown-body" ] storyText
                     ]
                 )
     in
