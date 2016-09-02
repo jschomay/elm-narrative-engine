@@ -30,18 +30,30 @@ type TestScene
 
 startingModel : Model TestItem TestLocation TestCharacter TestScene
 startingModel =
-    Engine.init "title" "byline" "prologue" startingState
+    Engine.init "title" "byline" "prologue" storySetup
 
 
 startingState : StoryState TestItem TestLocation TestCharacter TestScene
 startingState =
-    StoryState.init Earth Begining
+    startingModel.storyState
+
+
+storySetup : StorySetup TestItem TestLocation TestCharacter TestScene
+storySetup =
+    { startingScene = Begining
+    , startingLocation = Earth
+    , startingNarration = "In the beginning..."
+    , storyWorldSetupCommands = []
+    }
 
 
 all : Test
 all =
     describe "EngineTests"
-        [ updateTests ]
+        [ updateTests
+        , setUpStoryWorldTests
+        , initTests
+        ]
 
 
 itemInfo : a -> BasicInfo
@@ -62,7 +74,7 @@ characterInfo a =
 updateTests : Test.Test
 updateTests =
     describe "update"
-        [ describe "Interacttion"
+        [ describe "Interaction with Item"
             [ test "tries to update from rules first"
                 <| \() ->
                     let
@@ -70,7 +82,7 @@ updateTests =
                             [ given (InteractionWithItem ThingOne) (Always) `do` [] `narrate` Simple "custom" ]
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
-                            { startingState | storyLine = [ ( "name", "custom" ) ] }
+                            { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }
             , test "defaults to adding description to storyline"
                 <| \() ->
                     let
@@ -78,7 +90,7 @@ updateTests =
                             []
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
-                            { startingState | storyLine = [ ( "name", "description" ) ] }
+                            { startingState | storyLine = ( "name", "description" ) :: startingState.storyLine }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
                     let
@@ -86,9 +98,9 @@ updateTests =
                             []
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).interactions
-                            [ Item ThingOne ]
+                            (Item ThingOne :: startingModel.interactions)
             ]
-        , describe "InteractWithLocation"
+        , describe "Interact with location"
             [ test "tries to update from rules first"
                 <| \() ->
                     let
@@ -96,7 +108,7 @@ updateTests =
                             [ given (InteractionWithLocation Earth) (Always) `do` [] `narrate` Simple "custom" ]
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).storyState
-                            { startingState | storyLine = [ ( "name", "custom" ) ] }
+                            { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }
             , test "defaults to moving to location and adding narration"
                 <| \() ->
                     let
@@ -106,7 +118,7 @@ updateTests =
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Moon) startingModel).storyState
                             { startingState
                                 | currentLocation = Moon
-                                , storyLine = [ ( "name", "description" ) ]
+                                , storyLine = ( "name", "description" ) :: startingState.storyLine
                             }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
@@ -117,4 +129,28 @@ updateTests =
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).interactions
                             [ Location Earth ]
             ]
+        ]
+
+
+initTests : Test.Test
+initTests =
+    describe "init"
+        [ test "adds starting locatino to inst of interactions"
+            <| \() ->
+                Expect.equal (Engine.init "a" "b" "c" storySetup |> .interactions)
+                    [ Location Earth ]
+        ]
+
+
+setUpStoryWorldTests : Test.Test
+setUpStoryWorldTests =
+    describe "setUpStoryWorld"
+        [ test "sets up story state correctly"
+            <| \() ->
+                let
+                    expectedStoryState =
+                        { startingState | inventory = [ ThingOne ] }
+                in
+                    Expect.equal (setUpStoryWorld { storySetup | storyWorldSetupCommands = [ AddInventory ThingOne ] })
+                        expectedStoryState
         ]

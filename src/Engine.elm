@@ -24,21 +24,35 @@ type alias Model a b c d =
     }
 
 
-init : String -> String -> String -> StoryState a b c d -> Model a b c d
-init title byline prologue initialState =
+type alias StorySetup a b c d =
+    { startingScene : d
+    , startingLocation : b
+    , startingNarration : String
+    , storyWorldSetupCommands : ChangeWorldCommands a b c d
+    }
+
+
+init : String -> String -> String -> StorySetup a b c d -> Model a b c d
+init title byline prologue storySetup =
     { title = title
     , byline = byline
     , prologue = prologue
     , route = TitlePage
-    , interactions = []
-    , storyState = initialState
+    , interactions = [ Location storySetup.startingLocation ]
+    , storyState = setUpStoryWorld storySetup
     }
 
 
-loadStory : String -> String -> String -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> StoryState a b c d -> Program Never
-loadStory title byline prologue itemsInfo locationsInfo charactersInfo storyRules initialState =
+setUpStoryWorld : StorySetup a b c d -> StoryState a b c d
+setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorldSetupCommands } =
+    StoryState.init startingLocation startingScene
+        |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Simple startingNarration )
+
+
+loadStory : String -> String -> String -> StorySetup a b c d -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Program Never
+loadStory title byline prologue storySetup itemsInfo locationsInfo charactersInfo storyRules =
     Html.beginnerProgram
-        { model = init title byline prologue initialState
+        { model = init title byline prologue storySetup
         , view = view itemsInfo locationsInfo charactersInfo
         , update = update itemsInfo locationsInfo charactersInfo storyRules
         }

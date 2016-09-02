@@ -1,45 +1,48 @@
 module Main exposing (..)
 
-import Dict exposing (..)
 import Color exposing (..)
 import Engine exposing (..)
 import Engine exposing (..)
 import StoryElements exposing (..)
 import StoryRules exposing (..)
-import StoryState exposing (..)
 
 
 main : Program Never
 main =
-    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storyItems storyLocations storyCharacters storyRules initialStoryState
+    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storySetup storyItems storyLocations storyCharacters storyRules
 
 
 prologue : String
 prologue =
-    """
-![](/img/audience.jpg)
+    """![](/img/audience.jpg)
 
 **Only two weeks left.**
 
 You've been practicing hard, running through your presentation over and over, trying to remember all the pieces.  You want to be ready when the time comes.
 
-You must have fallen asleep, because *something definitely doesn't seem right...*
-"""
+You must have fallen asleep, because *something definitely doesn't seem right...*"""
 
 
-initialStoryState : StoryState MyItem MyLocation MyCharacter MyScene
-initialStoryState =
-    { currentLocation = Kitchen
-    , currentScene = Beginning
-    , inventory = [ Envelope ]
-    , knownLocations = [ Kitchen ]
-    , storyLine = [ ( getName <| storyLocations Kitchen, """
-You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
+startingNarration : String
+startingNarration =
+    """You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
 
-The only other person here is an anxious young man trying hard to get your attention.
-    """ ) ]
-    , itemsByLocation = Dict.singleton (toString Auditorium) [ Podium ] |> Dict.insert (toString Kitchen) [ KitchenExit ]
-    , charactersByLocation = Dict.singleton (toString Kitchen) [ Volunteer ] |> Dict.insert (toString Auditorium) [ Moderator ]
+The only other person here is an anxious young man trying hard to get your attention."""
+
+
+storySetup : StorySetup MyItem MyLocation MyCharacter MyScene
+storySetup =
+    { startingScene = Beginning
+    , startingLocation = Kitchen
+    , startingNarration = startingNarration
+    , storyWorldSetupCommands =
+        [ AddInventory Envelope
+        , AddLocation Kitchen
+        , AddCharacter Volunteer Kitchen
+        , AddCharacter Moderator Kitchen
+        , AddProp KitchenExit Kitchen
+        , AddProp Podium Auditorium
+        ]
     }
 
 

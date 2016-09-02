@@ -42,6 +42,7 @@ body.theme--dark {
   border-bottom: 1px solid #555;
   padding: 10px;
   opacity: 0.2;
+  transition: opacity 0.2s ease;
 }
 
 .theme--dark .Storyline__Item:hover {
