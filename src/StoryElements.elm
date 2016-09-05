@@ -1,7 +1,6 @@
 module StoryElements exposing (..)
 
 import Color exposing (..)
-import String exposing (join)
 
 
 type StoryElement a b c
@@ -45,11 +44,6 @@ getDescription { description } =
 getColor : WithColor a -> Color
 getColor { color } =
     color
-
-
-toCssColor : Color -> String
-toCssColor =
-    toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
 
 item : String -> String -> BasicInfo

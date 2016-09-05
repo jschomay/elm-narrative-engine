@@ -3,6 +3,8 @@ module Components.CurrentSummary exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import String exposing (join)
+import Color exposing (..)
 import StoryElements exposing (..)
 import StoryState exposing (..)
 
@@ -74,6 +76,10 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                         List.intersperse (text " and ") list
             in
                 storyElements ++ [ text "." ]
+
+        toCssColor : Color -> String
+        toCssColor =
+            toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
         cssColor =
             toCssColor <| getColor <| locationsInfo currentLocation

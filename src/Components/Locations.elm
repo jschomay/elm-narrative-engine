@@ -4,6 +4,8 @@ import Html exposing (..)
 import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import String exposing (join)
+import Color exposing (..)
 import StoryElements exposing (..)
 
 
@@ -30,6 +32,10 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
             let
                 key =
                     (toString location) ++ (toString <| numLocations - i)
+
+                toCssColor : Color -> String
+                toCssColor =
+                    toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
                 cssColor =
                     toCssColor <| getColor <| locationsInfo currentLocation

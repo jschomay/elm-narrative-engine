@@ -4,6 +4,8 @@ import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import String exposing (join)
+import Color exposing (..)
 import Markdown exposing (..)
 import Components.CurrentSummary exposing (..)
 import Components.Storyline exposing (..)
@@ -192,6 +194,10 @@ titelPage model =
 gamePage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
 gamePage itemsInfo locationsInfo charactersInfo model =
     let
+        toCssColor : Color -> String
+        toCssColor =
+            toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
+
         cssColor =
             toCssColor <| getColor <| locationsInfo model.storyState.currentLocation
     in
