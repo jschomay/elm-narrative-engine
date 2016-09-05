@@ -46,7 +46,7 @@ init title byline prologue storySetup =
 setUpStoryWorld : StorySetup a b c d -> StoryState a b c d
 setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorldSetupCommands } =
     StoryState.init startingLocation startingScene
-        |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Simple startingNarration )
+        |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
 
 
 loadStory : String -> String -> String -> StorySetup a b c d -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Program Never

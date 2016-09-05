@@ -63,8 +63,7 @@ type ChangeWorldCommand a b c d
 
 
 type Narration
-    = Simple String
-    | InOrder (List String)
+    = Narrate String
 
 
 given : Trigger a b c -> Condition a b c -> Do a b c d -> StoryRule a b c d
@@ -77,9 +76,9 @@ changeWorld f a b =
     f ( a, b )
 
 
-narrate : (Narration -> StoryRule a b c d) -> Narration -> StoryRule a b c d
+narrate : (Narration -> StoryRule a b c d) -> String -> StoryRule a b c d
 narrate f a =
-    f a
+    f <| Narrate a
 
 
 updateFromRules : StoryElement a b c -> Scene a b c d -> StoryState a b c d -> Bool -> String -> Maybe (StoryState a b c d)
@@ -164,11 +163,8 @@ updateStoryState storyElementName storyState ( changeWorldCommands, narration ) 
     let
         getNarration narration =
             case narration of
-                Simple t ->
+                Narrate t ->
                     t
-
-                _ ->
-                    Debug.crash "Other DisplayText not implmented"
 
         doCommand command storyState =
             case command of

@@ -49,7 +49,7 @@ updateFromRulesTests =
                     rules =
                         [ given (InteractionWithItem ThingTwo) (Always)
                             `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` Simple "thing one"
+                            `narrate` "thing one"
                         ]
                 in
                     Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
@@ -60,13 +60,13 @@ updateFromRulesTests =
                     rules =
                         [ given (InteractionWithItem ThingTwo) (Always)
                             `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` Simple "no match"
+                            `narrate` "no match"
                         , given (InteractionWithItem ThingOne) (Always)
                             `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` Simple "first match"
+                            `narrate` "first match"
                         , given (InteractionWithItem ThingOne) (Always)
                             `changeWorld` [ AddInventory ThingTwo ]
-                            `narrate` Simple "also matches"
+                            `narrate` "also matches"
                         ]
 
                     expected =

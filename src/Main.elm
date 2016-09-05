@@ -99,19 +99,19 @@ beginning : Scene MyItem MyLocation MyCharacter MyScene
 beginning =
     [ given (InteractionWithItem KitchenExit) (Always)
         `changeWorld` []
-        `narrate` Simple """
+        `narrate` """
 A way out.  You head for the emergency exit, but the Volunteer stops you.
 
 "You can't leave!  Everyone is waiting for you!"
 """
     , given (FirstInteractionWithCharacter Volunteer) (InLocation Kitchen)
         `changeWorld` [ AddLocation Auditorium ]
-        `narrate` Simple """
+        `narrate` """
 "Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
 """
     , given (InteractionWithCharacter Volunteer) (InLocation Kitchen)
         `changeWorld` [ AddLocation Auditorium ]
-        `narrate` Simple """
+        `narrate` """
 "What are you waiting for, get out there!"
 """
     , given (InteractionWithLocation Auditorium) (InLocation Kitchen)
@@ -120,7 +120,7 @@ A way out.  You head for the emergency exit, but the Volunteer stops you.
              , RemoveCharacter Volunteer Kitchen
              , AddLocation Hallway
              ]
-        `narrate` Simple """
+        `narrate` """
 You follow the Volunteer into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
 
 A woman at the podium addresses the audience.  "... and it looks like our next speaker has just arrived!  I'll hand it over to him."
@@ -129,12 +129,12 @@ She steps back, leading the audience in a welcoming applause, as they all turn a
 """
     , given (InteractionWithCharacter Moderator) (Always)
         `changeWorld` []
-        `narrate` Simple """
+        `narrate` """
 She smiles and nods at you politely, but her eyes say *"If you stall one more minute I'm going to wring your neck!*"
 """
     , given (InteractionWithItem Podium) (Not (WithItem Mic))
         `changeWorld` [ AddInventory Mic ]
-        `narrate` Simple """
+        `narrate` """
 You take a deep breath and make your way on stage.  The audience falls silent.  All eyes are on you.  Better say something quick.
 
 ![](/img/stage-fright.jpg)
@@ -145,13 +145,13 @@ Um... what now?
 """
     , given (InteractionWithLocation Hallway) (All [ NearProp Podium ])
         `changeWorld` []
-        `narrate` Simple strangerPreventsYouFromLeaving
+        `narrate` strangerPreventsYouFromLeaving
     , given (InteractionWithLocation Kitchen) (All [ NearProp Podium ])
         `changeWorld` []
-        `narrate` Simple strangerPreventsYouFromLeaving
+        `narrate` strangerPreventsYouFromLeaving
     , given (InteractionWithItem Envelope) (WithItem Mic)
         `changeWorld` [ RemoveInventory Mic, LoadScene Middle ]
-        `narrate` Simple """
+        `narrate` """
 Ahh yes, the envelope.  Now must be the time.
 
 You pull out the folded sheets of paper and flip to the first one.
@@ -177,7 +177,7 @@ middle : Scene MyItem MyLocation MyCharacter MyScene
 middle =
     [ given (InteractionWithItem Envelope) (Always)
         `changeWorld` []
-        `narrate` Simple "That went as well as could be expected.  Wonder where it came from?"
+        `narrate` "That went as well as could be expected.  Wonder where it came from?"
     ]
 
 
