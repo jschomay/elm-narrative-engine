@@ -30,7 +30,7 @@ startingNarration =
 The only other person here is an anxious young man trying hard to get your attention."""
 
 
-storySetup : StorySetup MyItem MyLocation MyCharacter MyScene
+storySetup : StorySetup MyItem MyLocation MyCharacter MyScene MyKnowledge
 storySetup =
     { startingScene = Beginning
     , startingLocation = Kitchen
@@ -85,7 +85,7 @@ storyCharacters tag =
             character "moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
 
 
-storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene
+storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
 storyRules scene =
     case scene of
         Beginning ->
@@ -95,10 +95,10 @@ storyRules scene =
             middle
 
 
-beginning : Scene MyItem MyLocation MyCharacter MyScene
+beginning : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 beginning =
     [ given (InteractionWithItem KitchenExit) (Always)
-        `changeWorld` []
+        `changeWorld` [ AddKnowledge Escape ]
         `narrate` """
 A way out.  You head for the emergency exit, but the Volunteer stops you.
 
@@ -109,6 +109,11 @@ A way out.  You head for the emergency exit, but the Volunteer stops you.
         `narrate` """
 "Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
 """
+    , given (InteractionWithCharacter Volunteer) (WithKnowledge Escape)
+        `changeWorld` []
+        `narrate` """
+I know you're thinking of escaping!
+"""
     , given (InteractionWithCharacter Volunteer) (InLocation Kitchen)
         `changeWorld` [ AddLocation Auditorium ]
         `narrate` """
@@ -116,10 +121,10 @@ A way out.  You head for the emergency exit, but the Volunteer stops you.
 """
     , given (InteractionWithLocation Auditorium) (InLocation Kitchen)
         `changeWorld` [ MoveTo Auditorium
-             , AddCharacter Volunteer Auditorium
-             , RemoveCharacter Volunteer Kitchen
-             , AddLocation Hallway
-             ]
+                      , AddCharacter Volunteer Auditorium
+                      , RemoveCharacter Volunteer Kitchen
+                      , AddLocation Hallway
+                      ]
         `narrate` """
 You follow the Volunteer into the auditorium.  Stepping in, you see the large room, packed with eager audience members.
 
@@ -173,7 +178,7 @@ The audience stares back, every eye in the room glazed over.  The moderator trie
     ]
 
 
-middle : Scene MyItem MyLocation MyCharacter MyScene
+middle : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 middle =
     [ given (InteractionWithItem Envelope) (Always)
         `changeWorld` []
@@ -207,3 +212,7 @@ type MyLocation
 type MyCharacter
     = Volunteer
     | Moderator
+
+
+type MyKnowledge
+    = Escape

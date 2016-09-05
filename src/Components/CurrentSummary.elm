@@ -12,7 +12,7 @@ type Msg a b
     | InteractWithCharacter b
 
 
-currentSummary : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> StoryState a b c d -> (StoryElement a b c -> Bool) -> Html (Msg a c)
+currentSummary : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> StoryState a b c d e -> (StoryElement a b c -> Bool) -> Html (Msg a c)
 currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneThat =
     let
         currentLocation =
@@ -38,22 +38,22 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                         Item item ->
                             getName <| itemsInfo item
 
-                        Location location ->
-                            Debug.crash <| "Error: A location should never appear here: " ++ (toString location)
-
                         Character character ->
                             getName <| charactersInfo character
+
+                        x ->
+                            Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
 
                 storyElementMsg =
                     case storyElement of
                         Item item ->
                             InteractWithProp item
 
-                        Location location ->
-                            Debug.crash <| "Error: A location should never appear here: " ++ (toString location)
-
                         Character character ->
                             InteractWithCharacter character
+
+                        x ->
+                            Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
             in
                 span
                     [ classList <| classes

@@ -14,25 +14,25 @@ import StoryRules exposing (..)
 import StoryState exposing (..)
 
 
-type alias Model a b c d =
+type alias Model a b c d e =
     { title : String
     , byline : String
     , prologue : String
     , route : Route
     , interactions : List (StoryElement a b c)
-    , storyState : StoryState a b c d
+    , storyState : StoryState a b c d e
     }
 
 
-type alias StorySetup a b c d =
+type alias StorySetup a b c d e =
     { startingScene : d
     , startingLocation : b
     , startingNarration : String
-    , storyWorldSetupCommands : ChangeWorldCommands a b c d
+    , storyWorldSetupCommands : ChangeWorldCommands a b c d e
     }
 
 
-init : String -> String -> String -> StorySetup a b c d -> Model a b c d
+init : String -> String -> String -> StorySetup a b c d e -> Model a b c d e
 init title byline prologue storySetup =
     { title = title
     , byline = byline
@@ -43,13 +43,13 @@ init title byline prologue storySetup =
     }
 
 
-setUpStoryWorld : StorySetup a b c d -> StoryState a b c d
+setUpStoryWorld : StorySetup a b c d e -> StoryState a b c d e
 setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorldSetupCommands } =
     StoryState.init startingLocation startingScene
         |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
 
 
-loadStory : String -> String -> String -> StorySetup a b c d -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Program Never
+loadStory : String -> String -> String -> StorySetup a b c d e -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d e -> Program Never
 loadStory title byline prologue storySetup itemsInfo locationsInfo charactersInfo storyRules =
     Html.beginnerProgram
         { model = init title byline prologue storySetup
@@ -68,7 +68,7 @@ type Msg a b c
 -- UPDATE
 
 
-update : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d -> Msg a b c -> Model a b c d -> Model a b c d
+update : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d e -> Msg a b c -> Model a b c d e -> Model a b c d e
 update itemsInfo locationsInfo charactersInfo storyRules action model =
     let
         defaultNarration storyElement ({ storyState } as model) =
@@ -159,7 +159,7 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
 -- main layout
 
 
-view : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d -> Html (Msg a b c)
+view : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
 view itemsInfo locationsInfo charactersInfo model =
     loadPage itemsInfo locationsInfo charactersInfo model
 
@@ -169,7 +169,7 @@ type Route
     | GamePage
 
 
-loadPage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d -> Html (Msg a b c)
+loadPage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
 loadPage itemsInfo locationsInfo charactersInfo model =
     case model.route of
         TitlePage ->
@@ -179,7 +179,7 @@ loadPage itemsInfo locationsInfo charactersInfo model =
             gamePage itemsInfo locationsInfo charactersInfo model
 
 
-titelPage : Model a b c d -> Html (Msg a b c)
+titelPage : Model a b c d e -> Html (Msg a b c)
 titelPage model =
     div [ class "TitlePage" ]
         [ h1 [ class "TitlePage__Title" ] [ text model.title ]
@@ -189,7 +189,7 @@ titelPage model =
         ]
 
 
-gamePage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d -> Html (Msg a b c)
+gamePage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
 gamePage itemsInfo locationsInfo charactersInfo model =
     let
         cssColor =

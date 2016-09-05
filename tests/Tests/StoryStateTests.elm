@@ -27,7 +27,11 @@ type TestScene
     | End
 
 
-init : StoryState TestItem TestLocation TestCharacter TestScene
+type TestKnowledge
+    = Secret
+
+
+init : StoryState TestItem TestLocation TestCharacter TestScene TestKnowledge
 init =
     StoryState.init Earth Begining
 

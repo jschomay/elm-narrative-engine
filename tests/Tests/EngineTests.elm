@@ -28,17 +28,21 @@ type TestScene
     = Begining
 
 
-startingModel : Model TestItem TestLocation TestCharacter TestScene
+type TestKnowledge
+    = Secret
+
+
+startingModel : Model TestItem TestLocation TestCharacter TestScene TestKnowledge
 startingModel =
     Engine.init "title" "byline" "prologue" storySetup
 
 
-startingState : StoryState TestItem TestLocation TestCharacter TestScene
+startingState : StoryState TestItem TestLocation TestCharacter TestScene TestKnowledge
 startingState =
     startingModel.storyState
 
 
-storySetup : StorySetup TestItem TestLocation TestCharacter TestScene
+storySetup : StorySetup TestItem TestLocation TestCharacter TestScene TestKnowledge
 storySetup =
     { startingScene = Begining
     , startingLocation = Earth
