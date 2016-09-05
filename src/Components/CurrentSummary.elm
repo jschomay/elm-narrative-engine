@@ -106,6 +106,6 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
     in
         div [ class "CurrentSummary", style [ ( "color", cssColor ) ] ]
             <| if isEmpty then
-                [ p [] [ text "There is nothing here." ] ]
+                []
                else
                 [ charactersList, itemsList ]

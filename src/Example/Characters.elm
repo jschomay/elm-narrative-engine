@@ -5,6 +5,7 @@ import StoryElements exposing (..)
 type MyCharacter
     = Volunteer
     | Moderator
+    | AnxiousMan
 
 
 storyCharacters : CharactersInfo MyCharacter
@@ -14,5 +15,9 @@ storyCharacters tag =
             character "volunteer" "He sure seems stressed.  You're not helping."
 
         Moderator ->
-            character "moderator" "She seems to command the audience and speakers with ease.  This definitely isn't her first rodeo."
+            character "moderator" "She seems fully confident in her capabilities of commanding the room, but the way she glares at you now suggests she is none to pleased with you.  Oh well."
+
+        AnxiousMan ->
+              character "Anxious old man" "He looks like a mad scientist, pacing in circles, muttering to himself about some \"lost notes\"."
+
 

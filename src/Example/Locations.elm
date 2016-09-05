@@ -14,12 +14,12 @@ storyLocations : LocationsInfo MyLocation
 storyLocations tag =
     case tag of
         Kitchen ->
-            location "commercial kitchen" blue "Rows of stainless steel counters fill the floor, with banks of ovens, stoves, and walk-in fridges along the walls."
+            location "commercial kitchen" blue "Everything has been cleaned, polished, and put away for the next morning."
 
         Auditorium ->
-            location "auditorium" purple "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
+            location "auditorium 'A'" purple "The lights are low, the plush velvet seats filled to capacity.  A spotlight shines down on the podium on the stage."
 
         Hallway ->
-            location "hallway" darkOrange "Just outside the main auditorium, where a few straglers wander by with hot drinks or converse in hushed debates."
+            location "hallway" darkOrange "Just outside the main auditorium, where a few stragglers wander around with hot drinks, or converse in hushed debates about the previous presentations."
 
 

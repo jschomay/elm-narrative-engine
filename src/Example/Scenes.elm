@@ -2,6 +2,6 @@ module Scenes exposing (..)
 
 
 type MyScene
-    = Beginning
-    | Middle
+    = Scene1
+    | Scene2
 

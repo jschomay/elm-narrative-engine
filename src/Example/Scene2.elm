@@ -7,10 +7,83 @@ import Characters exposing (..)
 import Knowledge exposing (..)
 import Scenes exposing (..)
 
-middle : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
-middle =
-    [ given (InteractionWithItem Envelope) (Always)
+scene2 : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
+scene2 =
+    [ given (InteractionWithItem Podium) (Always)
         `changeWorld` []
-        `narrate` "That went as well as could be expected.  Wonder where it came from?"
+        `narrate` doneWithPodium
+    , given (InteractionWithCharacter Moderator) (Always)
+        `changeWorld` []
+        `narrate` moderatorAfterSpeech
+    , given (FirstInteractionWithCharacter AnxiousMan) (Always)
+        `changeWorld` [AddKnowledge LostNotes]
+        `narrate` lostSpeech
+    , given (InteractionWithItem Envelope) (All [ WithKnowledge LostNotes
+                                                , NearCharacter AnxiousMan
+                                                ])
+        `changeWorld` [ RemoveInventory Envelope 
+                      , AddInventory ElmSticker
+                      , RemoveCharacter AnxiousMan Hallway
+                      , EndStory
+                      ]
+        `narrate` returningNotes
+    , given (InteractionWithItem Envelope) (Always)
+        `changeWorld` []
+        `narrate` mysteriousSpeechNotes
     ]
+
+
+
+
+doneWithPodium : String
+doneWithPodium =
+  "There's no need to get back up there.  Now to figure out how to get out of here."
+
+moderatorAfterSpeech : String
+moderatorAfterSpeech =
+  """She tries to get things back on track.  She seems even less pleased now, after that little performance.
+"""
+
+
+mysteriousSpeechNotes : String
+mysteriousSpeechNotes =
+  """How the heck did you end up with those?  You didn't understand a word of what you said.
+"""
+
+lostSpeech : String
+lostSpeech =
+  """He looks even more anxious than you, pacing back and forth, sweating, and muttering to himself.
+
+"Don't worry," you say, "it's not that bad."
+
+"You don't understand!  My speech, my notes -- I've lost them!  I lost the notes for my speech, and I'm supposed to present in ten minutes!"
+
+He goes back to muttering words of doom and gloom.  Poor guy.
+"""
+
+returningNotes : String
+returningNotes =
+  """"Oh you mean these?  Is this what you are looking for?  You're welcome to them."
+
+You hand over the envelope.  "Yes, these are it!  You found them!  You've saved me, how can I ever repay you?"
+
+"Don't bother, just... good luck."
+
+Well that wrapped that up in a nice little package.  But you still don't know why you are here.  You wander off, but the old man calls out to you.  
+
+"Oh, hey!  Here, I have something, I think you should have this."
+
+He reaches into his pocket and hands you something.  A sticker.
+
+![](example/img/elm-sticker.png)
+
+Wait a minute... that looks familiar.  Of course, Elm!  It's all coming back to you now.  This is ElmConf.  You're here to give your presentation.  A presentation called:
+
+###Building an Interactive Storytelling Framework in Elm##
+
+<span style="text-align: center; display: block;">_~ The end ~_</span>
+"""
+
+
+
 

@@ -16,6 +16,33 @@ main =
     loadStory "The curse of the tech demo" "Jeff Schomay" prologue storySetup storyItems storyLocations storyCharacters storyRules
 
 
+storySetup : StorySetup MyItem MyLocation MyCharacter MyScene MyKnowledge
+storySetup =
+    { startingScene = Scene1
+    , startingLocation = Kitchen
+    , startingNarration = startingNarration
+    , storyWorldSetupCommands =
+        [ AddInventory Envelope
+        , AddLocation Kitchen
+        , AddLocation Hallway
+        , AddCharacter Moderator Auditorium
+        , AddCharacter AnxiousMan Hallway
+        , AddProp ExitSign Kitchen
+        , AddProp Podium Auditorium
+        ]
+    }
+
+
+storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
+storyRules scene =
+    case scene of
+        Scene1 ->
+            scene1
+
+        Scene2 ->
+            scene2
+
+
 prologue : String
 prologue =
     """![](example/img/audience.jpg)
@@ -29,35 +56,11 @@ You must have fallen asleep, because *something definitely doesn't seem right...
 
 startingNarration : String
 startingNarration =
-    """You are in the commercial kitchen.  You don't know how you got here, or what you are doing here.
+  """You find yourself standing in the middle of a dark, cavernous commercial kitchen.  The lights are all off, save for the glowing green emergency exit sign glinting off the polished stainless steel counter tops, and a shaft of warm light through the small windows of the double doors leading out to a hallway.
 
-The only other person here is an anxious young man trying hard to get your attention."""
+You stand there, butterflies in your stomach, but you can't remember how you got there, or even why you are there.  All you know is that you feel nervous of what awaits you just outside.
+"""
 
-
-storySetup : StorySetup MyItem MyLocation MyCharacter MyScene MyKnowledge
-storySetup =
-    { startingScene = Beginning
-    , startingLocation = Kitchen
-    , startingNarration = startingNarration
-    , storyWorldSetupCommands =
-        [ AddInventory Envelope
-        , AddLocation Kitchen
-        , AddCharacter Volunteer Kitchen
-        , AddCharacter Moderator Auditorium
-        , AddProp KitchenExit Kitchen
-        , AddProp Podium Auditorium
-        ]
-    }
-
-
-storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
-storyRules scene =
-    case scene of
-        Beginning ->
-            beginning
-
-        Middle ->
-            middle
 
 
 
