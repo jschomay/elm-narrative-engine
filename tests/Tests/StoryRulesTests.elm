@@ -48,7 +48,7 @@ updateFromRulesTests =
                 let
                     rules =
                         [ given (InteractionWithItem ThingTwo) (Always)
-                            `do` [ AddInventory ThingOne ]
+                            `changeWorld` [ AddInventory ThingOne ]
                             `narrate` Simple "thing one"
                         ]
                 in
@@ -59,13 +59,13 @@ updateFromRulesTests =
                 let
                     rules =
                         [ given (InteractionWithItem ThingTwo) (Always)
-                            `do` [ AddInventory ThingOne ]
+                            `changeWorld` [ AddInventory ThingOne ]
                             `narrate` Simple "no match"
                         , given (InteractionWithItem ThingOne) (Always)
-                            `do` [ AddInventory ThingOne ]
+                            `changeWorld` [ AddInventory ThingOne ]
                             `narrate` Simple "first match"
                         , given (InteractionWithItem ThingOne) (Always)
-                            `do` [ AddInventory ThingTwo ]
+                            `changeWorld` [ AddInventory ThingTwo ]
                             `narrate` Simple "also matches"
                         ]
 

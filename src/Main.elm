@@ -98,24 +98,24 @@ storyRules scene =
 beginning : Scene MyItem MyLocation MyCharacter MyScene
 beginning =
     [ given (InteractionWithItem KitchenExit) (Always)
-        `do` []
+        `changeWorld` []
         `narrate` Simple """
 A way out.  You head for the emergency exit, but the Volunteer stops you.
 
 "You can't leave!  Everyone is waiting for you!"
 """
     , given (FirstInteractionWithCharacter Volunteer) (InLocation Kitchen)
-        `do` [ AddLocation Auditorium ]
+        `changeWorld` [ AddLocation Auditorium ]
         `narrate` Simple """
 "Finally!  You drifted off for a minute there.  Come on, they are ready for you in auditorium.  Let's go."
 """
     , given (InteractionWithCharacter Volunteer) (InLocation Kitchen)
-        `do` [ AddLocation Auditorium ]
+        `changeWorld` [ AddLocation Auditorium ]
         `narrate` Simple """
 "What are you waiting for, get out there!"
 """
     , given (InteractionWithLocation Auditorium) (InLocation Kitchen)
-        `do` [ MoveTo Auditorium
+        `changeWorld` [ MoveTo Auditorium
              , AddCharacter Volunteer Auditorium
              , RemoveCharacter Volunteer Kitchen
              , AddLocation Hallway
@@ -128,12 +128,12 @@ A woman at the podium addresses the audience.  "... and it looks like our next s
 She steps back, leading the audience in a welcoming applause, as they all turn and look, right at you.
 """
     , given (InteractionWithCharacter Moderator) (Always)
-        `do` []
+        `changeWorld` []
         `narrate` Simple """
 She smiles and nods at you politely, but her eyes say *"If you stall one more minute I'm going to wring your neck!*"
 """
     , given (InteractionWithItem Podium) (Not (WithItem Mic))
-        `do` [ AddInventory Mic ]
+        `changeWorld` [ AddInventory Mic ]
         `narrate` Simple """
 You take a deep breath and make your way on stage.  The audience falls silent.  All eyes are on you.  Better say something quick.
 
@@ -144,13 +144,13 @@ You take a deep breath and make your way on stage.  The audience falls silent.  
 Um... what now?
 """
     , given (InteractionWithLocation Hallway) (All [ NearProp Podium ])
-        `do` []
+        `changeWorld` []
         `narrate` Simple strangerPreventsYouFromLeaving
     , given (InteractionWithLocation Kitchen) (All [ NearProp Podium ])
-        `do` []
+        `changeWorld` []
         `narrate` Simple strangerPreventsYouFromLeaving
     , given (InteractionWithItem Envelope) (WithItem Mic)
-        `do` [ RemoveInventory Mic, LoadScene Middle ]
+        `changeWorld` [ RemoveInventory Mic, LoadScene Middle ]
         `narrate` Simple """
 Ahh yes, the envelope.  Now must be the time.
 
@@ -176,7 +176,7 @@ The audience stares back, every eye in the room glazed over.  The moderator trie
 middle : Scene MyItem MyLocation MyCharacter MyScene
 middle =
     [ given (InteractionWithItem Envelope) (Always)
-        `do` []
+        `changeWorld` []
         `narrate` Simple "That went as well as could be expected.  Wonder where it came from?"
     ]
 

@@ -72,8 +72,8 @@ given trigger condition =
     (,) ( trigger, condition )
 
 
-do : (Do a b c d -> StoryRule a b c d) -> ChangeWorldCommands a b c d -> Narration -> StoryRule a b c d
-do f a b =
+changeWorld : (Do a b c d -> StoryRule a b c d) -> ChangeWorldCommands a b c d -> Narration -> StoryRule a b c d
+changeWorld f a b =
     f ( a, b )
 
 
