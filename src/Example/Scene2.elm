@@ -1,6 +1,7 @@
 module Scene2 exposing (..)
 
 import StoryRules exposing (..)
+import StoryElements exposing (..)
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)
@@ -9,27 +10,32 @@ import Scenes exposing (..)
 
 scene2 : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 scene2 =
-    [ given (InteractionWithItem Podium) (Always)
-        `changeWorld` []
-        `narrate` doneWithPodium
-    , given (InteractionWithCharacter Moderator) (Always)
-        `changeWorld` []
-        `narrate` moderatorAfterSpeech
-    , given (FirstInteractionWithCharacter AnxiousMan) (Always)
-        `changeWorld` [AddKnowledge LostNotes]
-        `narrate` lostSpeech
-    , given (InteractionWithItem Envelope) (All [ WithKnowledge LostNotes
+    [ interactingWith (Item Podium)
+        `when` (Always)
+        `changesWorld` []
+        `narrates` doneWithPodium
+    , interactingWith (Character Moderator)
+        `when` (Always)
+        `changesWorld` []
+        `narrates` moderatorAfterSpeech
+    , firstInteractionWith (Character AnxiousMan)
+        `when` (Always)
+        `changesWorld` [AddKnowledge LostNotes]
+        `narrates` lostSpeech
+    , interactingWith (Item Envelope)
+        `when` (All [ WithKnowledge LostNotes
                                                 , NearCharacter AnxiousMan
                                                 ])
-        `changeWorld` [ RemoveInventory Envelope 
+        `changesWorld` [ RemoveInventory Envelope 
                       , AddInventory ElmSticker
                       , RemoveCharacter AnxiousMan Hallway
                       , EndStory
                       ]
-        `narrate` returningNotes
-    , given (InteractionWithItem Envelope) (Always)
-        `changeWorld` []
-        `narrate` mysteriousSpeechNotes
+        `narrates` returningNotes
+    , interactingWith (Item Envelope)
+        `when` (Always)
+        `changesWorld` []
+        `narrates` mysteriousSpeechNotes
     ]
 
 

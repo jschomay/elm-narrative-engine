@@ -51,9 +51,10 @@ updateFromRulesTests =
             <| \() ->
                 let
                     rules =
-                        [ given (InteractionWithItem ThingTwo) (Always)
-                            `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` "thing one"
+                        [ interactingWith (Item ThingTwo)
+                            `when` (Always)
+                            `changesWorld` [ AddInventory ThingOne ]
+                            `narrates` "thing one"
                         ]
                 in
                     Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
@@ -62,15 +63,18 @@ updateFromRulesTests =
             <| \() ->
                 let
                     rules =
-                        [ given (InteractionWithItem ThingTwo) (Always)
-                            `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` "no match"
-                        , given (InteractionWithItem ThingOne) (Always)
-                            `changeWorld` [ AddInventory ThingOne ]
-                            `narrate` "first match"
-                        , given (InteractionWithItem ThingOne) (Always)
-                            `changeWorld` [ AddInventory ThingTwo ]
-                            `narrate` "also matches"
+                        [ interactingWith (Item ThingTwo)
+                            `when` (Always)
+                            `changesWorld` [ AddInventory ThingOne ]
+                            `narrates` "no match"
+                        , interactingWith (Item ThingOne)
+                            `when` (Always)
+                            `changesWorld` [ AddInventory ThingOne ]
+                            `narrates` "first match"
+                        , interactingWith (Item ThingOne)
+                            `when` (Always)
+                            `changesWorld` [ AddInventory ThingTwo ]
+                            `narrates` "also matches"
                         ]
 
                     expected =
@@ -91,25 +95,25 @@ matchesTriggerTests =
             [ test "a match"
                 <| \() ->
                     Expect.true "match"
-                        (matchesTrigger (InteractionWithItem ThingOne) (Item ThingOne) True)
+                        (matchesTrigger (InteractionWith <| Item ThingOne) (Item ThingOne) True)
             , test "no match"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (InteractionWithItem ThingOne) (Item ThingTwo) True)
+                        (matchesTrigger (InteractionWith <| Item ThingOne) (Item ThingTwo) True)
             ]
         , describe "FirstInteractionWith"
             [ test "a match"
                 <| \() ->
                     Expect.true "match"
-                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingOne) False)
+                        (matchesTrigger (FirstInteractionWith <| Item ThingOne) (Item ThingOne) False)
             , test "no match (not first interaction)"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingOne) True)
+                        (matchesTrigger (FirstInteractionWith <| Item ThingOne) (Item ThingOne) True)
             , test "no match (different story element)"
                 <| \() ->
                     Expect.false "no match"
-                        (matchesTrigger (FirstInteractionWithItem ThingOne) (Item ThingTwo) False)
+                        (matchesTrigger (FirstInteractionWith <| Item ThingOne) (Item ThingTwo) False)
             ]
         ]
 

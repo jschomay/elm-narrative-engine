@@ -83,7 +83,7 @@ updateTests =
                 <| \() ->
                     let
                         storyRules a =
-                            [ given (InteractionWithItem ThingOne) (Always) `changeWorld` [] `narrate` "custom" ]
+                            [ interactingWith (Item ThingOne) `when` (Always) `changesWorld` [] `narrates` "custom" ]
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
                             { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }
@@ -109,7 +109,7 @@ updateTests =
                 <| \() ->
                     let
                         storyRules a =
-                            [ given (InteractionWithLocation Earth) (Always) `changeWorld` [] `narrate` "custom" ]
+                            [ interactingWith (Location Earth) `when` (Always) `changesWorld` [] `narrates` "custom" ]
                     in
                         Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).storyState
                             { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }

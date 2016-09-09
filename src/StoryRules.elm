@@ -29,12 +29,8 @@ type alias ChangeWorldCommands a b c d e =
 
 
 type Trigger a b c
-    = InteractionWithItem a
-    | InteractionWithLocation b
-    | InteractionWithCharacter c
-    | FirstInteractionWithItem a
-    | FirstInteractionWithLocation b
-    | FirstInteractionWithCharacter c
+    = InteractionWith (StoryElement a b c)
+    | FirstInteractionWith (StoryElement a b c)
 
 
 type Condition a b c e
@@ -68,19 +64,29 @@ type Narration
     = Narrate String
 
 
-given : Trigger a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
-given trigger condition =
-    (,) ( trigger, condition )
+firstInteractionWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
+firstInteractionWith storyElement condition do =
+    (( FirstInteractionWith storyElement, condition ), do)
 
 
-changeWorld : (Do a b c d e -> StoryRule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> StoryRule a b c d e
-changeWorld f a b =
+interactingWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
+interactingWith storyElement condition do =
+    (( InteractionWith storyElement, condition ), do)
+
+
+when : (Condition a b c e -> Do a b c d e -> StoryRule a b c d e) -> Condition a b c e  -> Do a b c d e -> StoryRule a b c d e
+when f condition =
+    f condition
+
+
+changesWorld : (Do a b c d e -> StoryRule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> StoryRule a b c d e
+changesWorld f a b =
     f ( a, b )
 
 
-narrate : (Narration -> StoryRule a b c d e) -> String -> StoryRule a b c d e
-narrate f a =
-    f <| Narrate a
+narrates : (Narration -> StoryRule a b c d e) -> String -> StoryRule a b c d e
+narrates f =
+    f << Narrate
 
 
 updateFromRules : StoryElement a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> String -> Maybe (StoryState a b c d e)
@@ -109,27 +115,12 @@ matchesGiven ( trigger, condition ) storyElement storyState beenThereDoneThat =
 
 matchesTrigger : Trigger a b c -> StoryElement a b c -> Bool -> Bool
 matchesTrigger trigger storyElement beenThereDoneThat =
-    case ( storyElement, trigger ) of
-        ( Item item, InteractionWithItem item' ) ->
-            item == item'
+    case trigger of
+        InteractionWith storyElement' ->
+            storyElement == storyElement'
 
-        ( Item item, FirstInteractionWithItem item' ) ->
-            item == item' && not beenThereDoneThat
-
-        ( Location location, InteractionWithLocation location' ) ->
-            location == location'
-
-        ( Location location, FirstInteractionWithLocation location' ) ->
-            location == location' && not beenThereDoneThat
-
-        ( Character character, InteractionWithCharacter character' ) ->
-            character == character'
-
-        ( Character character, FirstInteractionWithCharacter character' ) ->
-            character == character' && not beenThereDoneThat
-
-        _ ->
-            False
+        FirstInteractionWith storyElement' ->
+            storyElement == storyElement' && not beenThereDoneThat
 
 
 matchesCondition : Condition a b c e -> StoryState a b c d e -> Bool
@@ -164,7 +155,7 @@ matchesCondition condition storyState =
 
 
 updateStoryState : String -> StoryState a b c d e -> Do a b c d e -> StoryState a b c d e
-updateStoryState storyElementName storyState ( changeWorldCommands, narration ) =
+updateStoryState storyElementName storyState ( changesWorldCommands, narration ) =
     let
         getNarration narration =
             case narration of
@@ -209,5 +200,5 @@ updateStoryState storyElementName storyState ( changeWorldCommands, narration ) 
                 EndStory ->
                     storyState
     in
-        List.foldl doCommand storyState changeWorldCommands
+        List.foldl doCommand storyState changesWorldCommands
             |> addNarration ( storyElementName, getNarration narration )

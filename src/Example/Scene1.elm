@@ -1,6 +1,7 @@
 module Scene1 exposing (..)
 
 import StoryRules exposing (..)
+import StoryElements exposing (..)
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)
@@ -10,39 +11,48 @@ import Scenes exposing (..)
 
 scene1 : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 scene1 =
-    [ given (InteractionWithLocation Hallway) (InLocation Kitchen)
-        `changeWorld` []
-        `narrate` afraidOfHallway
-    , given (FirstInteractionWithItem Envelope) (Always)
-        `changeWorld` [ AddCharacter Volunteer Kitchen ]
-        `narrate` volunteerArrives
-    , given (FirstInteractionWithCharacter Volunteer) (Always)
-        `changeWorld` [ AddLocation Auditorium
+    [ interactingWith (Location Hallway)
+        `when` (InLocation Kitchen)
+        `changesWorld` []
+        `narrates` afraidOfHallway
+    , firstInteractionWith (Item Envelope)
+        `when` (Always)
+        `changesWorld` [ AddCharacter Volunteer Kitchen ]
+        `narrates` volunteerArrives
+    , firstInteractionWith (Character Volunteer)
+        `when` (Always)
+        `changesWorld` [ AddLocation Auditorium
                       , MoveTo Auditorium
                       , RemoveCharacter Volunteer Kitchen
                       , AddCharacter Volunteer Auditorium
                       ]
-        `narrate` followVolunteer
-    , given (InteractionWithLocation Hallway) (Not(NearProp Mic))
-        `changeWorld` []
-        `narrate` tryToEscape
-    , given (InteractionWithLocation Kitchen) (Not(NearProp Mic))
-        `changeWorld` []
-        `narrate` tryToEscape
-    , given (InteractionWithItem Podium) (Not (NearProp Mic))
-        `changeWorld` [ AddProp Mic Auditorium ]
-        `narrate` approachPodium
-    , given (InteractionWithLocation Hallway) (NearProp Mic)
-        `changeWorld` []
-        `narrate` thinkAboutEscaping
-    , given (InteractionWithLocation Kitchen) (NearProp Mic)
-        `changeWorld` []
-        `narrate` thinkAboutEscaping
-    , given (InteractionWithItem Envelope) (NearProp Mic)
-        `changeWorld` [ RemoveProp Mic Auditorium
+        `narrates` followVolunteer
+    , interactingWith (Location Hallway)
+        `when` (Not(NearProp Mic))
+        `changesWorld` []
+        `narrates` tryToEscape
+    , interactingWith (Location Kitchen)
+        `when` (Not(NearProp Mic))
+        `changesWorld` []
+        `narrates` tryToEscape
+    , interactingWith (Item Podium)
+        `when` (Not (NearProp Mic))
+        `changesWorld` [ AddProp Mic Auditorium ]
+        `narrates` approachPodium
+    , interactingWith (Location Hallway)
+        `when` (NearProp Mic)
+        `changesWorld` []
+        `narrates` thinkAboutEscaping
+    , interactingWith (Location Kitchen)
+        `when` (NearProp Mic)
+        `changesWorld` []
+        `narrates` thinkAboutEscaping
+    , interactingWith (Item Envelope)
+        `when` (NearProp Mic)
+        `changesWorld` [ RemoveProp Mic Auditorium
                       , LoadScene Scene2
                       ]
-        `narrate` giveSpeach
+        `narrates` giveSpeach
     ]
 
 
