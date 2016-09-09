@@ -2,6 +2,7 @@ module Items exposing (..)
 
 import StoryElements exposing (..)
 
+
 type MyItem
     = Envelope
     | Podium
@@ -10,23 +11,20 @@ type MyItem
     | ElmSticker
 
 
-
 storyItems : ItemsInfo MyItem
 storyItems tag =
     case tag of
         ExitSign ->
-            item "emergency exit sign" "The green letters glow like an illuminated caption of your thoughts:  \"What am I doing here, and more importantly, how do I get out?\""
+            itemInfo "emergency exit sign" "The green letters glow like an illuminated caption of your thoughts:  \"What am I doing here, and more importantly, how do I get out?\""
 
         Envelope ->
-            item "thick envelope" "You found it crammed in your pocket, but you don't recognize it."
+            itemInfo "thick envelope" "You found it crammed in your pocket, but you don't recognize it."
 
         Podium ->
-            item "podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
+            itemInfo "podium" "The podium is on the stage, facing the audience.  Right in the spotlight."
 
         Mic ->
-            item "microphone" "\"Testing one, two.\" Yup, it works fine."
+            itemInfo "microphone" "\"Testing one, two.\" Yup, it works fine."
 
         ElmSticker ->
-            item "Elm sticker" "![](example/img/elm-sticker.png)"
-
-
+            itemInfo "Elm sticker" "![](example/img/elm-sticker.png)"

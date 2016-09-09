@@ -2,7 +2,6 @@ module Main exposing (..)
 
 import Engine exposing (..)
 import StoryRules exposing (..)
-
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)
@@ -10,6 +9,7 @@ import Knowledge exposing (..)
 import Scenes exposing (..)
 import Scene1 exposing (..)
 import Scene2 exposing (..)
+
 
 main : Program Never
 main =
@@ -56,11 +56,7 @@ You must have fallen asleep, because *something definitely doesn't seem right...
 
 startingNarration : String
 startingNarration =
-  """You find yourself standing in the middle of a dark, cavernous commercial kitchen.  The lights are all off, save for the glowing green emergency exit sign glinting off the polished stainless steel counter tops, and a shaft of warm light through the small windows of the double doors leading out to a hallway.
+    """You find yourself standing in the middle of a dark, cavernous commercial kitchen.  The lights are all off, save for the glowing green emergency exit sign glinting off the polished stainless steel counter tops, and a shaft of warm light through the small windows of the double doors leading out to a hallway.
 
 You stand there, butterflies in your stomach, but you can't remember how you got there, or even why you are there.  All you know is that you feel nervous of what awaits you just outside.
 """
-
-
-
-

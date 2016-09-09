@@ -34,7 +34,7 @@ type Trigger a b c
 
 
 type Condition a b c e
-    = Always
+    = EveryTime
     | WithItem a
     | NearCharacter c
     | NearProp a
@@ -42,7 +42,7 @@ type Condition a b c e
     | WithKnowledge e
     | All (List (Condition a b c e))
     | Any (List (Condition a b c e))
-    | Not (Condition a b c e)
+    | Unless (Condition a b c e)
 
 
 type ChangeWorldCommand a b c d e
@@ -64,17 +64,122 @@ type Narration
     = Narrate String
 
 
+everyTime : Condition a b c e
+everyTime =
+    EveryTime
+
+
+withItem : a -> Condition a b c e
+withItem =
+    WithItem
+
+
+nearCharacter : c -> Condition a b c e
+nearCharacter =
+    NearCharacter
+
+
+nearProp : a -> Condition a b c e
+nearProp =
+    NearProp
+
+
+inLocation : b -> Condition a b c e
+inLocation =
+    InLocation
+
+
+withKnowledge : e -> Condition a b c e
+withKnowledge =
+    WithKnowledge
+
+
+all : List (Condition a b c e) -> Condition a b c e
+all =
+    All
+
+
+any : List (Condition a b c e) -> Condition a b c e
+any =
+    Any
+
+
+unless : Condition a b c e -> Condition a b c e
+unless =
+    Unless
+
+
+moveTo : b -> ChangeWorldCommand a b c d e
+moveTo =
+    MoveTo
+
+
+addLocation : b -> ChangeWorldCommand a b c d e
+addLocation =
+    AddLocation
+
+
+removeLocation : b -> ChangeWorldCommand a b c d e
+removeLocation =
+    RemoveLocation
+
+
+addInventory : a -> ChangeWorldCommand a b c d e
+addInventory =
+    AddInventory
+
+
+removeInventory : a -> ChangeWorldCommand a b c d e
+removeInventory =
+    RemoveInventory
+
+
+addCharacter : c -> b -> ChangeWorldCommand a b c d e
+addCharacter =
+    AddCharacter
+
+
+removeCharacter : c -> b -> ChangeWorldCommand a b c d e
+removeCharacter =
+    RemoveCharacter
+
+
+addProp : a -> b -> ChangeWorldCommand a b c d e
+addProp =
+    AddProp
+
+
+removeProp : a -> b -> ChangeWorldCommand a b c d e
+removeProp =
+    RemoveProp
+
+
+addKnowledge : e -> ChangeWorldCommand a b c d e
+addKnowledge =
+    AddKnowledge
+
+
+loadScene : d -> ChangeWorldCommand a b c d e
+loadScene =
+    LoadScene
+
+
+endStory : ChangeWorldCommand a b c d e
+endStory =
+    EndStory
+
+
 firstInteractionWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
 firstInteractionWith storyElement condition do =
-    (( FirstInteractionWith storyElement, condition ), do)
+    ( ( FirstInteractionWith storyElement, condition ), do )
 
 
 interactingWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
 interactingWith storyElement condition do =
-    (( InteractionWith storyElement, condition ), do)
+    ( ( InteractionWith storyElement, condition ), do )
 
 
-when : (Condition a b c e -> Do a b c d e -> StoryRule a b c d e) -> Condition a b c e  -> Do a b c d e -> StoryRule a b c d e
+when : (Condition a b c e -> Do a b c d e -> StoryRule a b c d e) -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
 when f condition =
     f condition
 
@@ -120,13 +225,13 @@ matchesTrigger trigger storyElement beenThereDoneThat =
             storyElement == storyElement'
 
         FirstInteractionWith storyElement' ->
-            storyElement == storyElement' && not beenThereDoneThat
+            storyElement == storyElement' && Basics.not beenThereDoneThat
 
 
 matchesCondition : Condition a b c e -> StoryState a b c d e -> Bool
 matchesCondition condition storyState =
     case condition of
-        Always ->
+        EveryTime ->
             True
 
         WithItem item ->
@@ -150,8 +255,8 @@ matchesCondition condition storyState =
         Any conditions ->
             List.any (flip matchesCondition storyState) conditions
 
-        Not condition ->
-            not <| matchesCondition condition storyState
+        Unless condition ->
+            Basics.not <| matchesCondition condition storyState
 
 
 updateStoryState : String -> StoryState a b c d e -> Do a b c d e -> StoryState a b c d e
@@ -168,31 +273,31 @@ updateStoryState storyElementName storyState ( changesWorldCommands, narration )
                     setCurrentLocation location storyState
 
                 AddLocation location ->
-                    addLocation location storyState
+                    StoryState.addLocation location storyState
 
                 RemoveLocation location ->
-                    removeLocation location storyState
+                    StoryState.removeLocation location storyState
 
                 AddInventory item ->
-                    addInventory item storyState
+                    StoryState.addInventory item storyState
 
                 RemoveInventory item ->
-                    removeInventory item storyState
+                    StoryState.removeInventory item storyState
 
                 AddCharacter character location ->
-                    addCharacter character location storyState
+                    StoryState.addCharacter character location storyState
 
                 RemoveCharacter character location ->
-                    removeCharacter character location storyState
+                    StoryState.removeCharacter character location storyState
 
                 AddProp prop location ->
-                    addProp prop location storyState
+                    StoryState.addProp prop location storyState
 
                 RemoveProp prop location ->
-                    removeProp prop location storyState
+                    StoryState.removeProp prop location storyState
 
                 AddKnowledge knowledge ->
-                    addKnowledge knowledge storyState
+                    StoryState.addKnowledge knowledge storyState
 
                 LoadScene scene ->
                     setCurrentScene scene storyState

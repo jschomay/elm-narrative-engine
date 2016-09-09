@@ -60,19 +60,19 @@ all =
         ]
 
 
-itemInfo : a -> BasicInfo
-itemInfo a =
-    item "name" "description"
+itemsInfo : a -> BasicInfo
+itemsInfo a =
+    itemInfo "name" "description"
 
 
-locationInfo : a -> WithColor BasicInfo
-locationInfo a =
-    location "name" blue "description"
+locationsInfo : a -> WithColor BasicInfo
+locationsInfo a =
+    locationInfo "name" blue "description"
 
 
-characterInfo : a -> BasicInfo
-characterInfo a =
-    character "name" "description"
+charactersInfo : a -> BasicInfo
+charactersInfo a =
+    characterInfo "name" "description"
 
 
 updateTests : Test.Test
@@ -83,9 +83,9 @@ updateTests =
                 <| \() ->
                     let
                         storyRules a =
-                            [ interactingWith (Item ThingOne) `when` (Always) `changesWorld` [] `narrates` "custom" ]
+                            [ interactingWith (item ThingOne) `when` (everyTime) `changesWorld` [] `narrates` "custom" ]
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
                             { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }
             , test "defaults to adding description to storyline"
                 <| \() ->
@@ -93,7 +93,7 @@ updateTests =
                         storyRules a =
                             []
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Item ThingOne) startingModel).storyState
                             { startingState | storyLine = ( "name", "description" ) :: startingState.storyLine }
             , test "always adds new story elements to the interaction list"
                 <| \() ->
@@ -101,7 +101,7 @@ updateTests =
                         storyRules a =
                             []
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Item ThingOne) startingModel).interactions
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Item ThingOne) startingModel).interactions
                             (Item ThingOne :: startingModel.interactions)
             ]
         , describe "Interact with location"
@@ -109,9 +109,9 @@ updateTests =
                 <| \() ->
                     let
                         storyRules a =
-                            [ interactingWith (Location Earth) `when` (Always) `changesWorld` [] `narrates` "custom" ]
+                            [ interactingWith (location Earth) `when` (everyTime) `changesWorld` [] `narrates` "custom" ]
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).storyState
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Location Earth) startingModel).storyState
                             { startingState | storyLine = ( "name", "custom" ) :: startingState.storyLine }
             , test "defaults to moving to location and adding narration"
                 <| \() ->
@@ -119,7 +119,7 @@ updateTests =
                         storyRules a =
                             []
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Moon) startingModel).storyState
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Location Moon) startingModel).storyState
                             { startingState
                                 | currentLocation = Moon
                                 , storyLine = ( "name", "description" ) :: startingState.storyLine
@@ -130,7 +130,7 @@ updateTests =
                         storyRules a =
                             []
                     in
-                        Expect.equal (update itemInfo locationInfo characterInfo storyRules (Interaction <| Location Earth) startingModel).interactions
+                        Expect.equal (update itemsInfo locationsInfo charactersInfo storyRules (Interaction <| Location Earth) startingModel).interactions
                             [ Location Earth ]
             ]
         ]

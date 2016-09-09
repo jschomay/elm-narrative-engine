@@ -31,6 +31,21 @@ type alias CharactersInfo a =
     a -> BasicInfo
 
 
+item : a -> StoryElement a b c
+item =
+    Item
+
+
+location : b -> StoryElement a b c
+location =
+    Location
+
+
+character : c -> StoryElement a b c
+character =
+    Character
+
+
 getName : { a | name : String } -> String
 getName { name } =
     name
@@ -46,23 +61,23 @@ getColor { color } =
     color
 
 
-item : String -> String -> BasicInfo
-item name description =
+itemInfo : String -> String -> BasicInfo
+itemInfo name description =
     { name = name
     , description = description
     }
 
 
-location : String -> Color -> String -> WithColor BasicInfo
-location name color description =
+locationInfo : String -> Color -> String -> WithColor BasicInfo
+locationInfo name color description =
     { name = name
     , description = description
     , color = color
     }
 
 
-character : String -> String -> BasicInfo
-character name description =
+characterInfo : String -> String -> BasicInfo
+characterInfo name description =
     { name = name
     , description = description
     }

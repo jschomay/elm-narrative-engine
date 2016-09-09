@@ -52,7 +52,7 @@ updateFromRulesTests =
                 let
                     rules =
                         [ interactingWith (Item ThingTwo)
-                            `when` (Always)
+                            `when` (everyTime)
                             `changesWorld` [ AddInventory ThingOne ]
                             `narrates` "thing one"
                         ]
@@ -64,15 +64,15 @@ updateFromRulesTests =
                 let
                     rules =
                         [ interactingWith (Item ThingTwo)
-                            `when` (Always)
+                            `when` (everyTime)
                             `changesWorld` [ AddInventory ThingOne ]
                             `narrates` "no match"
                         , interactingWith (Item ThingOne)
-                            `when` (Always)
+                            `when` (everyTime)
                             `changesWorld` [ AddInventory ThingOne ]
                             `narrates` "first match"
                         , interactingWith (Item ThingOne)
-                            `when` (Always)
+                            `when` (everyTime)
                             `changesWorld` [ AddInventory ThingTwo ]
                             `narrates` "also matches"
                         ]
@@ -121,43 +121,43 @@ matchesTriggerTests =
 matchesConditionTests : Test.Test
 matchesConditionTests =
     describe "matchesCondition"
-        [ test "Always"
+        [ test "EveryTime"
             <| \() ->
                 Expect.true "always true"
-                    <| matchesCondition Always startingState
+                    <| matchesCondition EveryTime startingState
         , describe "WithItem"
             [ test "match"
                 <| \() ->
                     Expect.true "match"
                         <| matchesCondition (WithItem ThingOne)
-                        <| addInventory ThingOne startingState
+                        <| StoryState.addInventory ThingOne startingState
             , test "no match"
                 <| \() ->
                     Expect.false "no match"
                         <| matchesCondition (WithItem ThingOne)
-                        <| addInventory ThingTwo startingState
+                        <| StoryState.addInventory ThingTwo startingState
             ]
         , describe "NearCharacter"
             [ test "match"
                 <| \() ->
-                    addCharacter Jack Earth startingState
+                    StoryState.addCharacter Jack Earth startingState
                         |> matchesCondition (NearCharacter Jack)
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    addCharacter Jill Earth startingState
+                    StoryState.addCharacter Jill Earth startingState
                         |> matchesCondition (NearCharacter Jack)
                         |> Expect.false "no match"
             ]
         , describe "NearProp"
             [ test "match"
                 <| \() ->
-                    addProp ThingOne Earth startingState
+                    StoryState.addProp ThingOne Earth startingState
                         |> matchesCondition (NearProp ThingOne)
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    addProp ThingTwo Earth startingState
+                    StoryState.addProp ThingTwo Earth startingState
                         |> matchesCondition (NearProp ThingOne)
                         |> Expect.false "no match"
             ]
@@ -176,7 +176,7 @@ matchesConditionTests =
         , describe "All"
             [ test "match"
                 <| \() ->
-                    addProp ThingOne Earth startingState
+                    StoryState.addProp ThingOne Earth startingState
                         |> matchesCondition
                             (All
                                 [ (InLocation Earth)
@@ -186,7 +186,7 @@ matchesConditionTests =
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    addProp ThingTwo Earth startingState
+                    StoryState.addProp ThingTwo Earth startingState
                         |> matchesCondition
                             (All
                                 [ (InLocation Earth)
@@ -198,7 +198,7 @@ matchesConditionTests =
         , describe "Any"
             [ test "match"
                 <| \() ->
-                    addProp ThingOne Earth startingState
+                    StoryState.addProp ThingOne Earth startingState
                         |> matchesCondition
                             (Any
                                 [ (InLocation Moon)
@@ -208,7 +208,7 @@ matchesConditionTests =
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    addProp ThingOne Earth startingState
+                    StoryState.addProp ThingOne Earth startingState
                         |> matchesCondition
                             (Any
                                 [ (InLocation Moon)
@@ -221,12 +221,12 @@ matchesConditionTests =
             [ test "match"
                 <| \() ->
                     startingState
-                        |> matchesCondition (Not (InLocation Moon))
+                        |> matchesCondition (unless (InLocation Moon))
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
                     startingState
-                        |> matchesCondition (Not (InLocation Earth))
+                        |> matchesCondition (unless (InLocation Earth))
                         |> Expect.false "no match"
             ]
         ]

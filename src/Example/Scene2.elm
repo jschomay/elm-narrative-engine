@@ -8,57 +8,60 @@ import Characters exposing (..)
 import Knowledge exposing (..)
 import Scenes exposing (..)
 
+
 scene2 : Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 scene2 =
-    [ interactingWith (Item Podium)
-        `when` (Always)
+    [ interactingWith (item Podium)
+        `when` (everyTime)
         `changesWorld` []
         `narrates` doneWithPodium
-    , interactingWith (Character Moderator)
-        `when` (Always)
+    , interactingWith (character Moderator)
+        `when` (everyTime)
         `changesWorld` []
         `narrates` moderatorAfterSpeech
-    , firstInteractionWith (Character AnxiousMan)
-        `when` (Always)
-        `changesWorld` [AddKnowledge LostNotes]
+    , firstInteractionWith (character AnxiousMan)
+        `when` (everyTime)
+        `changesWorld` [ addKnowledge LostNotes ]
         `narrates` lostSpeech
-    , interactingWith (Item Envelope)
-        `when` (All [ WithKnowledge LostNotes
-                                                , NearCharacter AnxiousMan
-                                                ])
-        `changesWorld` [ RemoveInventory Envelope 
-                      , AddInventory ElmSticker
-                      , RemoveCharacter AnxiousMan Hallway
-                      , EndStory
-                      ]
+    , interactingWith (item Envelope)
+        `when` (all
+                    [ withKnowledge LostNotes
+                    , nearCharacter AnxiousMan
+                    ]
+               )
+        `changesWorld` [ removeInventory Envelope
+                       , addInventory ElmSticker
+                       , removeCharacter AnxiousMan Hallway
+                       , endStory
+                       ]
         `narrates` returningNotes
-    , interactingWith (Item Envelope)
-        `when` (Always)
+    , interactingWith (item Envelope)
+        `when` (everyTime)
         `changesWorld` []
         `narrates` mysteriousSpeechNotes
     ]
 
 
-
-
 doneWithPodium : String
 doneWithPodium =
-  "There's no need to get back up there.  Now to figure out how to get out of here."
+    "There's no need to get back up there.  Now to figure out how to get out of here."
+
 
 moderatorAfterSpeech : String
 moderatorAfterSpeech =
-  """She tries to get things back on track.  She seems even less pleased now, after that little performance.
+    """She tries to get things back on track.  She seems even less pleased now, after that little performance.
 """
 
 
 mysteriousSpeechNotes : String
 mysteriousSpeechNotes =
-  """How the heck did you end up with those?  You didn't understand a word of what you said.
+    """How the heck did you end up with those?  You didn't understand a word of what you said.
 """
+
 
 lostSpeech : String
 lostSpeech =
-  """He looks even more anxious than you, pacing back and forth, sweating, and muttering to himself.
+    """He looks even more anxious than you, pacing back and forth, sweating, and muttering to himself.
 
 "Don't worry," you say, "it's not that bad."
 
@@ -67,15 +70,16 @@ lostSpeech =
 He goes back to muttering words of doom and gloom.  Poor guy.
 """
 
+
 returningNotes : String
 returningNotes =
-  """"Oh you mean these?  Is this what you are looking for?  You're welcome to them."
+    """"Oh you mean these?  Is this what you are looking for?  You're welcome to them."
 
 You hand over the envelope.  "Yes, these are it!  You found them!  You've saved me, how can I ever repay you?"
 
 "Don't bother, just... good luck."
 
-Well that wrapped that up in a nice little package.  But you still don't know why you are here.  You wander off, but the old man calls out to you.  
+Well that wrapped that up in a nice little package.  But you still don't know why you are here.  You wander off, but the old man calls out to you.
 
 "Oh, hey!  Here, I have something, I think you should have this."
 
@@ -89,7 +93,3 @@ Wait a minute... that looks familiar.  Of course, Elm!  It's all coming back to 
 
 <span style="text-align: center; display: block;">_~ The end ~_</span>
 """
-
-
-
-
