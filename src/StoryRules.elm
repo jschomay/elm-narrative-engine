@@ -4,10 +4,6 @@ import StoryState exposing (..)
 import StoryElements exposing (..)
 
 
-type alias SceneSelector a b c d e =
-    d -> Scene a b c d e
-
-
 type alias Scene a b c d e =
     List (StoryRule a b c d e)
 

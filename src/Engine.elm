@@ -58,12 +58,12 @@ setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorld
         |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
 
 
-loadStory : StoryInfo -> StorySetup a b c d e -> DisplayInfo a b c -> SceneSelector a b c d e -> Program Never
-loadStory storyInfo storySetup displayInfo storyRules =
+loadStory : StoryInfo -> StorySetup a b c d e -> DisplayInfo a b c -> (d -> Scene a b c d e) -> Program Never
+loadStory storyInfo storySetup displayInfo scenes =
     Html.beginnerProgram
         { model = init storyInfo storySetup
         , view = view displayInfo
-        , update = update displayInfo storyRules
+        , update = update displayInfo scenes
         }
 
 
@@ -77,8 +77,8 @@ type Msg a b c
 -- UPDATE
 
 
-update : DisplayInfo a b c -> SceneSelector a b c d e -> Msg a b c -> Model a b c d e -> Model a b c d e
-update displayInfo storyRules action model =
+update : DisplayInfo a b c -> (d -> Scene a b c d e) -> Msg a b c -> Model a b c d e -> Model a b c d e
+update displayInfo scenes action model =
     let
         defaultNarration storyElement ({ storyState } as model) =
             { model
@@ -129,7 +129,7 @@ update displayInfo storyRules action model =
         tryUpdatingFromRules storyElement model =
             let
                 scene =
-                    (storyRules model.storyState.currentScene)
+                    (scenes model.storyState.currentScene)
 
                 beenThereDoneThat =
                     (List.member storyElement model.interactions)

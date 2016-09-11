@@ -50,7 +50,7 @@ storySetup =
     }
 
 
-scenes : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
+scenes : MyScene -> Scene MyItem MyLocation MyCharacter MyScene MyKnowledge
 scenes scene =
     case scene of
         Scene1 ->
