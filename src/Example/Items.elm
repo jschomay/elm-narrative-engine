@@ -11,9 +11,9 @@ type MyItem
     | ElmSticker
 
 
-storyItems : ItemsInfo MyItem
-storyItems tag =
-    case tag of
+displayInfo : MyItem -> ItemInfo
+displayInfo item =
+    case item of
         ExitSign ->
             itemInfo "emergency exit sign" "The green letters glow like an illuminated caption of your thoughts:  \"What am I doing here, and more importantly, how do I get out?\""
 

@@ -13,7 +13,7 @@ type Msg a
     = InteractWithLocation a
 
 
-locations : LocationsInfo b -> List b -> b -> (StoryElement a b c -> Bool) -> Html (Msg b)
+locations : (b -> LocationInfo) -> List b -> b -> (StoryElement a b c -> Bool) -> Html (Msg b)
 locations locationsInfo locations currentLocation beenThereDoneThat =
     let
         classes location =
@@ -38,7 +38,7 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
                     toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
                 cssColor =
-                    toCssColor <| getColor <| locationsInfo currentLocation
+                    toCssColor <| .color <| locationsInfo currentLocation
             in
                 ( key
                 , li
@@ -50,7 +50,7 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
                            else
                             []
                     )
-                    [ text <| getName <| locationsInfo location ]
+                    [ text <| .name <| locationsInfo location ]
                 )
     in
         div [ class "Locations" ]

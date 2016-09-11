@@ -9,9 +9,9 @@ type MyCharacter
     | AnxiousMan
 
 
-storyCharacters : CharactersInfo MyCharacter
-storyCharacters tag =
-    case tag of
+displayInfo : MyCharacter -> CharacterInfo
+displayInfo character =
+    case character of
         Volunteer ->
             characterInfo "volunteer" "He sure seems stressed.  You're not helping."
 

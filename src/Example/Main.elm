@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Engine exposing (..)
 import StoryRules exposing (..)
+import StoryElements exposing (..)
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)
@@ -13,7 +14,15 @@ import Scene2 exposing (..)
 
 main : Program Never
 main =
-    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storySetup storyItems storyLocations storyCharacters storyRules
+    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storySetup displayInfo scenes
+
+
+displayInfo : DisplayInfo MyItem MyLocation MyCharacter
+displayInfo =
+    { items = Items.displayInfo
+    , locations = Locations.displayInfo
+    , characters = Characters.displayInfo
+    }
 
 
 storySetup : StorySetup MyItem MyLocation MyCharacter MyScene MyKnowledge
@@ -33,8 +42,8 @@ storySetup =
     }
 
 
-storyRules : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
-storyRules scene =
+scenes : SceneSelector MyItem MyLocation MyCharacter MyScene MyKnowledge
+scenes scene =
     case scene of
         Scene1 ->
             scene1

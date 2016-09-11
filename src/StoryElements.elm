@@ -9,6 +9,13 @@ type StoryElement a b c
     | Character c
 
 
+type alias DisplayInfo a b c =
+    { items : a -> ItemInfo
+    , locations : b -> LocationInfo
+    , characters : c -> CharacterInfo
+    }
+
+
 type alias BasicInfo =
     { name : String
     , description : String
@@ -19,16 +26,16 @@ type alias WithColor a =
     { a | color : Color }
 
 
-type alias ItemsInfo a =
-    a -> BasicInfo
+type alias ItemInfo =
+    BasicInfo
 
 
-type alias LocationsInfo a =
-    a -> WithColor BasicInfo
+type alias LocationInfo =
+    WithColor BasicInfo
 
 
-type alias CharactersInfo a =
-    a -> BasicInfo
+type alias CharacterInfo =
+    BasicInfo
 
 
 item : a -> StoryElement a b c
@@ -46,29 +53,14 @@ character =
     Character
 
 
-getName : { a | name : String } -> String
-getName { name } =
-    name
-
-
-getDescription : { a | description : String } -> String
-getDescription { description } =
-    description
-
-
-getColor : WithColor a -> Color
-getColor { color } =
-    color
-
-
-itemInfo : String -> String -> BasicInfo
+itemInfo : String -> String -> ItemInfo
 itemInfo name description =
     { name = name
     , description = description
     }
 
 
-locationInfo : String -> Color -> String -> WithColor BasicInfo
+locationInfo : String -> Color -> String -> LocationInfo
 locationInfo name color description =
     { name = name
     , description = description
@@ -76,7 +68,7 @@ locationInfo name color description =
     }
 
 
-characterInfo : String -> String -> BasicInfo
+characterInfo : String -> String -> CharacterInfo
 characterInfo name description =
     { name = name
     , description = description

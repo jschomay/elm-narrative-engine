@@ -10,9 +10,9 @@ type MyLocation
     | Hallway
 
 
-storyLocations : LocationsInfo MyLocation
-storyLocations tag =
-    case tag of
+displayInfo : MyLocation -> LocationInfo
+displayInfo location =
+    case location of
         Kitchen ->
             locationInfo "commercial kitchen" blue "Everything has been cleaned, polished, and put away for the next morning."
 

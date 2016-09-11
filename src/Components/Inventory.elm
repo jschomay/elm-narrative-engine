@@ -11,7 +11,7 @@ type Msg a
     = InteractWithItem a
 
 
-inventory : ItemsInfo a -> List a -> (StoryElement a b c -> Bool) -> Html (Msg a)
+inventory : (a -> ItemInfo) -> List a -> (StoryElement a b c -> Bool) -> Html (Msg a)
 inventory itemsInfo items beenThereDoneThat =
     let
         numItems =
@@ -33,7 +33,7 @@ inventory itemsInfo items beenThereDoneThat =
                     [ classList classes
                     , onClick <| InteractWithItem item
                     ]
-                    [ text <| getName <| itemsInfo item ]
+                    [ text <| .name <| itemsInfo item ]
                 )
     in
         div [ class "Inventory" ]

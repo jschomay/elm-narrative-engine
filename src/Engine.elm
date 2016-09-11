@@ -51,12 +51,12 @@ setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorld
         |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
 
 
-loadStory : String -> String -> String -> StorySetup a b c d e -> ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d e -> Program Never
-loadStory title byline prologue storySetup itemsInfo locationsInfo charactersInfo storyRules =
+loadStory : String -> String -> String -> StorySetup a b c d e -> DisplayInfo a b c -> SceneSelector a b c d e -> Program Never
+loadStory title byline prologue storySetup displayInfo storyRules =
     Html.beginnerProgram
         { model = init title byline prologue storySetup
-        , view = view itemsInfo locationsInfo charactersInfo
-        , update = update itemsInfo locationsInfo charactersInfo storyRules
+        , view = view displayInfo
+        , update = update displayInfo storyRules
         }
 
 
@@ -70,8 +70,8 @@ type Msg a b c
 -- UPDATE
 
 
-update : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> SceneSelector a b c d e -> Msg a b c -> Model a b c d e -> Model a b c d e
-update itemsInfo locationsInfo charactersInfo storyRules action model =
+update : DisplayInfo a b c -> SceneSelector a b c d e -> Msg a b c -> Model a b c d e -> Model a b c d e
+update displayInfo storyRules action model =
     let
         defaultNarration storyElement ({ storyState } as model) =
             { model
@@ -100,24 +100,24 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
         toName storyElement =
             case storyElement of
                 Item item ->
-                    getName <| itemsInfo item
+                    .name <| displayInfo.items item
 
                 Location location ->
-                    getName <| locationsInfo location
+                    .name <| displayInfo.locations location
 
                 Character character ->
-                    getName <| charactersInfo character
+                    .name <| displayInfo.characters character
 
         toDescription storyElement =
             case storyElement of
                 Item item ->
-                    getDescription <| itemsInfo item
+                    .description <| displayInfo.items item
 
                 Location location ->
-                    getDescription <| locationsInfo location
+                    .description <| displayInfo.locations location
 
                 Character character ->
-                    getDescription <| charactersInfo character
+                    .description <| displayInfo.characters character
 
         tryUpdatingFromRules storyElement model =
             let
@@ -161,9 +161,9 @@ update itemsInfo locationsInfo charactersInfo storyRules action model =
 -- main layout
 
 
-view : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
-view itemsInfo locationsInfo charactersInfo model =
-    loadPage itemsInfo locationsInfo charactersInfo model
+view : DisplayInfo a b c -> Model a b c d e -> Html (Msg a b c)
+view displayInfo model =
+    loadPage displayInfo model
 
 
 type Route
@@ -171,14 +171,14 @@ type Route
     | GamePage
 
 
-loadPage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
-loadPage itemsInfo locationsInfo charactersInfo model =
+loadPage : DisplayInfo a b c -> Model a b c d e -> Html (Msg a b c)
+loadPage displayInfo model =
     case model.route of
         TitlePage ->
             titelPage model
 
         GamePage ->
-            gamePage itemsInfo locationsInfo charactersInfo model
+            gamePage displayInfo model
 
 
 titelPage : Model a b c d e -> Html (Msg a b c)
@@ -191,21 +191,21 @@ titelPage model =
         ]
 
 
-gamePage : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> Model a b c d e -> Html (Msg a b c)
-gamePage itemsInfo locationsInfo charactersInfo model =
+gamePage : DisplayInfo a b c -> Model a b c d e -> Html (Msg a b c)
+gamePage displayInfo model =
     let
         toCssColor : Color -> String
         toCssColor =
             toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
         cssColor =
-            toCssColor <| getColor <| locationsInfo model.storyState.currentLocation
+            toCssColor <| .color <| displayInfo.locations model.storyState.currentLocation
     in
         div [ class "GamePage" ]
             [ div [ class "Layout" ]
                 [ div [ class "Layout__Main" ]
                     [ h1 [ class "Current-location", style [ ( "backgroundColor", cssColor ) ] ]
-                        [ text <| getName <| locationsInfo model.storyState.currentLocation ]
+                        [ text <| .name <| displayInfo.locations model.storyState.currentLocation ]
                     , Html.map
                         (\msg ->
                             case msg of
@@ -215,14 +215,14 @@ gamePage itemsInfo locationsInfo charactersInfo model =
                                 Components.CurrentSummary.InteractWithCharacter a ->
                                     Interaction (Character a)
                         )
-                        <| currentSummary itemsInfo locationsInfo charactersInfo model.storyState (flip List.member model.interactions)
+                        <| currentSummary displayInfo model.storyState (flip List.member model.interactions)
                     , storyline model.storyState.storyLine
                     ]
                 , div [ class "Layout__Sidebar" ]
                     [ Html.map (\(Components.Locations.InteractWithLocation a) -> Interaction (Location a))
-                        <| locations locationsInfo model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
+                        <| locations displayInfo.locations model.storyState.knownLocations model.storyState.currentLocation (flip List.member model.interactions)
                     , Html.map (\(Components.Inventory.InteractWithItem a) -> Interaction (Item a))
-                        <| inventory itemsInfo model.storyState.inventory (flip List.member model.interactions)
+                        <| inventory displayInfo.items model.storyState.inventory (flip List.member model.interactions)
                     ]
                 ]
             ]

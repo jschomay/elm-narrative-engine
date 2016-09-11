@@ -14,8 +14,8 @@ type Msg a b
     | InteractWithCharacter b
 
 
-currentSummary : ItemsInfo a -> LocationsInfo b -> CharactersInfo c -> StoryState a b c d e -> (StoryElement a b c -> Bool) -> Html (Msg a c)
-currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneThat =
+currentSummary : DisplayInfo a b c -> StoryState a b c d e -> (StoryElement a b c -> Bool) -> Html (Msg a c)
+currentSummary displayInfo storyState beenThereDoneThat =
     let
         currentLocation =
             storyState.currentLocation
@@ -26,7 +26,7 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                 |> (==) 0
 
         locationName =
-            getName <| locationsInfo currentLocation
+            .name <| displayInfo.locations currentLocation
 
         storyElementDom storyElement =
             let
@@ -38,10 +38,10 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
                 storyElementName =
                     case storyElement of
                         Item item ->
-                            getName <| itemsInfo item
+                            .name <| displayInfo.items item
 
                         Character character ->
-                            getName <| charactersInfo character
+                            .name <| displayInfo.characters character
 
                         x ->
                             Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
@@ -82,7 +82,7 @@ currentSummary itemsInfo locationsInfo charactersInfo storyState beenThereDoneTh
             toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
         cssColor =
-            toCssColor <| getColor <| locationsInfo currentLocation
+            toCssColor <| .color <| displayInfo.locations currentLocation
 
         charactersList =
             if not <| List.isEmpty <| getCharactersByLocation currentLocation storyState then
