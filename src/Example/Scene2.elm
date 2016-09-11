@@ -65,7 +65,7 @@ lostSpeech =
 
 "Don't worry," you say, "it's not that bad."
 
-"You don't understand!  My speech, my notes -- I've lost them!  I lost the notes for my speech, and I'm supposed to present in ten minutes!"
+"You don't understand!  My speech, my notes -- I've lost them!  I'm supposed to present in ten minutes!  What am I going to do?"
 
 He goes back to muttering words of doom and gloom.  Poor guy.
 """
@@ -73,15 +73,15 @@ He goes back to muttering words of doom and gloom.  Poor guy.
 
 returningNotes : String
 returningNotes =
-    """"Oh you mean these?  Is this what you are looking for?  You're welcome to them."
+    """"Oh you mean these?  You're welcome to them."
 
-You hand over the envelope.  "Yes, these are it!  You found them!  You've saved me, how can I ever repay you?"
+You hand over the envelope.  "Yes, that's it!  You found them!  You've saved me, how can I ever repay you?"
 
 "Don't bother, just... good luck."
 
-Well that wrapped that up in a nice little package.  But you still don't know why you are here.  You wander off, but the old man calls out to you.
+Well that wraps that up in a nice little package.  But it's still a mystery why you are here.
 
-"Oh, hey!  Here, I have something, I think you should have this."
+The old man calls you back.  "Oh, hey!  I think you should have this."
 
 He reaches into his pocket and hands you something.  A sticker.
 

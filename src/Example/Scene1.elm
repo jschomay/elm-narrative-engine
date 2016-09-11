@@ -32,7 +32,7 @@ scene1 =
         `changesWorld` []
         `narrates` tryToEscape
     , interactingWith (location Kitchen)
-        `when` (unless (nearProp Mic))
+        `when` (all [ inLocation Auditorium, (unless (nearProp Mic)) ])
         `changesWorld` []
         `narrates` tryToEscape
     , interactingWith (item Podium)
@@ -58,7 +58,7 @@ scene1 =
 
 afraidOfHallway : String
 afraidOfHallway =
-    """It's the only way out you that you can see, but even thinking of going out there sends a shiver of nerves through your body, though you don't even know why."""
+    """It's the only way out that you can see, but even thinking of going out there sends a shiver of nerves through your body, though you don't even know why."""
 
 
 volunteerArrives : String
@@ -114,17 +114,17 @@ thinkAboutEscaping =
 
 giveSpeach : String
 giveSpeach =
-    """ Ahh yes, the envelope in your pocket.  Now must be the time.
+    """Ahh yes, the envelope in your pocket.  Now must be the time.
 
 You pull out the folded sheets of paper and flip to the first one.  Let's see...
 
-"Ahem.  'Mitochondrial transmembrane potential and Apoptosis.'"  Oh boy, this seems heavy.  Well, better give them what they want.
+"Ahem.  'Mitochondrial transmembrane potential and Apoptosis.'"  Oh boy, what a mouthful.  Well, better give them what they want.
 
-"A variety of key events in apoptosis focus on mitochondria, including the release of caspase activators such as cytochrome c, altered cellular oxidation-reductions..."
+"Our study focused on measuring altered cellular oxidation-reductions in mitochondrial..."
 
-What a mouthful.  That goes on for at least 20 minutes.  Finally you finish the last page.
+Eyes begin glazing over.  That goes on for at least 20 minutes.  Finally you finish the last page.
 
-"... in conclusion, the study failed to return a significant correlation to the hypothesis.  Any questions?  No?  Great, see ya'!"
+"... in conclusion, the study failed to return a significant correlation to the hypothesis.  No questions?  Great, see ya'!"
 
-Every eye in the room has glazed over.  You slink off stage.  At least that's done.
+Half the audience has fallen asleep.  You slink off stage.  At least that's done.
 """
