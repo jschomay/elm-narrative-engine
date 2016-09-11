@@ -34,7 +34,15 @@ type TestKnowledge
 
 startingModel : Model TestItem TestLocation TestCharacter TestScene TestKnowledge
 startingModel =
-    Engine.init "title" "byline" "prologue" storySetup
+    Engine.init storyInfo storySetup
+
+
+storyInfo : StoryInfo
+storyInfo =
+    { title = "title"
+    , byline = "byline"
+    , prologue = "prologue"
+    }
 
 
 startingState : StoryState TestItem TestLocation TestCharacter TestScene TestKnowledge
@@ -134,7 +142,7 @@ initTests =
     describe "init"
         [ test "adds starting locatino to inst of interactions"
             <| \() ->
-                Expect.equal (Engine.init "a" "b" "c" storySetup |> .interactions)
+                Expect.equal (Engine.init storyInfo storySetup |> .interactions)
                     [ Location Earth ]
         ]
 

@@ -14,7 +14,15 @@ import Scene2 exposing (..)
 
 main : Program Never
 main =
-    loadStory "The curse of the tech demo" "Jeff Schomay" prologue storySetup displayInfo scenes
+    loadStory storyInfo storySetup displayInfo scenes
+
+
+storyInfo : StoryInfo
+storyInfo =
+    { title = "The curse of the tech demo"
+    , byline = "Jeff Schomay"
+    , prologue = prologue
+    }
 
 
 displayInfo : DisplayInfo MyItem MyLocation MyCharacter

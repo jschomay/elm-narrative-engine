@@ -34,8 +34,15 @@ type alias StorySetup a b c d e =
     }
 
 
-init : String -> String -> String -> StorySetup a b c d e -> Model a b c d e
-init title byline prologue storySetup =
+type alias StoryInfo =
+    { title : String
+    , byline : String
+    , prologue : String
+    }
+
+
+init : StoryInfo -> StorySetup a b c d e -> Model a b c d e
+init { title, byline, prologue } storySetup =
     { title = title
     , byline = byline
     , prologue = prologue
@@ -51,10 +58,10 @@ setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorld
         |> \storyState -> StoryRules.updateStoryState "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
 
 
-loadStory : String -> String -> String -> StorySetup a b c d e -> DisplayInfo a b c -> SceneSelector a b c d e -> Program Never
-loadStory title byline prologue storySetup displayInfo storyRules =
+loadStory : StoryInfo -> StorySetup a b c d e -> DisplayInfo a b c -> SceneSelector a b c d e -> Program Never
+loadStory storyInfo storySetup displayInfo storyRules =
     Html.beginnerProgram
-        { model = init title byline prologue storySetup
+        { model = init storyInfo storySetup
         , view = view displayInfo
         , update = update displayInfo storyRules
         }
@@ -185,7 +192,7 @@ titelPage : Model a b c d e -> Html (Msg a b c)
 titelPage model =
     div [ class "TitlePage" ]
         [ h1 [ class "TitlePage__Title" ] [ text model.title ]
-        , h3 [ class "TitlePage__ByLine" ] [ text <| "An interactive story by " ++ model.byline ]
+        , h3 [ class "TitlePage__Byline" ] [ text <| "An interactive story by " ++ model.byline ]
         , toHtml [ class "TitlePage__Prologue markdown-body" ] model.prologue
         , span [ class "TitlePage__StartGame", onClick StartGame ] [ text "Play" ]
         ]
