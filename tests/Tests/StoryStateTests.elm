@@ -3,6 +3,7 @@ module Tests.StoryStateTests exposing (all)
 import Test exposing (..)
 import Expect exposing (..)
 import StoryState exposing (..)
+import StoryElements exposing (..)
 
 
 type TestItem
@@ -43,9 +44,29 @@ all =
             [ describe "MoveTo"
                 [ test "sets the current location"
                     <| \() ->
-                        Expect.equal { init | currentLocation = Mars, storyLine = [ ( "Mars", "MoveTo Mars" ) ] }
+                        Expect.equal
+                            { init
+                                | currentLocation = Mars
+                                , storyLine = [ ( "Mars", "MoveTo Mars" ) ]
+                                , familiarWith = [ Location Earth, Location Mars ]
+                            }
                             <| advanceStory "Mars" init
                             <| ( [ moveTo Mars ], Narrate "MoveTo Mars" )
+                , describe "adds the location to the 'familiarWith' list (even if it isn't the subject of the interaction)"
+                    [ test "if it isn't already there"
+                        <| \() ->
+                            Expect.equal [ Location Earth, Location Mars ]
+                                <| .familiarWith
+                                <| advanceStory "Jack" init
+                                <| ( [ moveTo Mars ], Narrate "Jack sends you to Mars" )
+                    , test "unless it is already there"
+                        <| \() ->
+                            Expect.equal [ Location Earth, Location Mars ]
+                                <| .familiarWith
+                                <| (\newState -> advanceStory "Jack" newState <| ( [ moveTo Mars ], Narrate "Jack sends you to Mars" ))
+                                <| advanceStory "Mars" init
+                                <| ( [ MoveTo Mars ], Narrate "I think I'll go to mars myself" )
+                    ]
                 ]
             , describe "AddLocation"
                 [ test "prepend location to known locations"

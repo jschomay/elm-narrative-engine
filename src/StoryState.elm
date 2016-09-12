@@ -147,9 +147,15 @@ advanceStory storyElementName storyState ( changesWorldCommands, narration ) =
         doCommand command storyState =
             case command of
                 MoveTo location ->
-                    { storyState
-                        | currentLocation = location
-                    }
+                    if List.member (Location location) storyState.familiarWith then
+                        { storyState
+                            | currentLocation = location
+                        }
+                    else
+                        { storyState
+                            | currentLocation = location
+                            , familiarWith = storyState.familiarWith ++ [ Location location ]
+                        }
 
                 AddLocation location ->
                     if List.member location storyState.knownLocations then
