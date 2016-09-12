@@ -39,130 +39,97 @@ init =
 all : Test
 all =
     describe "StoryStateTests"
-        [ describe "setCurrentLocation"
-            [ test "sets the current location"
-                <| \() ->
-                    Expect.equal { init | currentLocation = Mars }
-                        <| setCurrentLocation Mars init
-            ]
-        , describe "addLocation"
-            [ test "prepend location to known locations"
-                <| \() ->
-                    addLocation Earth init
-                        |> addLocation Mars
-                        |> .knownLocations
-                        |> Expect.equal [ Mars, Earth ]
-            , test "won't add a location twice"
-                <| \() ->
-                    addLocation Moon init
-                        |> addLocation Mars
-                        |> addLocation Mars
-                        |> .knownLocations
-                        |> Expect.equal [ Mars, Moon ]
-            ]
-        , describe "removeLocation"
-            [ test "removes location from known locations without chaning order"
-                <| \() ->
-                    addLocation Moon init
-                        |> addLocation Earth
-                        |> addLocation Mars
-                        |> removeLocation Earth
-                        |> .knownLocations
-                        |> Expect.equal [ Mars, Moon ]
-            , test "does nothing if location is not in known locations"
-                <| \() ->
-                    addLocation Moon init
-                        |> addLocation Mars
-                        |> removeLocation Earth
-                        |> .knownLocations
-                        |> Expect.equal [ Mars, Moon ]
-            ]
-        , describe "addProp"
-            [ test "appends prop to items by location "
-                <| \() ->
-                    addProp ThingOne Earth init
-                        |> addProp ThingTwo Earth
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal [ ThingOne, ThingTwo ]
-            , test "wont duplicate items"
-                <| \() ->
-                    addProp ThingOne Earth init
-                        |> addProp ThingTwo Earth
-                        |> addProp ThingTwo Earth
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal [ ThingOne, ThingTwo ]
-            ]
-        , describe "addCharacter"
-            [ test "appends character to items by location "
-                <| \() ->
-                    addCharacter Jack Earth init
-                        |> addCharacter Jill Earth
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal [ Jack, Jill ]
-            , test "wont duplicate characters"
-                <| \() ->
-                    addCharacter Jack Earth init
-                        |> addCharacter Jill Earth
-                        |> addCharacter Jill Earth
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal [ Jack, Jill ]
-            ]
-        , describe "removeProp"
-            [ test "removes the prop from items by location"
-                <| \() ->
-                    addProp ThingOne Earth init
-                        |> addProp ThingTwo Earth
-                        |> removeProp ThingOne Earth
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal [ ThingTwo ]
-            , test "does nothing if the location does not have the prop"
-                <| \() ->
-                    addProp ThingOne Earth init
-                        |> removeProp ThingTwo Earth
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal [ ThingOne ]
-            , test "does nothing if the location is empty"
-                <| \() ->
-                    init
-                        |> removeProp ThingOne Earth
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal []
-            , test "leaves other locations alone"
-                <| \() ->
-                    addProp ThingOne Earth init
-                        |> addProp ThingTwo Earth
-                        |> addProp ThingOne Mars
-                        |> removeProp ThingOne Mars
-                        |> getPropsInCurrentLocation
-                        |> Expect.equal [ ThingOne, ThingTwo ]
-            ]
-        , describe "removeCharacter"
-            [ test "removes the character from characters by location"
-                <| \() ->
-                    addCharacter Jill Earth init
-                        |> addCharacter Jack Earth
-                        |> removeCharacter Jill Earth
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal [ Jack ]
-            , test "does nothing if the location does not have the character"
-                <| \() ->
-                    addCharacter Jill Earth init
-                        |> removeCharacter Jack Earth
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal [ Jill ]
-            , test "does nothing if the location is empty"
-                <| \() ->
-                    init
-                        |> removeCharacter Jill Earth
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal []
-            , test "leaves other locations alone"
-                <| \() ->
-                    addCharacter Jill Earth init
-                        |> addCharacter Jack Earth
-                        |> addCharacter Jill Mars
-                        |> removeCharacter Jill Mars
-                        |> getCharactersInCurrentLocation
-                        |> Expect.equal [ Jill, Jack ]
+        [ describe "advanceStory"
+            [ describe "MoveTo"
+                [ test "sets the current location"
+                    <| \() ->
+                        Expect.equal { init | currentLocation = Mars, storyLine = [ ( "Mars", "MoveTo Mars" ) ] }
+                            <| advanceStory "Mars" init
+                            <| ( [ moveTo Mars ], Narrate "MoveTo Mars" )
+                ]
+            , describe "AddLocation"
+                [ test "prepend location to known locations"
+                    <| \() ->
+                        Expect.equal { init | knownLocations = [ Mars, Earth ], storyLine = [ ( "Mars", "AddLocation Mars" ), ( "Earth", "AddLocation Earth" ) ] }
+                            <| (\newState -> advanceStory "Mars" newState <| ( [ AddLocation Mars ], Narrate "AddLocation Mars" ))
+                            <| advanceStory "Earth" init
+                            <| ( [ AddLocation Earth ], Narrate "AddLocation Earth" )
+                , test "won't add a location twice"
+                    <| \() ->
+                        Expect.equal [ Earth, Moon ]
+                            <| .knownLocations
+                            <| (\newState -> advanceStory "Earth" newState <| ( [ AddLocation Earth ], Narrate "AddLocation Earth" ))
+                            <| (\newState -> advanceStory "Earth" newState <| ( [ AddLocation Earth ], Narrate "AddLocation Earth" ))
+                            <| advanceStory "Moon" init
+                            <| ( [ AddLocation Moon ], Narrate "AddLocation Moon" )
+                ]
+            , describe "RemoveLocation"
+                [ test "removes location from known locations without chaning order"
+                    <| \() ->
+                        Expect.equal [ Mars, Moon ]
+                            <| .knownLocations
+                            <| (\newState -> advanceStory "Earth" newState <| ( [ RemoveLocation Earth ], Narrate "RemoveLocation Earth" ))
+                            <| (\newState -> advanceStory "Mars" newState <| ( [ AddLocation Mars ], Narrate "AddLocation Mars" ))
+                            <| (\newState -> advanceStory "Earth" newState <| ( [ AddLocation Earth ], Narrate "AddLocation Earth" ))
+                            <| advanceStory "Moon" init
+                            <| ( [ AddLocation Moon ], Narrate "AddLocation Moon" )
+                , test "does nothing if location is not in known locations"
+                    <| \() ->
+                        Expect.equal [ Mars, Moon ]
+                            <| .knownLocations
+                            <| (\newState -> advanceStory "Earth" newState <| ( [ RemoveLocation Earth ], Narrate "RemoveLocation Earth" ))
+                            <| (\newState -> advanceStory "Mars" newState <| ( [ AddLocation Mars ], Narrate "AddLocation Mars" ))
+                            <| advanceStory "Moon" init
+                            <| ( [ AddLocation Moon ], Narrate "AddLocation Moon" )
+                ]
+            , describe "addProp"
+                [ test "appends prop to items by location "
+                    <| \() ->
+                        Expect.equal [ ThingOne, ThingTwo ]
+                            <| getPropsInCurrentLocation
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Earth ], Narrate "AddProp ThingTwo" ))
+                            <| advanceStory "ThingOne" init
+                            <| ( [ AddProp ThingOne Earth ], Narrate "AddProp ThingOne" )
+                , test "wont duplicate items"
+                    <| \() ->
+                        Expect.equal [ ThingOne, ThingTwo ]
+                            <| getPropsInCurrentLocation
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Earth ], Narrate "AddProp ThingTwo" ))
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Earth ], Narrate "AddProp ThingTwo" ))
+                            <| advanceStory "ThingOne" init
+                            <| ( [ AddProp ThingOne Earth ], Narrate "AddProp ThingOne" )
+                ]
+            , describe "removeProp"
+                [ test "removes the prop from items by location"
+                    <| \() ->
+                        Expect.equal [ ThingTwo ]
+                            <| getPropsInCurrentLocation
+                            <| (\newState -> advanceStory "ThingOne" newState <| ( [ RemoveProp ThingOne Earth ], Narrate "RemoveProp ThingOne" ))
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Earth ], Narrate "AddProp ThingTwo" ))
+                            <| advanceStory "ThingOne" init
+                            <| ( [ AddProp ThingOne Earth ], Narrate "AddProp ThingOne" )
+                , test "does nothing if the location does not have the prop"
+                    <| \() ->
+                        Expect.equal [ ThingOne ]
+                            <| getPropsInCurrentLocation
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ RemoveProp ThingTwo Earth ], Narrate "RemoveProp ThingTwo" ))
+                            <| advanceStory "ThingOne" init
+                            <| ( [ AddProp ThingOne Earth ], Narrate "AddProp ThingOne" )
+                , test "does nothing if the location is empty"
+                    <| \() ->
+                        Expect.equal []
+                            <| getPropsInCurrentLocation
+                            <| advanceStory "ThingOne" init
+                            <| ( [ RemoveProp ThingOne Earth ], Narrate "RemoveProp ThingOne" )
+                , test "leaves other locations alone"
+                    <| \() ->
+                        Expect.equal [ ThingOne, ThingTwo ]
+                            <| getPropsInCurrentLocation
+                            <| (\newState -> advanceStory "ThingOne" newState <| ( [ RemoveProp ThingOne Mars ], Narrate "RemoveProp ThingOne" ))
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Mars ], Narrate "AddProp ThingTwo" ))
+                            <| (\newState -> advanceStory "ThingTwo" newState <| ( [ AddProp ThingTwo Earth ], Narrate "AddProp ThingTwo" ))
+                            <| advanceStory "ThingOne" init
+                            <| ( [ AddProp ThingOne Earth ], Narrate "AddProp ThingOne" )
+                ]
             ]
         ]

@@ -9,19 +9,11 @@ type alias Scene a b c d e =
 
 
 type alias StoryRule a b c d e =
-    ( Given a b c e, Do a b c d e )
+    ( Given a b c e, AdvanceStory a b c d e )
 
 
 type alias Given a b c e =
     ( Trigger a b c, Condition a b c e )
-
-
-type alias Do a b c d e =
-    ( ChangeWorldCommands a b c d e, Narration )
-
-
-type alias ChangeWorldCommands a b c d e =
-    List (ChangeWorldCommand a b c d e)
 
 
 type Trigger a b c
@@ -39,25 +31,6 @@ type Condition a b c e
     | All (List (Condition a b c e))
     | Any (List (Condition a b c e))
     | Unless (Condition a b c e)
-
-
-type ChangeWorldCommand a b c d e
-    = MoveTo b
-    | AddLocation b
-    | RemoveLocation b
-    | AddInventory a
-    | RemoveInventory a
-    | AddCharacter c b
-    | RemoveCharacter c b
-    | AddProp a b
-    | RemoveProp a b
-    | AddKnowledge e
-    | LoadScene d
-    | EndStory
-
-
-type Narration
-    = Narrate String
 
 
 everyTime : Condition a b c e
@@ -105,82 +78,22 @@ unless =
     Unless
 
 
-moveTo : b -> ChangeWorldCommand a b c d e
-moveTo =
-    MoveTo
+firstInteractionWith : StoryElement a b c -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
+firstInteractionWith storyElement condition advanceStory =
+    ( ( FirstInteractionWith storyElement, condition ), advanceStory )
 
 
-addLocation : b -> ChangeWorldCommand a b c d e
-addLocation =
-    AddLocation
+interactingWith : StoryElement a b c -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
+interactingWith storyElement condition advanceStory =
+    ( ( InteractionWith storyElement, condition ), advanceStory )
 
 
-removeLocation : b -> ChangeWorldCommand a b c d e
-removeLocation =
-    RemoveLocation
-
-
-addInventory : a -> ChangeWorldCommand a b c d e
-addInventory =
-    AddInventory
-
-
-removeInventory : a -> ChangeWorldCommand a b c d e
-removeInventory =
-    RemoveInventory
-
-
-addCharacter : c -> b -> ChangeWorldCommand a b c d e
-addCharacter =
-    AddCharacter
-
-
-removeCharacter : c -> b -> ChangeWorldCommand a b c d e
-removeCharacter =
-    RemoveCharacter
-
-
-addProp : a -> b -> ChangeWorldCommand a b c d e
-addProp =
-    AddProp
-
-
-removeProp : a -> b -> ChangeWorldCommand a b c d e
-removeProp =
-    RemoveProp
-
-
-addKnowledge : e -> ChangeWorldCommand a b c d e
-addKnowledge =
-    AddKnowledge
-
-
-loadScene : d -> ChangeWorldCommand a b c d e
-loadScene =
-    LoadScene
-
-
-endStory : ChangeWorldCommand a b c d e
-endStory =
-    EndStory
-
-
-firstInteractionWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
-firstInteractionWith storyElement condition do =
-    ( ( FirstInteractionWith storyElement, condition ), do )
-
-
-interactingWith : StoryElement a b c -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
-interactingWith storyElement condition do =
-    ( ( InteractionWith storyElement, condition ), do )
-
-
-when : (Condition a b c e -> Do a b c d e -> StoryRule a b c d e) -> Condition a b c e -> Do a b c d e -> StoryRule a b c d e
+when : (Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e) -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
 when f condition =
     f condition
 
 
-changesWorld : (Do a b c d e -> StoryRule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> StoryRule a b c d e
+changesWorld : (AdvanceStory a b c d e -> StoryRule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> StoryRule a b c d e
 changesWorld f a b =
     f ( a, b )
 
@@ -190,23 +103,17 @@ narrates f =
     f << Narrate
 
 
-updateFromRules : StoryElement a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> String -> Maybe (StoryState a b c d e)
-updateFromRules storyElement scene storyState beenThereDoneThat storyElementName =
-    findFirstMatchingRule scene storyElement storyState beenThereDoneThat
-        `Maybe.andThen` (Just << updateStoryState storyElementName storyState)
-
-
-findFirstMatchingRule : Scene a b c d e -> StoryElement a b c -> StoryState a b c d e -> Bool -> Maybe (Do a b c d e)
-findFirstMatchingRule rules storyElement storyState beenThereDoneThat =
+findMatchingRule : StoryElement a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> Maybe (AdvanceStory a b c d e)
+findMatchingRule storyElement rules storyState beenThereDoneThat =
     case rules of
         [] ->
             Nothing
 
-        (( given, do ) as x) :: xs ->
+        (( given, advanceStory ) as x) :: xs ->
             if matchesGiven given storyElement storyState beenThereDoneThat then
-                Just do
+                Just advanceStory
             else
-                findFirstMatchingRule xs storyElement storyState beenThereDoneThat
+                findMatchingRule storyElement xs storyState beenThereDoneThat
 
 
 matchesGiven : Given a b c e -> StoryElement a b c -> StoryState a b c d e -> Bool -> Bool
@@ -253,53 +160,3 @@ matchesCondition condition storyState =
 
         Unless condition ->
             Basics.not <| matchesCondition condition storyState
-
-
-updateStoryState : String -> StoryState a b c d e -> Do a b c d e -> StoryState a b c d e
-updateStoryState storyElementName storyState ( changesWorldCommands, narration ) =
-    let
-        getNarration narration =
-            case narration of
-                Narrate t ->
-                    t
-
-        doCommand command storyState =
-            case command of
-                MoveTo location ->
-                    setCurrentLocation location storyState
-
-                AddLocation location ->
-                    StoryState.addLocation location storyState
-
-                RemoveLocation location ->
-                    StoryState.removeLocation location storyState
-
-                AddInventory item ->
-                    StoryState.addInventory item storyState
-
-                RemoveInventory item ->
-                    StoryState.removeInventory item storyState
-
-                AddCharacter character location ->
-                    StoryState.addCharacter character location storyState
-
-                RemoveCharacter character location ->
-                    StoryState.removeCharacter character location storyState
-
-                AddProp prop location ->
-                    StoryState.addProp prop location storyState
-
-                RemoveProp prop location ->
-                    StoryState.removeProp prop location storyState
-
-                AddKnowledge knowledge ->
-                    StoryState.addKnowledge knowledge storyState
-
-                LoadScene scene ->
-                    setCurrentScene scene storyState
-
-                EndStory ->
-                    storyState
-    in
-        List.foldl doCommand storyState changesWorldCommands
-            |> addNarration ( storyElementName, getNarration narration )

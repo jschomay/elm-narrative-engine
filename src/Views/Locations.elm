@@ -1,20 +1,15 @@
-module Components.Locations exposing (..)
+module Views.Locations exposing (..)
 
 import Html exposing (..)
 import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import String exposing (join)
 import Color exposing (..)
 import StoryElements exposing (..)
 
 
-type Msg a
-    = InteractWithLocation a
-
-
-locations : (b -> LocationInfo) -> List b -> b -> (StoryElement a b c -> Bool) -> Html (Msg b)
-locations locationsInfo locations currentLocation beenThereDoneThat =
+locations : (b -> msg) -> (b -> LocationInfo) -> List b -> b -> (Color -> String) -> (StoryElement a b c -> Bool) -> Html msg
+locations msg locationsInfo locations currentLocation toCssColor beenThereDoneThat =
     let
         classes location =
             classList
@@ -33,17 +28,13 @@ locations locationsInfo locations currentLocation beenThereDoneThat =
                 key =
                     (toString location) ++ (toString <| numLocations - i)
 
-                toCssColor : Color -> String
-                toCssColor =
-                    toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
-
                 cssColor =
                     toCssColor <| .color <| locationsInfo currentLocation
             in
                 ( key
                 , li
                     ([ classes location
-                     , onClick <| InteractWithLocation location
+                     , onClick <| msg location
                      ]
                         ++ if location == currentLocation then
                             [ style [ ( "backgroundColor", cssColor ) ] ]

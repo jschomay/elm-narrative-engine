@@ -1,4 +1,4 @@
-module Components.Inventory exposing (..)
+module Views.Inventory exposing (..)
 
 import Html exposing (..)
 import Html.Keyed
@@ -7,12 +7,8 @@ import Html.Events exposing (..)
 import StoryElements exposing (..)
 
 
-type Msg a
-    = InteractWithItem a
-
-
-inventory : (a -> ItemInfo) -> List a -> (StoryElement a b c -> Bool) -> Html (Msg a)
-inventory itemsInfo items beenThereDoneThat =
+inventory : (a -> msg) -> (a -> ItemInfo) -> List a -> (StoryElement a b c -> Bool) -> Html msg
+inventory msg itemsInfo items beenThereDoneThat =
     let
         numItems =
             List.length items
@@ -31,7 +27,7 @@ inventory itemsInfo items beenThereDoneThat =
                 ( key
                 , li
                     [ classList classes
-                    , onClick <| InteractWithItem item
+                    , onClick <| msg item
                     ]
                     [ text <| .name <| itemsInfo item ]
                 )

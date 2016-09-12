@@ -1,21 +1,15 @@
-module Components.CurrentSummary exposing (..)
+module Views.CurrentSummary exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import String exposing (join)
 import Color exposing (..)
 import StoryElements exposing (..)
 import StoryState exposing (..)
 
 
-type Msg a b
-    = InteractWithProp a
-    | InteractWithCharacter b
-
-
-currentSummary : DisplayInfo a b c -> StoryState a b c d e -> (StoryElement a b c -> Bool) -> Html (Msg a c)
-currentSummary displayInfo storyState beenThereDoneThat =
+currentSummary : (a -> msg) -> (c -> msg) -> DisplayInfo a b c -> (Color -> String) -> (StoryElement a b c -> Bool) -> StoryState a b c d e -> Html msg
+currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat storyState =
     let
         currentLocation =
             storyState.currentLocation
@@ -49,10 +43,10 @@ currentSummary displayInfo storyState beenThereDoneThat =
                 storyElementMsg =
                     case storyElement of
                         Item item ->
-                            InteractWithProp item
+                            itemMsg item
 
                         Character character ->
-                            InteractWithCharacter character
+                            charcterMsg character
 
                         x ->
                             Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
@@ -76,10 +70,6 @@ currentSummary displayInfo storyState beenThereDoneThat =
                         List.intersperse (text " and ") list
             in
                 storyElements ++ [ text "." ]
-
-        toCssColor : Color -> String
-        toCssColor =
-            toRgb >> \{ red, green, blue } -> String.join "" [ "rgb(", toString red, ",", toString green, ",", toString blue, ")" ]
 
         cssColor =
             toCssColor <| .color <| displayInfo.locations currentLocation

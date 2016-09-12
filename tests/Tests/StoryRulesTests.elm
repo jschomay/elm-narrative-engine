@@ -46,7 +46,7 @@ all =
 
 updateFromRulesTests : Test.Test
 updateFromRulesTests =
-    describe "updateFromRules"
+    describe "findMatchingRule"
         [ test "with no matches returns nothing"
             <| \() ->
                 let
@@ -57,7 +57,7 @@ updateFromRulesTests =
                             `narrates` "thing one"
                         ]
                 in
-                    Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
+                    Expect.equal (findMatchingRule (Item ThingOne) rules startingState True)
                         Nothing
         , test "only runs first matching rule"
             <| \() ->
@@ -66,11 +66,11 @@ updateFromRulesTests =
                         [ interactingWith (Item ThingTwo)
                             `when` (everyTime)
                             `changesWorld` [ AddInventory ThingOne ]
-                            `narrates` "no match"
+                            `narrates` "first match"
                         , interactingWith (Item ThingOne)
                             `when` (everyTime)
                             `changesWorld` [ AddInventory ThingOne ]
-                            `narrates` "first match"
+                            `narrates` "second match"
                         , interactingWith (Item ThingOne)
                             `when` (everyTime)
                             `changesWorld` [ AddInventory ThingTwo ]
@@ -78,13 +78,10 @@ updateFromRulesTests =
                         ]
 
                     expected =
-                        { startingState
-                            | inventory = [ ThingOne ]
-                            , storyLine = [ ( "name", "first match" ) ]
-                        }
+                        List.head rules
                 in
-                    Expect.equal (updateFromRules (Item ThingOne) rules startingState True "name")
-                        (Just expected)
+                    Expect.equal (findMatchingRule (Item ThingTwo) rules startingState True)
+                        (Maybe.map snd expected)
         ]
 
 
@@ -130,34 +127,34 @@ matchesConditionTests =
                 <| \() ->
                     Expect.true "match"
                         <| matchesCondition (WithItem ThingOne)
-                        <| StoryState.addInventory ThingOne startingState
+                        <| (advanceStory "ThingOne" startingState <| ( [ AddInventory ThingOne ], Narrate "AddInventory ThingOne" ))
             , test "no match"
                 <| \() ->
                     Expect.false "no match"
                         <| matchesCondition (WithItem ThingOne)
-                        <| StoryState.addInventory ThingTwo startingState
+                        <| (advanceStory "ThingTwo" startingState <| ( [ AddInventory ThingTwo ], Narrate "AddInventory ThingTwo" ))
             ]
         , describe "NearCharacter"
             [ test "match"
                 <| \() ->
-                    StoryState.addCharacter Jack Earth startingState
+                    (advanceStory "Jack" startingState <| ( [ AddCharacter Jack Earth ], Narrate ".." ))
                         |> matchesCondition (NearCharacter Jack)
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    StoryState.addCharacter Jill Earth startingState
+                    (advanceStory "Jill" startingState <| ( [ AddCharacter Jill Earth ], Narrate ".." ))
                         |> matchesCondition (NearCharacter Jack)
                         |> Expect.false "no match"
             ]
         , describe "NearProp"
             [ test "match"
                 <| \() ->
-                    StoryState.addProp ThingOne Earth startingState
+                    (advanceStory "ThingOne" startingState <| ( [ AddProp ThingOne Earth ], Narrate ".." ))
                         |> matchesCondition (NearProp ThingOne)
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    StoryState.addProp ThingTwo Earth startingState
+                    (advanceStory "ThingTwo" startingState <| ( [ AddProp ThingTwo Earth ], Narrate ".." ))
                         |> matchesCondition (NearProp ThingOne)
                         |> Expect.false "no match"
             ]
@@ -176,7 +173,7 @@ matchesConditionTests =
         , describe "All"
             [ test "match"
                 <| \() ->
-                    StoryState.addProp ThingOne Earth startingState
+                    (advanceStory "ThingOne" startingState <| ( [ AddProp ThingOne Earth ], Narrate ".." ))
                         |> matchesCondition
                             (All
                                 [ (InLocation Earth)
@@ -186,7 +183,7 @@ matchesConditionTests =
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    StoryState.addProp ThingTwo Earth startingState
+                    (advanceStory "ThingTwo" startingState <| ( [ AddProp ThingTwo Earth ], Narrate ".." ))
                         |> matchesCondition
                             (All
                                 [ (InLocation Earth)
@@ -198,7 +195,7 @@ matchesConditionTests =
         , describe "Any"
             [ test "match"
                 <| \() ->
-                    StoryState.addProp ThingOne Earth startingState
+                    (advanceStory "ThingOne" startingState <| ( [ AddProp ThingOne Earth ], Narrate ".." ))
                         |> matchesCondition
                             (Any
                                 [ (InLocation Moon)
@@ -208,7 +205,7 @@ matchesConditionTests =
                         |> Expect.true "match"
             , test "no match"
                 <| \() ->
-                    StoryState.addProp ThingOne Earth startingState
+                    (advanceStory "ThingOne" startingState <| ( [ AddProp ThingOne Earth ], Narrate ".." ))
                         |> matchesCondition
                             (Any
                                 [ (InLocation Moon)

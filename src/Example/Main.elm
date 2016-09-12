@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Engine exposing (..)
 import StoryRules exposing (..)
+import StoryState exposing (..)
 import StoryElements exposing (..)
 import Items exposing (..)
 import Locations exposing (..)

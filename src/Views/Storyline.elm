@@ -1,4 +1,4 @@
-module Components.Storyline exposing (..)
+module Views.Storyline exposing (..)
 
 import Html exposing (..)
 import Html.Keyed
