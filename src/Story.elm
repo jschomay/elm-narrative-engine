@@ -1,14 +1,14 @@
-module Engine exposing (..)
+module Story exposing (load, Info, Setup)
 
 import Html exposing (..)
 import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Markdown exposing (..)
-import StoryElements exposing (..)
-import StoryRules exposing (..)
-import StoryState exposing (..)
-import Mechanics exposing (..)
+import Story.Element exposing (..)
+import Story.Rule exposing (..)
+import Story.State exposing (..)
+import Story.Mechanics exposing (..)
 import Views.Game exposing (..)
 
 
@@ -21,15 +21,15 @@ type alias Model a b c d e =
     }
 
 
-type alias StorySetup a b c d e =
+type alias Setup a b c d e =
     { startingScene : d
     , startingLocation : b
     , startingNarration : String
-    , storyWorldSetupCommands : ChangeWorldCommands a b c d e
+    , setupCommands : ChangeWorldCommands a b c d e
     }
 
 
-type alias StoryInfo =
+type alias Info =
     { title : String
     , byline : String
     , prologue : String
@@ -44,31 +44,31 @@ type Route
 type Msg a b c
     = NoOp
     | StartGame
-    | Interaction (Mechanics.Msg a b c)
+    | Interaction (Story.Mechanics.Msg a b c)
 
 
-init : StoryInfo -> StorySetup a b c d e -> Model a b c d e
-init { title, byline, prologue } storySetup =
+init : Info -> Setup a b c d e -> Model a b c d e
+init { title, byline, prologue } setup =
     { title = title
     , byline = byline
     , prologue = prologue
     , route = TitlePage
-    , storyState = setUpStoryWorld storySetup
+    , storyState = setUpWorld setup
     }
 
 
-setUpStoryWorld : StorySetup a b c d e -> StoryState a b c d e
-setUpStoryWorld { startingScene, startingLocation, startingNarration, storyWorldSetupCommands } =
-    StoryState.init startingLocation startingScene
-        |> \storyState -> StoryState.advanceStory "Begin" storyState ( storyWorldSetupCommands, Narrate startingNarration )
+setUpWorld : Setup a b c d e -> StoryState a b c d e
+setUpWorld { startingScene, startingLocation, startingNarration, setupCommands } =
+    Story.State.init startingLocation startingScene
+        |> \storyState -> Story.State.advanceStory "Begin" storyState ( setupCommands, Narrate startingNarration )
 
 
-loadStory : StoryInfo -> StorySetup a b c d e -> DisplayInfo a b c -> (d -> Scene a b c d e) -> Program Never
-loadStory storyInfo storySetup displayInfo scenes =
+load : Info -> Elements a b c -> Setup a b c d e -> (d -> Scene a b c d e) -> Program Never
+load info elements setup scenes =
     Html.beginnerProgram
-        { model = init storyInfo storySetup
-        , view = view displayInfo
-        , update = update displayInfo scenes
+        { model = init info setup
+        , view = view elements
+        , update = update elements scenes
         }
 
 
@@ -76,7 +76,7 @@ loadStory storyInfo storySetup displayInfo scenes =
 -- UPDATE
 
 
-update : DisplayInfo a b c -> (d -> Scene a b c d e) -> Msg a b c -> Model a b c d e -> Model a b c d e
+update : Elements a b c -> (d -> Scene a b c d e) -> Msg a b c -> Model a b c d e -> Model a b c d e
 update displayInfo scenes msg model =
     case msg of
         NoOp ->
@@ -86,14 +86,14 @@ update displayInfo scenes msg model =
             { model | route = GamePage }
 
         Interaction msg ->
-            { model | storyState = Mechanics.update displayInfo scenes msg model.storyState }
+            { model | storyState = Story.Mechanics.update displayInfo scenes msg model.storyState }
 
 
 
 -- VIEW
 
 
-view : DisplayInfo a b c -> Model a b c d e -> Html (Msg a b c)
+view : Elements a b c -> Model a b c d e -> Html (Msg a b c)
 view displayInfo model =
     case model.route of
         TitlePage ->

@@ -4,12 +4,12 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color exposing (..)
-import StoryElements exposing (..)
-import StoryState exposing (..)
+import Story.Element exposing (..)
+import Story.State exposing (..)
 
 
-currentSummary : (a -> msg) -> (c -> msg) -> DisplayInfo a b c -> (Color -> String) -> (StoryElement a b c -> Bool) -> StoryState a b c d e -> Html msg
-currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat storyState =
+currentSummary : (a -> msg) -> (c -> msg) -> Elements a b c -> (Color -> String) -> (Element a b c -> Bool) -> StoryState a b c d e -> Html msg
+currentSummary itemMsg charcterMsg elements toCssColor beenThereDoneThat storyState =
     let
         currentLocation =
             storyState.currentLocation
@@ -20,28 +20,28 @@ currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat stor
                 |> (==) 0
 
         locationName =
-            .name <| displayInfo.locations currentLocation
+            .name <| elements.locations currentLocation
 
-        storyElementDom storyElement =
+        elementDom element =
             let
                 classes =
                     [ ( "CurrentSummary__StoryElement u-selectable", True )
-                    , ( "u-new-story-element", not <| beenThereDoneThat storyElement )
+                    , ( "u-new-story-element", not <| beenThereDoneThat element )
                     ]
 
-                storyElementName =
-                    case storyElement of
+                elementName =
+                    case element of
                         Item item ->
-                            .name <| displayInfo.items item
+                            .name <| elements.items item
 
                         Character character ->
-                            .name <| displayInfo.characters character
+                            .name <| elements.characters character
 
                         x ->
                             Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
 
-                storyElementMsg =
-                    case storyElement of
+                elementMsg =
+                    case element of
                         Item item ->
                             itemMsg item
 
@@ -53,13 +53,13 @@ currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat stor
             in
                 span
                     [ classList <| classes
-                    , onClick <| storyElementMsg
+                    , onClick <| elementMsg
                     ]
-                    [ text <| storyElementName ]
+                    [ text <| elementName ]
 
         format list =
             let
-                storyElements =
+                elements =
                     if List.length list > 2 then
                         (List.take (List.length list - 1) list
                             |> List.intersperse (text ", ")
@@ -69,15 +69,15 @@ currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat stor
                     else
                         List.intersperse (text " and ") list
             in
-                storyElements ++ [ text "." ]
+                elements ++ [ text "." ]
 
         cssColor =
-            toCssColor <| .color <| displayInfo.locations currentLocation
+            toCssColor <| .color <| elements.locations currentLocation
 
         charactersList =
             if not <| List.isEmpty <| getCharactersByLocation currentLocation storyState then
                 getCharactersByLocation currentLocation storyState
-                    |> List.map (storyElementDom << Character)
+                    |> List.map (elementDom << Character)
                     |> format
                     |> (::) (text "Characters here: ")
                     |> p []
@@ -87,7 +87,7 @@ currentSummary itemMsg charcterMsg displayInfo toCssColor beenThereDoneThat stor
         itemsList =
             if not <| List.isEmpty <| getItemsByLocation currentLocation storyState then
                 getItemsByLocation currentLocation storyState
-                    |> List.map (storyElementDom << Item)
+                    |> List.map (elementDom << Item)
                     |> format
                     |> (::) (text "Items here: ")
                     |> p []

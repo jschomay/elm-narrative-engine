@@ -1,14 +1,14 @@
-module StoryRules exposing (..)
+module Story.Rule exposing (..)
 
-import StoryState exposing (..)
-import StoryElements exposing (..)
+import Story.State exposing (..)
+import Story.Element exposing (..)
 
 
 type alias Scene a b c d e =
-    List (StoryRule a b c d e)
+    List (Rule a b c d e)
 
 
-type alias StoryRule a b c d e =
+type alias Rule a b c d e =
     ( Given a b c e, AdvanceStory a b c d e )
 
 
@@ -17,8 +17,8 @@ type alias Given a b c e =
 
 
 type Trigger a b c
-    = InteractionWith (StoryElement a b c)
-    | FirstInteractionWith (StoryElement a b c)
+    = InteractionWith (Element a b c)
+    | FirstInteractionWith (Element a b c)
 
 
 type Condition a b c e
@@ -78,57 +78,57 @@ unless =
     Unless
 
 
-firstInteractionWith : StoryElement a b c -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
-firstInteractionWith storyElement condition advanceStory =
-    ( ( FirstInteractionWith storyElement, condition ), advanceStory )
+firstInteractionWith : Element a b c -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
+firstInteractionWith element condition advanceStory =
+    ( ( FirstInteractionWith element, condition ), advanceStory )
 
 
-interactingWith : StoryElement a b c -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
-interactingWith storyElement condition advanceStory =
-    ( ( InteractionWith storyElement, condition ), advanceStory )
+interactingWith : Element a b c -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
+interactingWith element condition advanceStory =
+    ( ( InteractionWith element, condition ), advanceStory )
 
 
-when : (Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e) -> Condition a b c e -> AdvanceStory a b c d e -> StoryRule a b c d e
+when : (Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e) -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
 when f condition =
     f condition
 
 
-changesWorld : (AdvanceStory a b c d e -> StoryRule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> StoryRule a b c d e
+changesWorld : (AdvanceStory a b c d e -> Rule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> Rule a b c d e
 changesWorld f a b =
     f ( a, b )
 
 
-narrates : (Narration -> StoryRule a b c d e) -> String -> StoryRule a b c d e
+narrates : (Narration -> Rule a b c d e) -> String -> Rule a b c d e
 narrates f =
     f << Narrate
 
 
-findMatchingRule : StoryElement a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> Maybe (AdvanceStory a b c d e)
-findMatchingRule storyElement rules storyState beenThereDoneThat =
+findMatchingRule : Element a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> Maybe (AdvanceStory a b c d e)
+findMatchingRule element rules storyState beenThereDoneThat =
     case rules of
         [] ->
             Nothing
 
         (( given, advanceStory ) as x) :: xs ->
-            if matchesGiven given storyElement storyState beenThereDoneThat then
+            if matchesGiven given element storyState beenThereDoneThat then
                 Just advanceStory
             else
-                findMatchingRule storyElement xs storyState beenThereDoneThat
+                findMatchingRule element xs storyState beenThereDoneThat
 
 
-matchesGiven : Given a b c e -> StoryElement a b c -> StoryState a b c d e -> Bool -> Bool
-matchesGiven ( trigger, condition ) storyElement storyState beenThereDoneThat =
-    matchesTrigger trigger storyElement beenThereDoneThat && matchesCondition condition storyState
+matchesGiven : Given a b c e -> Element a b c -> StoryState a b c d e -> Bool -> Bool
+matchesGiven ( trigger, condition ) element storyState beenThereDoneThat =
+    matchesTrigger trigger element beenThereDoneThat && matchesCondition condition storyState
 
 
-matchesTrigger : Trigger a b c -> StoryElement a b c -> Bool -> Bool
-matchesTrigger trigger storyElement beenThereDoneThat =
+matchesTrigger : Trigger a b c -> Element a b c -> Bool -> Bool
+matchesTrigger trigger element beenThereDoneThat =
     case trigger of
-        InteractionWith storyElement' ->
-            storyElement == storyElement'
+        InteractionWith element' ->
+            element == element'
 
-        FirstInteractionWith storyElement' ->
-            storyElement == storyElement' && Basics.not beenThereDoneThat
+        FirstInteractionWith element' ->
+            element == element' && Basics.not beenThereDoneThat
 
 
 matchesCondition : Condition a b c e -> StoryState a b c d e -> Bool

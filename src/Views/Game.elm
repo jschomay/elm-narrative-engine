@@ -4,16 +4,16 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Color exposing (..)
 import String exposing (join)
-import StoryElements exposing (..)
-import StoryState exposing (..)
-import Mechanics exposing (..)
+import Story.Element exposing (..)
+import Story.State exposing (..)
+import Story.Mechanics exposing (..)
 import Views.CurrentSummary exposing (..)
 import Views.Storyline exposing (..)
 import Views.Locations exposing (..)
 import Views.Inventory exposing (..)
 
 
-view : DisplayInfo a b c -> StoryState a b c d e -> Html (Mechanics.Msg a b c)
+view : Elements a b c -> StoryState a b c d e -> Html (Story.Mechanics.Msg a b c)
 view displayInfo storyState =
     let
         toCssColor : Color -> String
@@ -24,13 +24,13 @@ view displayInfo storyState =
             toCssColor <| .color <| displayInfo.locations storyState.currentLocation
 
         itemMsg =
-            Mechanics.Interact << Item
+            Story.Mechanics.Interact << Item
 
         locationMsg =
-            Mechanics.Interact << Location
+            Story.Mechanics.Interact << Location
 
         characterMsg =
-            Mechanics.Interact << Character
+            Story.Mechanics.Interact << Character
     in
         div [ class "GamePage" ]
             [ div [ class "Layout" ]

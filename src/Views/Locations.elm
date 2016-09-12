@@ -5,10 +5,10 @@ import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color exposing (..)
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
-locations : (b -> msg) -> (b -> LocationInfo) -> List b -> b -> (Color -> String) -> (StoryElement a b c -> Bool) -> Html msg
+locations : (b -> msg) -> (b -> LocationInfo) -> List b -> b -> (Color -> String) -> (Element a b c -> Bool) -> Html msg
 locations msg locationsInfo locations currentLocation toCssColor beenThereDoneThat =
     let
         classes location =

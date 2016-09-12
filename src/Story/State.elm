@@ -1,13 +1,13 @@
-module StoryState exposing (..)
+module Story.State exposing (..)
 
 import Dict exposing (..)
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
 type alias StoryState a b c d e =
     { currentLocation : b
     , currentScene : d
-    , familiarWith : List (StoryElement a b c)
+    , familiarWith : List (Element a b c)
     , inventory : List a
     , knownLocations : List b
     , storyLine : List ( String, String )
@@ -132,7 +132,7 @@ getItemsByLocation location storyState =
 
 
 advanceStory : String -> StoryState a b c d e -> AdvanceStory a b c d e -> StoryState a b c d e
-advanceStory storyElementName storyState ( changesWorldCommands, narration ) =
+advanceStory elementName storyState ( changesWorldCommands, narration ) =
     let
         getNarration narration =
             case narration of
@@ -248,4 +248,4 @@ advanceStory storyElementName storyState ( changesWorldCommands, narration ) =
                     storyState
     in
         List.foldl doCommand storyState changesWorldCommands
-            |> addNarration ( storyElementName, getNarration narration )
+            |> addNarration ( elementName, getNarration narration )

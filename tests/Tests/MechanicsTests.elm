@@ -3,10 +3,10 @@ module Tests.MechanicsTests exposing (all)
 import Color exposing (blue)
 import Test exposing (..)
 import Expect exposing (..)
-import Mechanics exposing (..)
-import StoryElements exposing (..)
-import StoryState exposing (..)
-import StoryRules exposing (..)
+import Story.Mechanics exposing (..)
+import Story.Element exposing (..)
+import Story.State exposing (..)
+import Story.Rule exposing (..)
 
 
 type TestItem
@@ -34,7 +34,7 @@ type TestKnowledge
 
 startingState : StoryState TestItem TestLocation TestCharacter TestScene TestKnowledge
 startingState =
-    StoryState.init Earth Begining
+    Story.State.init Earth Begining
 
 
 all : Test
@@ -45,7 +45,7 @@ all =
         ]
 
 
-displayInfo : DisplayInfo TestItem TestLocation TestCharacter
+displayInfo : Elements TestItem TestLocation TestCharacter
 displayInfo =
     { items = \_ -> itemInfo "name" "description"
     , locations = \_ -> locationInfo "name" blue "description"

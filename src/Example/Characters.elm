@@ -1,6 +1,6 @@
 module Characters exposing (..)
 
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
 type MyCharacter
@@ -9,8 +9,8 @@ type MyCharacter
     | AnxiousMan
 
 
-displayInfo : MyCharacter -> CharacterInfo
-displayInfo character =
+characters : MyCharacter -> CharacterInfo
+characters character =
     case character of
         Volunteer ->
             characterInfo "volunteer" "He sure seems stressed.  You're not helping."

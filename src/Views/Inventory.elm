@@ -4,10 +4,10 @@ import Html exposing (..)
 import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
-inventory : (a -> msg) -> (a -> ItemInfo) -> List a -> (StoryElement a b c -> Bool) -> Html msg
+inventory : (a -> msg) -> (a -> ItemInfo) -> List a -> (Element a b c -> Bool) -> Html msg
 inventory msg itemsInfo items beenThereDoneThat =
     let
         numItems =

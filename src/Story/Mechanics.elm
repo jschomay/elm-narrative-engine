@@ -1,39 +1,39 @@
-module Mechanics exposing (..)
+module Story.Mechanics exposing (..)
 
-import StoryElements exposing (..)
-import StoryState exposing (..)
-import StoryRules exposing (..)
+import Story.Element exposing (..)
+import Story.State exposing (..)
+import Story.Rule exposing (..)
 
 
 type Msg a b c
-    = Interact (StoryElement a b c)
+    = Interact (Element a b c)
 
 
-update : DisplayInfo a b c -> (d -> Scene a b c d e) -> Msg a b c -> StoryState a b c d e -> StoryState a b c d e
+update : Elements a b c -> (d -> Scene a b c d e) -> Msg a b c -> StoryState a b c d e -> StoryState a b c d e
 update displayInfo scenes msg storyState =
     let
-        defaultNarration storyElement storyState =
-            { storyState | storyLine = ( toName storyElement, toDescription storyElement ) :: storyState.storyLine }
+        defaultNarration element storyState =
+            { storyState | storyLine = ( toName element, toDescription element ) :: storyState.storyLine }
 
-        goToLocation storyElement storyState =
-            case storyElement of
+        goToLocation element storyState =
+            case element of
                 Location location ->
                     { storyState | currentLocation = location }
 
                 _ ->
                     Debug.crash "It should be impossible for a non-location element to get here"
 
-        addFamiliarity storyElement storyState =
+        addFamiliarity element storyState =
             { storyState
                 | familiarWith =
-                    if not <| List.member storyElement storyState.familiarWith then
-                        storyElement :: storyState.familiarWith
+                    if not <| List.member element storyState.familiarWith then
+                        element :: storyState.familiarWith
                     else
                         storyState.familiarWith
             }
 
-        toName storyElement =
-            case storyElement of
+        toName element =
+            case element of
                 Item item ->
                     .name <| displayInfo.items item
 
@@ -43,8 +43,8 @@ update displayInfo scenes msg storyState =
                 Character character ->
                     .name <| displayInfo.characters character
 
-        toDescription storyElement =
-            case storyElement of
+        toDescription element =
+            case element of
                 Item item ->
                     .description <| displayInfo.items item
 
@@ -54,16 +54,16 @@ update displayInfo scenes msg storyState =
                 Character character ->
                     .description <| displayInfo.characters character
 
-        tryUpdatingFromRules storyElement storyState =
+        tryUpdatingFromRules element storyState =
             let
                 scene =
                     (scenes storyState.currentScene)
 
                 beenThereDoneThat =
-                    (List.member storyElement storyState.familiarWith)
+                    (List.member element storyState.familiarWith)
             in
-                findMatchingRule storyElement scene storyState beenThereDoneThat
-                    `Maybe.andThen` (Just << StoryState.advanceStory (toName storyElement) storyState)
+                findMatchingRule element scene storyState beenThereDoneThat
+                    `Maybe.andThen` (Just << Story.State.advanceStory (toName element) storyState)
     in
         case msg of
             Interact ((Item _) as item) ->

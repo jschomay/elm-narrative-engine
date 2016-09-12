@@ -1,10 +1,10 @@
-module Tests.StoryRulesTests exposing (all)
+module Tests.RulesTests exposing (all)
 
 import Test exposing (..)
 import Expect exposing (..)
-import StoryState exposing (..)
-import StoryElements exposing (..)
-import StoryRules exposing (..)
+import Story.State exposing (..)
+import Story.Element exposing (..)
+import Story.Rule exposing (..)
 
 
 type TestItem
@@ -32,7 +32,7 @@ type TestKnowledge
 
 startingState : StoryState TestItem TestLocation TestCharacter TestScene TestKnowledge
 startingState =
-    StoryState.init Earth Begining
+    Story.State.init Earth Begining
 
 
 all : Test

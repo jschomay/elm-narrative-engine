@@ -1,8 +1,8 @@
 module Scene2 exposing (..)
 
-import StoryRules exposing (..)
-import StoryState exposing (..)
-import StoryElements exposing (..)
+import Story.Rule exposing (..)
+import Story.State exposing (..)
+import Story.Element exposing (..)
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)

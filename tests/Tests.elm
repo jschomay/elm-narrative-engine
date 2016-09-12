@@ -1,8 +1,8 @@
 module Tests exposing (suite)
 
 import Tests.MechanicsTests
-import Tests.StoryStateTests
-import Tests.StoryRulesTests
+import Tests.StateTests
+import Tests.RulesTests
 import Test exposing (..)
 
 
@@ -10,6 +10,6 @@ suite : Test
 suite =
     describe "Full suite"
         [ Tests.MechanicsTests.all
-        , Tests.StoryStateTests.all
-        , Tests.StoryRulesTests.all
+        , Tests.StateTests.all
+        , Tests.RulesTests.all
         ]

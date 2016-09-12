@@ -1,9 +1,9 @@
 module Main exposing (..)
 
-import Engine exposing (..)
-import StoryRules exposing (..)
-import StoryState exposing (..)
-import StoryElements exposing (..)
+import Story exposing (..)
+import Story.Rule exposing (..)
+import Story.State exposing (..)
+import Story.Element exposing (..)
 import Items exposing (..)
 import Locations exposing (..)
 import Characters exposing (..)
@@ -15,31 +15,31 @@ import Scene2 exposing (..)
 
 main : Program Never
 main =
-    loadStory storyInfo storySetup displayInfo scenes
+    Story.load info elements setup scenes
 
 
-storyInfo : StoryInfo
-storyInfo =
+info : Info
+info =
     { title = "The curse of the tech demo"
     , byline = "Jeff Schomay"
     , prologue = prologue
     }
 
 
-displayInfo : DisplayInfo MyItem MyLocation MyCharacter
-displayInfo =
-    { items = Items.displayInfo
-    , locations = Locations.displayInfo
-    , characters = Characters.displayInfo
+elements : Elements MyItem MyLocation MyCharacter
+elements =
+    { items = Items.items
+    , locations = Locations.locations
+    , characters = Characters.characters
     }
 
 
-storySetup : StorySetup MyItem MyLocation MyCharacter MyScene MyKnowledge
-storySetup =
+setup : Setup MyItem MyLocation MyCharacter MyScene MyKnowledge
+setup =
     { startingScene = Scene1
     , startingLocation = Kitchen
     , startingNarration = startingNarration
-    , storyWorldSetupCommands =
+    , setupCommands =
         [ AddInventory Envelope
         , AddLocation Kitchen
         , AddLocation Hallway

@@ -1,7 +1,7 @@
 module Locations exposing (..)
 
 import Color exposing (..)
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
 type MyLocation
@@ -10,8 +10,8 @@ type MyLocation
     | Hallway
 
 
-displayInfo : MyLocation -> LocationInfo
-displayInfo location =
+locations : MyLocation -> LocationInfo
+locations location =
     case location of
         Kitchen ->
             locationInfo "commercial kitchen" blue "Everything has been cleaned, polished, and put away for the next morning."

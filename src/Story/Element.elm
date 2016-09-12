@@ -1,15 +1,15 @@
-module StoryElements exposing (..)
+module Story.Element exposing (..)
 
 import Color exposing (..)
 
 
-type StoryElement a b c
+type Element a b c
     = Item a
     | Location b
     | Character c
 
 
-type alias DisplayInfo a b c =
+type alias Elements a b c =
     { items : a -> ItemInfo
     , locations : b -> LocationInfo
     , characters : c -> CharacterInfo
@@ -38,17 +38,17 @@ type alias CharacterInfo =
     BasicInfo
 
 
-item : a -> StoryElement a b c
+item : a -> Element a b c
 item =
     Item
 
 
-location : b -> StoryElement a b c
+location : b -> Element a b c
 location =
     Location
 
 
-character : c -> StoryElement a b c
+character : c -> Element a b c
 character =
     Character
 

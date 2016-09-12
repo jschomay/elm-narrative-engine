@@ -1,6 +1,6 @@
 module Items exposing (..)
 
-import StoryElements exposing (..)
+import Story.Element exposing (..)
 
 
 type MyItem
@@ -11,8 +11,8 @@ type MyItem
     | ElmSticker
 
 
-displayInfo : MyItem -> ItemInfo
-displayInfo item =
+items : MyItem -> ItemInfo
+items item =
     case item of
         ExitSign ->
             itemInfo "emergency exit sign" "The green letters glow like an illuminated caption of your thoughts:  \"What am I doing here, and more importantly, how do I get out?\""
