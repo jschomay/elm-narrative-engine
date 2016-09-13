@@ -78,7 +78,7 @@ followVolunteer =
 
 "Don't be silly, let's go." He ushers you through the double doors and down the hall to "Auditorium A."
 
-From the back of the room you can the moderator at the podium on the stage, addressing a full audience.  She seems to be stalling for time.
+From the back of the room you can see the moderator at the podium on the stage, addressing a full audience.  She seems to be stalling for time.
 
 "... and I see our next speaker has just arrived!  Without further ado, I'll turn microphone over."  She steps aside and the whole room turns around to look back at you.
 
