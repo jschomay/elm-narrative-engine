@@ -17,8 +17,6 @@ For authors:
 
 See https://github.com/jschomay/elm-interactive-story-starter.git for everything you need to get started, including an example story you can modify with your own content.
 
-Or just get started immediately with `npm i elm-interactive-story-starter`
-
 ## Basic Usage
 
 Step 1: Define your "story elements" (items, locations, and characters)

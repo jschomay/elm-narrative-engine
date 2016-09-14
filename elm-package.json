@@ -1,12 +1,14 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "summary": "Interactive storytelling framework",
     "repository": "https://github.com/jschomay/elm-narrative-engine.git",
     "license": "BSD3",
     "source-directories": [
         "src"
     ],
-    "exposed-modules": ["Story"],
+    "exposed-modules": [
+        "Story"
+    ],
     "dependencies": {
         "elm-lang/core": "4.0.0 <= v < 5.0.0",
         "elm-lang/html": "1.0.0 <= v < 2.0.0",
