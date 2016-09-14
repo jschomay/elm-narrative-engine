@@ -5,7 +5,6 @@
     "license": "BSD3",
     "source-directories": [
         ".",
-        "..",
         "../src/"
     ],
     "exposed-modules": [],

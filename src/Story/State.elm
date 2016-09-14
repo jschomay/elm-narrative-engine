@@ -49,66 +49,6 @@ init startingLocation startingScene =
     StoryState startingLocation startingScene [ Location startingLocation ] [] [] [] Dict.empty Dict.empty []
 
 
-moveTo : b -> ChangeWorldCommand a b c d e
-moveTo =
-    MoveTo
-
-
-addLocation : b -> ChangeWorldCommand a b c d e
-addLocation =
-    AddLocation
-
-
-removeLocation : b -> ChangeWorldCommand a b c d e
-removeLocation =
-    RemoveLocation
-
-
-addInventory : a -> ChangeWorldCommand a b c d e
-addInventory =
-    AddInventory
-
-
-removeInventory : a -> ChangeWorldCommand a b c d e
-removeInventory =
-    RemoveInventory
-
-
-addCharacter : c -> b -> ChangeWorldCommand a b c d e
-addCharacter =
-    AddCharacter
-
-
-removeCharacter : c -> b -> ChangeWorldCommand a b c d e
-removeCharacter =
-    RemoveCharacter
-
-
-addProp : a -> b -> ChangeWorldCommand a b c d e
-addProp =
-    AddProp
-
-
-removeProp : a -> b -> ChangeWorldCommand a b c d e
-removeProp =
-    RemoveProp
-
-
-addKnowledge : e -> ChangeWorldCommand a b c d e
-addKnowledge =
-    AddKnowledge
-
-
-loadScene : d -> ChangeWorldCommand a b c d e
-loadScene =
-    LoadScene
-
-
-endStory : ChangeWorldCommand a b c d e
-endStory =
-    EndStory
-
-
 getCharactersInCurrentLocation : StoryState a b c d e -> List c
 getCharactersInCurrentLocation storyState =
     getCharactersByLocation storyState.currentLocation storyState

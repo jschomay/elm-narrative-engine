@@ -2,6 +2,7 @@ module Tests.StateTests exposing (all)
 
 import Test exposing (..)
 import Expect exposing (..)
+import Story exposing (..)
 import Story.State exposing (..)
 import Story.Element exposing (..)
 

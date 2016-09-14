@@ -1,0 +1,240 @@
+[
+  {
+    "name": "Story",
+    "comment": " Entry point to the framework, where the client passes off all the story information.\n\nThe framework takes care of managing all of the state, views, and interaction handling, allowing the client code to focus purely on the story.\n\n# Loading the story\n\n@docs load, Info, Setup\n\n# Defining your story world\n\n@docs Elements, storyWorld, ItemInfo, LocationInfo, CharacterInfo, itemInfo, locationInfo, characterInfo, item, location, character\n\n# Defining story rules\n\nRules are declarative pairings of a \"matcher\" and a set of \"commands\" to perform if the rule matches.  Rules are grouped into \"scenes\" for better control and organization.  If no rules match, the framework will perform a default rule, which is usually just to narrate the description of what was interacted with.\n\n@docs Scene\n\nYou build up rules via a declarative DSL like this:\n\n    storyRules =\n        [ interactingWith (item Umbrella)\n            `when` (unless (withItem Umbrella))\n            `changesWorld` [ addInventory Umbrella ]\n            `narrates` \"I always take my umbrella with me.\"\n        , interactingWith (item Umbrella)\n            `when` (inLocation Swamp)\n            `changesWorld` [ ]\n            `narrates` \"Good thing I brought my umbrella!\"\n        ...\n        ]\n\n@docs firstInteractionWith, interactingWith, when, changesWorld, narrates\n\n\n## Matching rules\n\nThe following condition matchers can be used in the `when` part of the DSL.  Note that you can nest and combine these matchers with `unless`, `all`, and `any`.\n\n@docs everyTime , withItem , nearCharacter , nearProp , inLocation , withKnowledge , all , any , unless\n\n\n## Changing the story world\n\nYou cannot change the story directly, but you can supply \"commands\" describing how the story state should change, as well as \"narration\" to accompany these changes.\n\n\n@docs moveTo, addLocation, removeLocation, addInventory, removeInventory, addCharacter, removeCharacter, addProp, removeProp, addKnowledge, loadScene, endStory\n",
+    "aliases": [
+      {
+        "name": "CharacterInfo",
+        "comment": " Display information for your characters, including a name and description.  The description allows markdown.\n",
+        "args": [],
+        "type": "Story.Element.CharacterInfo"
+      },
+      {
+        "name": "Elements",
+        "comment": " The items, locations, and characters in your story that will be displayed and interacted with.\n",
+        "args": [
+          "a",
+          "b",
+          "c"
+        ],
+        "type": "Story.Element.Elements a b c"
+      },
+      {
+        "name": "Info",
+        "comment": " Basic information about the story, which gets displayed on the \"title page\" before beginning the story.\n\n    info : Info\n    info =\n        { title = \"The Continuing Adventures of Bartholomew Barrymore\"\n        , byline = \"B. Barrymore\"\n        , prologue = \"Mr. Barrymore is at it again, with more shenanigans in this comedy-mystery...\"\n        }\n",
+        "args": [],
+        "type": "{ title : String, byline : String, prologue : String }"
+      },
+      {
+        "name": "ItemInfo",
+        "comment": " Display information for your items, including a name and description.  The description allows markdown.\n",
+        "args": [],
+        "type": "Story.Element.ItemInfo"
+      },
+      {
+        "name": "LocationInfo",
+        "comment": " Display information for your locations, including a name, a highlight color, and a description.  The description allows markdown.\n",
+        "args": [],
+        "type": "Story.Element.LocationInfo"
+      },
+      {
+        "name": "Scene",
+        "comment": " A list of declarative rules, describing how to advance your story.\n",
+        "args": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ],
+        "type": "Story.Rule.Scene a b c d e"
+      },
+      {
+        "name": "Setup",
+        "comment": " Information for the starting state of your story.  See the \"Changing the story world\" section for more information on the setupCommands.\n\n    setup : Setup MyItem MyLocation MyCharacter MyScene MyKnowledge\n    setup =\n        { startingScene = Beginning\n        , startingLocation = Home\n        , startingNarration = \"Home sweet home...\"\n        , setupCommands =\n            [ addLocation Conservatory\n            , addCharacter John Conservatory\n            , addProp Umbrella Home\n            ]\n        }\n",
+        "args": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e"
+        ],
+        "type": "{ startingScene : d , startingLocation : b , startingNarration : String , setupCommands : Story.State.ChangeWorldCommands a b c d e }"
+      }
+    ],
+    "types": [],
+    "values": [
+      {
+        "name": "addCharacter",
+        "comment": " Adds a character to a location.  (Use moveTo to move yourself between locations.)\n\n    addCharacter John Conservatory\n",
+        "type": "c -> b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "addInventory",
+        "comment": " Adds an item to your inventory.\n\n    addInventory Umbrella\n",
+        "type": "a -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "addKnowledge",
+        "comment": " Knowledge is an intangible \"flag\" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.\n\nHowever, before turning to this tool, consider if you can use a normal, displayable story element instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can \"show\" to people for more information.  This keeps the story more concrete.\n\n    type MyKnowledge = LearnOfSuspect | WrongSuspect | Amnesia\n\n    addKnowledge LearnOfSuspect\n",
+        "type": "e -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "addLocation",
+        "comment": " Adds a location to your list of known locations.  Any location on this list is available for the player to click on at any time.  This avoids clunky spatial navigation mechanics, but does mean that you will need to make rules to prevent against going to locations that are inaccessible (with appropriate narration).\n\n    addLocation Conservatory\n",
+        "type": "b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "addProp",
+        "comment": " \"Props\" are just items in a location instead of in your inventory.  They could be something fixed to the location, such as a painting on a wall that you can look at but not take, or they can be something that you can take into your inventory.\n\nThis command adds an item to a location.\n\n    addProp Umbrella Home\n",
+        "type": "a -> b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "all",
+        "comment": " Will match if all of the supplied conditions match.\n",
+        "type": "List (Story.Rule.Condition a b c e) -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "any",
+        "comment": " Will match if any of the supplied conditions match.\n",
+        "type": "List (Story.Rule.Condition a b c e) -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "changesWorld",
+        "comment": " Part of the rule building DSL. See the example above.\n",
+        "type": "(Story.State.AdvanceStory a b c d e -> Story.Rule.Rule a b c d e) -> Story.State.ChangeWorldCommands a b c d e -> Story.State.Narration -> Story.Rule.Rule a b c d e"
+      },
+      {
+        "name": "character",
+        "comment": " Wrap your character type in an `Element` type\n",
+        "type": "c -> Story.Element.Element a b c"
+      },
+      {
+        "name": "characterInfo",
+        "comment": "\n    characterInfo \"Harry\" \"My good friend Harry...\"\n",
+        "type": "String -> String -> Story.CharacterInfo"
+      },
+      {
+        "name": "endStory",
+        "comment": " Let the framework know the story has ended.  Currently this has no effect, I'm trying to figure out what should happen when stories end.\n",
+        "type": "Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "everyTime",
+        "comment": " Will match every time.  Useful in combination with `FirstInteractionWith` (though you may want to restrict that more).  Also useful when not supplying any commands to change the world, but you do want a custom narration.\n",
+        "type": "Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "firstInteractionWith",
+        "comment": " Part of the rule building DSL. See the example above.   `firstInteractionWith` is interchangeable with `interactingWith`, and will only match on the first interaction with the give story element.\n",
+        "type": "Story.Element.Element a b c -> Story.Rule.Condition a b c e -> Story.State.AdvanceStory a b c d e -> Story.Rule.Rule a b c d e"
+      },
+      {
+        "name": "inLocation",
+        "comment": " Will match when the supplied location is the current location.\n",
+        "type": "b -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "interactingWith",
+        "comment": " Part of the rule building DSL. See the example above.\n",
+        "type": "Story.Element.Element a b c -> Story.Rule.Condition a b c e -> Story.State.AdvanceStory a b c d e -> Story.Rule.Rule a b c d e"
+      },
+      {
+        "name": "item",
+        "comment": " Wrap your item type in an `Element` type\n",
+        "type": "a -> Story.Element.Element a b c"
+      },
+      {
+        "name": "itemInfo",
+        "comment": "\n    itemInfo \"Umbrella\" \"My trusty umbrella, I take it everywhere.\"\n",
+        "type": "String -> String -> Story.ItemInfo"
+      },
+      {
+        "name": "load",
+        "comment": " This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define elements and scenes.\n\n    main : Program Never\n    main =\n        Story.load info elements scenes setup\n\n",
+        "type": "Story.Info -> Story.Elements a b c -> (d -> Story.Scene a b c d e) -> Story.Setup a b c d e -> Platform.Program Basics.Never"
+      },
+      {
+        "name": "loadScene",
+        "comment": " Rules are grouped into \"scenes\" for better organization and control.  This is how you switch between scenes when you want a different rule set.  You may want to switch scenes at a \"turning point\" in your story to bring about new rules for the next objective.\n\n    type MyScene = CallToAction | SearchForClues | CatchSuspect | etc...\n\n    loadScene SearchForClues\n",
+        "type": "d -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "location",
+        "comment": " Wrap your location type in an `Element` type\n",
+        "type": "b -> Story.Element.Element a b c"
+      },
+      {
+        "name": "locationInfo",
+        "comment": "\n    locationInfo \"Home\" Color.Green \"Home sweet home...\"\n",
+        "type": "String -> Color.Color -> String -> Story.LocationInfo"
+      },
+      {
+        "name": "moveTo",
+        "comment": " Changes the current location.  The current location will be highlighted in the list of known locations, and will also be displayed at the top of the page, highlighted in the color defined for that location.  Any items or characters that are in the current location will also be shown for the player to interact with.\n\n    moveTo Conservatory\n",
+        "type": "b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "narrates",
+        "comment": " Part of the rule building DSL. See the example above.\n",
+        "type": "(Story.State.Narration -> Story.Rule.Rule a b c d e) -> String -> Story.Rule.Rule a b c d e"
+      },
+      {
+        "name": "nearCharacter",
+        "comment": " Will match if the supplied character in in the current location.\n",
+        "type": "c -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "nearProp",
+        "comment": " Will match if the supplied item in in the current location.\n",
+        "type": "a -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "removeCharacter",
+        "comment": " Removes a character from a location.  The character will not show up anywhere else until you add it to another location.  (Use moveTo to move yourself between locations.)\n\n    removeCharacter John Conservatory\n",
+        "type": "c -> b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "removeInventory",
+        "comment": " Removes an item from your inventory.  The item will not show up anywhere until you add it back to your inventory or to a location.\n\n    removeInventory Umbrella\n",
+        "type": "a -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "removeLocation",
+        "comment": " Removes a location from your list of known locations.  You probably don't need this since once you know about a location you would always know about it, and trying to go to a location that is inaccessible for some reason could just give some narration telling why.  But maybe you will find a good reason to use it.\n\n    removeLocation Home\n",
+        "type": "b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "removeProp",
+        "comment": " Removes an item from a location.\n\n    removeProp Umbrella Home\n",
+        "type": "a -> b -> Story.State.ChangeWorldCommand a b c d e"
+      },
+      {
+        "name": "storyWorld",
+        "comment": " A means of looking up static information about your story elements, which gets loaded into `Story.load`.\n",
+        "type": "(a -> Story.ItemInfo) -> (b -> Story.LocationInfo) -> (c -> Story.CharacterInfo) -> Story.Elements a b c"
+      },
+      {
+        "name": "unless",
+        "comment": " Will match if the supplied condition does NOT match.\n",
+        "type": "Story.Rule.Condition a b c e -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "when",
+        "comment": " Part of the rule building DSL. See the example above.\n",
+        "type": "(Story.Rule.Condition a b c e -> Story.State.AdvanceStory a b c d e -> Story.Rule.Rule a b c d e) -> Story.Rule.Condition a b c e -> Story.State.AdvanceStory a b c d e -> Story.Rule.Rule a b c d e"
+      },
+      {
+        "name": "withItem",
+        "comment": " Will match if the supplied item is in the inventory.\n",
+        "type": "a -> Story.Rule.Condition a b c e"
+      },
+      {
+        "name": "withKnowledge",
+        "comment": " Will match if the specified knowledge has been acquired.\n",
+        "type": "e -> Story.Rule.Condition a b c e"
+      }
+    ],
+    "generated-with-elm-version": "0.17.1"
+  }
+]

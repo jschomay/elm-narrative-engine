@@ -3,10 +3,10 @@ module Tests.MechanicsTests exposing (all)
 import Color exposing (blue)
 import Test exposing (..)
 import Expect exposing (..)
+import Story exposing (..)
 import Story.Mechanics exposing (..)
 import Story.Element exposing (..)
 import Story.State exposing (..)
-import Story.Rule exposing (..)
 
 
 type TestItem
@@ -45,7 +45,7 @@ all =
         ]
 
 
-displayInfo : Elements TestItem TestLocation TestCharacter
+displayInfo : Story.Elements TestItem TestLocation TestCharacter
 displayInfo =
     { items = \_ -> itemInfo "name" "description"
     , locations = \_ -> locationInfo "name" blue "description"

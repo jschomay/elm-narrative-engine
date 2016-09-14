@@ -1,68 +1,70 @@
-# elm-webpack-starter
+# Elm Narrative Engine
 
-A simple Webpack setup for writing [Elm](http://elm-lang.org/) apps:
+A framework for telling interactive stories, based on specific design principles:
 
-* Dev server with live reloading, HMR
-* Support for CSS/SCSS (with Autoprefixer), image assets
-* Bootstrap 3.3+ (Sass version)
-* Bundling and minification for deployment
-* Basic app scaffold, using `Html.App`
-* A snippet of example code to get you started!
+For the readers/players:
 
+* No command line interface (having to type "go north" or "inspect umbrella"), just simple point-and-click
+* More interaction and agency than simply choosing which branch to follow
+* Avoid clunky mechanics such as spacial navigation and object manipulation, and instead focus on the story
 
-### Install:
-```
-git clone https://github.com/moarwick/elm-webpack-starter
-cd elm-webpack-starter
-npm install
-```
+For authors:
 
-If you haven't done so yet, install Elm globally:
-```
-npm install -g elm
-```
+* Simple to use - focus on the story, not on the code
+* Declarative, data-driven approach - describe your story world and how it changes over time, the framework will take care of rest
 
-Install Elm's dependencies:
-```
-elm package install
-```
+## Getting Started
 
-### Serve locally:
-```
-npm start
-```
-* Access app at `http://localhost:8080/`
-* Get coding! The entry point file is `src/Main.elm`
-* Browser will refresh automatically on any file changes..
+See https://github.com/jschomay/elm-interactive-story-starter.git for everything you need to get started, including an example story you can modify with your own content.
+
+Or just get started immediately with `npm i elm-interactive-story-starter`
+
+## Basic Usage
+
+Step 1: Define your "story elements" (items, locations, and characters)
+
+```elm
+type MyItem
+    = Umbrella
+    ...
 
 
-### Build & bundle for prod:
-```
-npm run build
+items : MyItem -> ItemInfo
+items item =
+    case item of
+        Umbrella ->
+            itemInfo "Umbrella" "Your trusty umbrella, you bring it everywhere with you."
+    ...
 ```
 
-* Files are saved into the `/dist` folder
-* To check it, open `dist/index.html`
+Step 2: Define your declarative "story rules," broken up into "scenes"
 
+```elm
+scene1rules =
+    [ interactingWith (item Umbrella)
+        `when` (unless (withItem Umbrella))
+        `changesWorld` [ addInventory Umbrella ]
+        `narrates` takingUmbrella
+    , interactingWith (item Umbrella)
+        `when` (inLocation Swamp)
+        `changesWorld` [ ]
+        `narrates` startingToRain
+    ...
+    ]
 
-### Changelog
+takingUmbrella =
+    "Never leave home without it."
 
-**Ver 0.6.2**
-* Use `copy-webpack-plugin` instead of `cp` to copy files (Windows compatible)
+startingToRain =
+    "Good thing your brought your umbrella..."
+```
 
-**Ver 0.6.0**
-* `elm-hot-loader` is back (no Elm code changes required!)
-* Switch to [bootstrap-sass](https://www.npmjs.com/package/bootstrap-sass) to demo CSS
+Step 3: Load your story elements and rules into the framework
 
-**Ver 0.5.0**
-* Update to Elm 0.17.0 (and other latest modules)
-* Upgrade starter code per [upgrade-docs](https://github.com/elm-lang/elm-platform/blob/master/upgrade-docs/0.17.md)
-* Remove `elm-hot-loader` (for now)
+```elm
+Story.load info elements scenes setup
+```
 
-**Ver 0.4.0**
-* Add [elm-hot-loader](https://github.com/fluxxu/elm-hot-loader) for HMR support (PR by [fluxxu](https://github.com/fluxxu))
+## Sample Stories
 
-**Ver 0.3.0**
-* Use `html-webpack-plugin` to generate `index.html`
-* Apply hash filenames for bundled JS and CSS (prevents caching)
-* Image and favicon assets copied to `dist/`
+* coming soon...
