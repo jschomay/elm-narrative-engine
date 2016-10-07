@@ -4,6 +4,71 @@ import Dict exposing (..)
 import Story.Element exposing (..)
 
 
+-- Rule
+
+
+type alias Rule item location character knowledge =
+    { interaction : Interaction item location character
+    , condition : List (Condition item location character knowledge)
+    , changes : List (ChangeWorldCommand item location character knowledge)
+    , narration : Narration
+    }
+
+
+type Interaction a b c
+    = InteractionBased Time (Element a b c)
+    | TurnBased Time
+
+
+withCharacter : character -> Trigger item location character
+withCharacter character =
+    InteractionBased (Time { before = Nothing, after = Nothing }) (Character character)
+
+
+firstWithCharacter : character -> Trigger item location character
+firstWithCharacter character =
+    InteractionBased (Time { before = Just 2, after = Nothing }) (Character character)
+
+
+type Time
+    = Time { before : Maybe Int, after : Maybe Int }
+
+
+type Condition a b c e
+    = WithItem a
+    | NearCharacter c
+    | NearProp a
+    | InLocation b
+    | WithKnowledge e
+    | Any (List (Condition a b c e))
+    | Unless (Condition a b c e)
+
+
+type ChangeWorldCommand item location character knowledge
+    = MoveTo location
+    | AddLocation location
+    | RemoveLocation location
+    | AddInventory item
+    | RemoveInventory item
+    | AddCharacter character location
+    | RemoveCharacter character location
+    | AddProp item location
+    | RemoveProp item location
+    | AddKnowledge knowledge
+    | LoadScene (List (Rule item location character knowledge))
+    | EndStory
+
+
+type Narration
+    = Narrate String
+    | InOrder (List String)
+    | Cycling (List String)
+
+
+
+-- StoryState
+
+
 type alias StoryState a b c d e =
     { currentLocation : b
     , currentScene : d
@@ -15,33 +80,6 @@ type alias StoryState a b c d e =
     , charactersByLocation : Dict String (List c)
     , knowledge : List e
     }
-
-
-type alias AdvanceStory a b c d e =
-    ( ChangeWorldCommands a b c d e, Narration )
-
-
-type alias ChangeWorldCommands a b c d e =
-    List (ChangeWorldCommand a b c d e)
-
-
-type ChangeWorldCommand a b c d e
-    = MoveTo b
-    | AddLocation b
-    | RemoveLocation b
-    | AddInventory a
-    | RemoveInventory a
-    | AddCharacter c b
-    | RemoveCharacter c b
-    | AddProp a b
-    | RemoveProp a b
-    | AddKnowledge e
-    | LoadScene d
-    | EndStory
-
-
-type Narration
-    = Narrate String
 
 
 init : b -> d -> StoryState a b c d e
@@ -189,3 +227,62 @@ advanceStory elementName storyState ( changesWorldCommands, narration ) =
     in
         List.foldl doCommand storyState changesWorldCommands
             |> addNarration ( elementName, getNarration narration )
+
+
+findMatchingRule : Element a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> Maybe (AdvanceStory a b c d e)
+findMatchingRule element rules storyState beenThereDoneThat =
+    case rules of
+        [] ->
+            Nothing
+
+        (( given, advanceStory ) as x) :: xs ->
+            if matchesGiven given element storyState beenThereDoneThat then
+                Just advanceStory
+            else
+                findMatchingRule element xs storyState beenThereDoneThat
+
+
+matchesGiven : Given a b c e -> Element a b c -> StoryState a b c d e -> Bool -> Bool
+matchesGiven ( trigger, condition ) element storyState beenThereDoneThat =
+    matchesTrigger trigger element beenThereDoneThat && matchesCondition condition storyState
+
+
+matchesTrigger : Trigger a b c -> Element a b c -> Bool -> Bool
+matchesTrigger trigger element beenThereDoneThat =
+    case trigger of
+        InteractionWith element' ->
+            element == element'
+
+        FirstInteractionWith element' ->
+            element == element' && Basics.not beenThereDoneThat
+
+
+matchesCondition : Condition a b c e -> StoryState a b c d e -> Bool
+matchesCondition condition storyState =
+    case condition of
+        EveryTime ->
+            True
+
+        WithItem item ->
+            List.member item storyState.inventory
+
+        NearCharacter character ->
+            List.member character <| getCharactersInCurrentLocation storyState
+
+        NearProp prop ->
+            List.member prop <| getPropsInCurrentLocation storyState
+
+        InLocation location ->
+            storyState.currentLocation == location
+
+        WithKnowledge knowledge ->
+            List.member knowledge storyState.knowledge
+
+        All conditions ->
+            List.all (flip matchesCondition storyState) conditions
+
+        Any conditions ->
+            List.any (flip matchesCondition storyState) conditions
+
+        Unless condition ->
+            Basics.not <| matchesCondition condition storyState
