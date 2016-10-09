@@ -9,13 +9,13 @@ import Markdown
 storyline : List ( String, String ) -> Html msg
 storyline storyLine =
     let
-        storyLi i ( elementName, storyText ) =
+        storyLi i ( displayableName, storyText ) =
             let
                 numLines =
                     List.length storyLine
 
                 key =
-                    elementName ++ (toString <| numLines - i)
+                    displayableName ++ (toString <| numLines - i)
 
                 classes =
                     [ ( "Storyline__Item", True )
@@ -24,7 +24,7 @@ storyline storyLine =
             in
                 ( key
                 , li [ classList classes ]
-                    [ h4 [ class "Storyline__Item__Action" ] <| [ text elementName ]
+                    [ h4 [ class "Storyline__Item__Action" ] <| [ text displayableName ]
                     , Markdown.toHtml [ class "Storyline__Item__Narration markdown-body" ] storyText
                     ]
                 )

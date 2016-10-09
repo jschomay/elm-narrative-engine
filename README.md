@@ -19,7 +19,7 @@ See https://github.com/jschomay/elm-interactive-story-starter.git for everything
 
 ## Basic Usage
 
-Step 1: Define your "story elements" (items, locations, and characters)
+Step 1: Define your "story displayables" (items, locations, and characters)
 
 ```elm
 type MyItem
@@ -38,29 +38,25 @@ items item =
 Step 2: Define your declarative "story rules," broken up into "scenes"
 
 ```elm
-scene1rules =
-    [ interactingWith (item Umbrella)
-        `when` (unless (withItem Umbrella))
-        `changesWorld` [ addInventory Umbrella ]
-        `narrates` takingUmbrella
-    , interactingWith (item Umbrella)
-        `when` (inLocation Swamp)
-        `changesWorld` [ ]
-        `narrates` startingToRain
-    ...
+scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
+scene1 =
+    [ { interaction = character Harry
+      , conditions = [ inLocation Garden ]
+      , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
+      , narration = "Meet me in the marsh..."
+      }
+    , { interaction = character Harry
+      , conditions = [ inLocation Marsh ]
+      , changes = []
+      , narration = "My good friend Harry..."
+      }
     ]
-
-takingUmbrella =
-    "Never leave home without it."
-
-startingToRain =
-    "Good thing your brought your umbrella..."
 ```
 
-Step 3: Load your story elements and rules into the framework
+Step 3: Load your story displayables and rules into the framework
 
 ```elm
-Story.load info elements scenes setup
+Story.load info displayables setup
 ```
 
 ## Sample Stories

@@ -1,47 +1,27 @@
 module Story.State exposing (..)
 
 import Dict exposing (..)
-import Story.Element exposing (..)
+import Story.Displayable exposing (..)
 
 
 -- Rule
 
 
 type alias Rule item location character knowledge =
-    { interaction : Interaction item location character
-    , condition : List (Condition item location character knowledge)
+    { interaction : Displayable item location character
+    , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
-    , narration : Narration
+    , narration : String
     }
 
 
-type Interaction a b c
-    = InteractionBased Time (Element a b c)
-    | TurnBased Time
-
-
-withCharacter : character -> Trigger item location character
-withCharacter character =
-    InteractionBased (Time { before = Nothing, after = Nothing }) (Character character)
-
-
-firstWithCharacter : character -> Trigger item location character
-firstWithCharacter character =
-    InteractionBased (Time { before = Just 2, after = Nothing }) (Character character)
-
-
-type Time
-    = Time { before : Maybe Int, after : Maybe Int }
-
-
-type Condition a b c e
-    = WithItem a
-    | NearCharacter c
-    | NearProp a
-    | InLocation b
-    | WithKnowledge e
-    | Any (List (Condition a b c e))
-    | Unless (Condition a b c e)
+type Condition item location character knowledge
+    = WithItem item
+    | NearCharacter character
+    | NearProp item
+    | InLocation location
+    | WithKnowledge knowledge
+    | Unless (Condition item location character knowledge)
 
 
 type ChangeWorldCommand item location character knowledge
@@ -59,64 +39,58 @@ type ChangeWorldCommand item location character knowledge
     | EndStory
 
 
-type Narration
-    = Narrate String
-    | InOrder (List String)
-    | Cycling (List String)
-
-
 
 -- StoryState
 
 
-type alias StoryState a b c d e =
-    { currentLocation : b
-    , currentScene : d
-    , familiarWith : List (Element a b c)
-    , inventory : List a
-    , knownLocations : List b
+type alias StoryState item location character knowledge =
+    { currentLocation : location
+    , currentScene : List (Rule item location character knowledge)
+    , familiarWith : List (Displayable item location character)
+    , inventory : List item
+    , knownLocations : List location
     , storyLine : List ( String, String )
-    , itemsByLocation : Dict String (List a)
-    , charactersByLocation : Dict String (List c)
-    , knowledge : List e
+    , itemsByLocation : Dict String (List item)
+    , charactersByLocation : Dict String (List character)
+    , knowledge : List knowledge
     }
 
 
-init : b -> d -> StoryState a b c d e
+init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
 init startingLocation startingScene =
     StoryState startingLocation startingScene [ Location startingLocation ] [] [] [] Dict.empty Dict.empty []
 
 
-getCharactersInCurrentLocation : StoryState a b c d e -> List c
+getCharactersInCurrentLocation : StoryState item location character knowledge -> List character
 getCharactersInCurrentLocation storyState =
     getCharactersByLocation storyState.currentLocation storyState
 
 
-getPropsInCurrentLocation : StoryState a b c d e -> List a
+getPropsInCurrentLocation : StoryState item location character knowledge -> List item
 getPropsInCurrentLocation storyState =
     getItemsByLocation storyState.currentLocation storyState
 
 
-getCharactersByLocation : b -> StoryState a b c d e -> List c
+getCharactersByLocation : location -> StoryState item location character knowledge -> List character
 getCharactersByLocation location storyState =
     Maybe.withDefault []
         <| Dict.get (toString location) storyState.charactersByLocation
 
 
-getItemsByLocation : b -> StoryState a b c d e -> List a
+getItemsByLocation : location -> StoryState item location character knowledge -> List item
 getItemsByLocation location storyState =
     Maybe.withDefault []
         <| Dict.get (toString location) storyState.itemsByLocation
 
 
-advanceStory : String -> StoryState a b c d e -> AdvanceStory a b c d e -> StoryState a b c d e
-advanceStory elementName storyState ( changesWorldCommands, narration ) =
+advanceStory :
+    String
+    -> StoryState item location character knowledge
+    -> List (ChangeWorldCommand item location character knowledge)
+    -> String
+    -> StoryState item location character knowledge
+advanceStory displayableName storyState changesWorldCommands narration =
     let
-        getNarration narration =
-            case narration of
-                Narrate t ->
-                    t
-
         addNarration narration storyState =
             { storyState
                 | storyLine = narration :: storyState.storyLine
@@ -226,43 +200,41 @@ advanceStory elementName storyState ( changesWorldCommands, narration ) =
                     storyState
     in
         List.foldl doCommand storyState changesWorldCommands
-            |> addNarration ( elementName, getNarration narration )
+            |> addNarration ( displayableName, narration )
 
 
-findMatchingRule : Element a b c -> Scene a b c d e -> StoryState a b c d e -> Bool -> Maybe (AdvanceStory a b c d e)
-findMatchingRule element rules storyState beenThereDoneThat =
+findMatchingRule :
+    Displayable item location character
+    -> List (Rule item location character knowledge)
+    -> StoryState item location character knowledge
+    -> Maybe (Rule item location character knowledge)
+findMatchingRule displayable rules storyState =
     case rules of
         [] ->
             Nothing
 
-        (( given, advanceStory ) as x) :: xs ->
-            if matchesGiven given element storyState beenThereDoneThat then
-                Just advanceStory
+        rule :: remainingRules ->
+            if matchesRule rule displayable storyState then
+                Just rule
             else
-                findMatchingRule element xs storyState beenThereDoneThat
+                findMatchingRule displayable remainingRules storyState
 
 
-matchesGiven : Given a b c e -> Element a b c -> StoryState a b c d e -> Bool -> Bool
-matchesGiven ( trigger, condition ) element storyState beenThereDoneThat =
-    matchesTrigger trigger element beenThereDoneThat && matchesCondition condition storyState
+matchesRule :
+    Rule item location character knowledge
+    -> Displayable item location character
+    -> StoryState item location character knowledge
+    -> Bool
+matchesRule rule displayable storyState =
+    rule.interaction == displayable && List.all (matchesCondition storyState) rule.conditions
 
 
-matchesTrigger : Trigger a b c -> Element a b c -> Bool -> Bool
-matchesTrigger trigger element beenThereDoneThat =
-    case trigger of
-        InteractionWith element' ->
-            element == element'
-
-        FirstInteractionWith element' ->
-            element == element' && Basics.not beenThereDoneThat
-
-
-matchesCondition : Condition a b c e -> StoryState a b c d e -> Bool
-matchesCondition condition storyState =
+matchesCondition :
+    StoryState item location character knowledge
+    -> Condition item location character knowledge
+    -> Bool
+matchesCondition storyState condition =
     case condition of
-        EveryTime ->
-            True
-
         WithItem item ->
             List.member item storyState.inventory
 
@@ -278,11 +250,5 @@ matchesCondition condition storyState =
         WithKnowledge knowledge ->
             List.member knowledge storyState.knowledge
 
-        All conditions ->
-            List.all (flip matchesCondition storyState) conditions
-
-        Any conditions ->
-            List.any (flip matchesCondition storyState) conditions
-
         Unless condition ->
-            Basics.not <| matchesCondition condition storyState
+            Basics.not <| matchesCondition storyState condition

@@ -5,10 +5,17 @@ import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color exposing (..)
-import Story.Element exposing (..)
+import Story.Displayable exposing (..)
 
 
-locations : (b -> msg) -> (b -> LocationInfo) -> List b -> b -> (Color -> String) -> (Element a b c -> Bool) -> Html msg
+locations :
+    (location -> msg)
+    -> (location -> LocationInfo)
+    -> List location
+    -> location
+    -> (Color -> String)
+    -> (Displayable item location character -> Bool)
+    -> Html msg
 locations msg locationsInfo locations currentLocation toCssColor beenThereDoneThat =
     let
         classes location =
@@ -17,7 +24,7 @@ locations msg locationsInfo locations currentLocation toCssColor beenThereDoneTh
                 , ( "Locations__Location--current", location == currentLocation )
                 , ( "u-selectable", True )
                 , ( "u-jump", not <| beenThereDoneThat (Location location) )
-                , ( "u-new-story-element", not <| beenThereDoneThat (Location location) )
+                , ( "u-new-story-displayable", not <| beenThereDoneThat (Location location) )
                 ]
 
         numLocations =

@@ -3,8 +3,8 @@ module Story
         ( load
         , Info
         , Setup
-        , Elements
         , storyWorld
+        , StoryWorld
         , ItemInfo
         , LocationInfo
         , CharacterInfo
@@ -14,20 +14,12 @@ module Story
         , item
         , location
         , character
-        , Scene
-        , firstInteractionWith
-        , interactingWith
-        , when
-        , changesWorld
-        , narrates
-        , everyTime
+        , Rule
         , withItem
         , nearCharacter
         , nearProp
         , inLocation
         , withKnowledge
-        , all
-        , any
         , unless
         , moveTo
         , addLocation
@@ -53,44 +45,49 @@ The framework takes care of managing all of the state, views, and interaction ha
 
 # Defining your story world
 
-@docs Elements, storyWorld, ItemInfo, LocationInfo, CharacterInfo, itemInfo, locationInfo, characterInfo, item, location, character
+@docs storyWorld, StoryWorld, ItemInfo, LocationInfo, CharacterInfo, itemInfo, locationInfo, characterInfo, item, location, character
 
 # Defining story rules
 
 Rules are declarative pairings of a "matcher" and a set of "commands" to perform if the rule matches.  Rules are grouped into "scenes" for better control and organization.  If no rules match, the framework will perform a default rule, which is usually just to narrate the description of what was interacted with.
 
-@docs Scene
 
-You build up rules via a declarative DSL like this:
+A rule has four parts:
 
-    storyRules =
-        [ interactingWith (item Umbrella)
-            `when` (unless (withItem Umbrella))
-            `changesWorld` [ addInventory Umbrella ]
-            `narrates` "I always take my umbrella with me."
-        , interactingWith (item Umbrella)
-            `when` (inLocation Swamp)
-            `changesWorld` [ ]
-            `narrates` "Good thing I brought my umbrella!"
-        ...
+- a matcher against what displayable story element the user clicked on
+- a list of conditions that all must match for the rule to match
+- a list of changes to make if the rule matches
+- what to add to the story line if the rule matches
+
+    scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
+    scene1 =
+        [ { interaction = character Harry
+          , conditions = [ inLocation Garden ]
+          , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
+          , narration = "Meet me in the marsh..."
+          }
+        , { interaction = character Harry
+          , conditions = [ inLocation Marsh ]
+          , changes = []
+          , narration = "My good friend Harry..."
+          }
         ]
 
-@docs firstInteractionWith, interactingWith, when, changesWorld, narrates
+@docs Rule
 
+## Conditions
 
-## Matching rules
+The following condition matchers can be used in the `conditions` part of the rule record.
 
-The following condition matchers can be used in the `when` part of the DSL.  Note that you can nest and combine these matchers with `unless`, `all`, and `any`.
-
-@docs everyTime , withItem , nearCharacter , nearProp , inLocation , withKnowledge , all , any , unless
+@docs  withItem , nearCharacter , nearProp , inLocation , withKnowledge , unless
 
 
 ## Changing the story world
 
-You cannot change the story directly, but you can supply "commands" describing how the story state should change, as well as "narration" to accompany these changes.
-
+You cannot change the story directly, but you can supply "commands" describing how the story state should change.
 
 @docs moveTo, addLocation, removeLocation, addInventory, removeInventory, addCharacter, removeCharacter, addProp, removeProp, addKnowledge, loadScene, endStory
+
 -}
 
 import Html exposing (..)
@@ -99,22 +96,21 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Markdown exposing (..)
 import Color exposing (Color)
-import Story.Element exposing (..)
-import Story.Rule exposing (..)
+import Story.Displayable exposing (..)
 import Story.State exposing (..)
 import Story.Mechanics exposing (..)
 import Views.Game exposing (..)
 
 
-{-| The items, locations, and characters in your story that will be displayed and interacted with.
+{-| A displayable story element -- and item, location, or character in your story that can be displayed and interacted with.
 -}
-type alias Elements a b c =
-    Story.Element.Elements a b c
+type alias Displayable item location character =
+    Story.Displayable.Displayable item location character
 
 
-{-| A means of looking up static information about your story elements, which gets loaded into `Story.load`.
+{-| A means of looking up static information about your story displayables, which gets loaded into `Story.load`.
 -}
-storyWorld : (a -> ItemInfo) -> (b -> LocationInfo) -> (c -> CharacterInfo) -> Elements a b c
+storyWorld : (item -> ItemInfo) -> (location -> LocationInfo) -> (character -> CharacterInfo) -> StoryWorld item location character
 storyWorld items locations characters =
     { items = items
     , locations = locations
@@ -122,22 +118,28 @@ storyWorld items locations characters =
     }
 
 
+{-| A collection of all of the displayable elements in your story, for loading into the engine.
+-}
+type alias StoryWorld item location character =
+    Story.Displayable.StoryWorld item location character
+
+
 {-| Display information for your items, including a name and description.  The description allows markdown.
 -}
 type alias ItemInfo =
-    Story.Element.ItemInfo
+    Story.Displayable.ItemInfo
 
 
 {-| Display information for your locations, including a name, a highlight color, and a description.  The description allows markdown.
 -}
 type alias LocationInfo =
-    Story.Element.LocationInfo
+    Story.Displayable.LocationInfo
 
 
 {-| Display information for your characters, including a name and description.  The description allows markdown.
 -}
 type alias CharacterInfo =
-    Story.Element.CharacterInfo
+    Story.Displayable.CharacterInfo
 
 
 {-|
@@ -171,41 +173,41 @@ characterInfo name description =
     }
 
 
-{-| Wrap your item type in an `Element` type
+{-| Wrap your item type in an `Displayable` type when matching interactions in your rules.
 -}
-item : a -> Element a b c
+item : item -> Displayable item location character
 item =
-    Story.Element.Item
+    Story.Displayable.Item
 
 
-{-| Wrap your location type in an `Element` type
+{-| Wrap your location type in an `Displayable` type when matching interactions in your rules.
 -}
-location : b -> Element a b c
+location : location -> Displayable item location character
 location =
-    Story.Element.Location
+    Story.Displayable.Location
 
 
-{-| Wrap your character type in an `Element` type
+{-| Wrap your character type in an `Displayable` type when matching interactions in your rules.
 -}
-character : c -> Element a b c
+character : character -> Displayable item location character
 character =
-    Story.Element.Character
+    Story.Displayable.Character
 
 
-type alias Model a b c d e =
+type alias Model item location character knowledge =
     { title : String
     , byline : String
     , prologue : String
     , route : Route
-    , storyState : StoryState a b c d e
+    , storyState : StoryState item location character knowledge
     }
 
 
 {-| Information for the starting state of your story.  See the "Changing the story world" section for more information on the setupCommands.
 
-    setup : Setup MyItem MyLocation MyCharacter MyScene MyKnowledge
+    setup : Setup MyItem MyLocation MyCharacter MyKnowledge
     setup =
-        { startingScene = Beginning
+        { startingScene = beginning
         , startingLocation = Home
         , startingNarration = "Home sweet home..."
         , setupCommands =
@@ -215,11 +217,11 @@ type alias Model a b c d e =
             ]
         }
 -}
-type alias Setup a b c d e =
-    { startingScene : d
-    , startingLocation : b
+type alias Setup item location character knowledge =
+    { startingScene : List (Rule item location character knowledge)
+    , startingLocation : location
     , startingNarration : String
-    , setupCommands : ChangeWorldCommands a b c d e
+    , setupCommands : List (ChangeWorldCommand item location character knowledge)
     }
 
 
@@ -244,13 +246,13 @@ type Route
     | GamePage
 
 
-type Msg a b c
+type Msg item location character
     = NoOp
     | StartGame
-    | Interaction (Story.Mechanics.Msg a b c)
+    | Interaction (Story.Mechanics.Msg item location character)
 
 
-init : Info -> Setup a b c d e -> Model a b c d e
+init : Info -> Setup item location character knowledge -> Model item location character knowledge
 init { title, byline, prologue } setup =
     { title = title
     , byline = byline
@@ -260,132 +262,76 @@ init { title, byline, prologue } setup =
     }
 
 
-setUpWorld : Setup a b c d e -> StoryState a b c d e
+setUpWorld : Setup item location character knowledge -> StoryState item location character knowledge
 setUpWorld { startingScene, startingLocation, startingNarration, setupCommands } =
     Story.State.init startingLocation startingScene
-        |> \storyState -> Story.State.advanceStory "Begin" storyState ( setupCommands, Narrate startingNarration )
+        |> \storyState -> Story.State.advanceStory "Begin" storyState setupCommands startingNarration
 
 
-{-| This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define elements and scenes.
+{-| This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define displayables and scenes.
 
     main : Program Never
     main =
-        Story.load info elements scenes setup
+        Story.load info displayables setup
 
 -}
-load : Info -> Elements a b c -> (d -> Scene a b c d e) -> Setup a b c d e -> Program Never
-load info elements scenes setup =
+load :
+    Info
+    -> StoryWorld item location character
+    -> Setup item location character knowledge
+    -> Program Never
+load info displayables setup =
     Html.beginnerProgram
         { model = init info setup
-        , view = view elements
-        , update = update elements scenes
+        , view = view displayables
+        , update = update displayables
         }
 
 
-
--- UPDATE
-
-
-{-| A list of declarative rules, describing how to advance your story.
+{-| A declarative rule, describing how to advance your story and under what conditions.
 -}
-type alias Scene a b c d e =
-    Story.Rule.Scene a b c d e
-
-
-{-| Part of the rule building DSL. See the example above.   `firstInteractionWith` is interchangeable with `interactingWith`, and will only match on the first interaction with the give story element.
--}
-firstInteractionWith : Element a b c -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
-firstInteractionWith element condition advanceStory =
-    ( ( FirstInteractionWith element, condition ), advanceStory )
-
-
-{-| Part of the rule building DSL. See the example above.
--}
-interactingWith : Element a b c -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
-interactingWith element condition advanceStory =
-    ( ( InteractionWith element, condition ), advanceStory )
-
-
-{-| Part of the rule building DSL. See the example above.
--}
-when : (Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e) -> Condition a b c e -> AdvanceStory a b c d e -> Rule a b c d e
-when f condition =
-    f condition
-
-
-{-| Part of the rule building DSL. See the example above.
--}
-changesWorld : (AdvanceStory a b c d e -> Rule a b c d e) -> ChangeWorldCommands a b c d e -> Narration -> Rule a b c d e
-changesWorld f a b =
-    f ( a, b )
-
-
-{-| Part of the rule building DSL. See the example above.
--}
-narrates : (Narration -> Rule a b c d e) -> String -> Rule a b c d e
-narrates f =
-    f << Narrate
-
-
-{-| Will match every time.  Useful in combination with `FirstInteractionWith` (though you may want to restrict that more).  Also useful when not supplying any commands to change the world, but you do want a custom narration.
--}
-everyTime : Condition a b c e
-everyTime =
-    EveryTime
+type alias Rule item location character knowledge =
+    Story.State.Rule item location character knowledge
 
 
 {-| Will match if the supplied item is in the inventory.
 -}
-withItem : a -> Condition a b c e
+withItem : item -> Condition item location character knowledge
 withItem =
     WithItem
 
 
 {-| Will match if the supplied character in in the current location.
 -}
-nearCharacter : c -> Condition a b c e
+nearCharacter : character -> Condition item location character knowledge
 nearCharacter =
     NearCharacter
 
 
 {-| Will match if the supplied item in in the current location.
 -}
-nearProp : a -> Condition a b c e
+nearProp : item -> Condition item location character knowledge
 nearProp =
     NearProp
 
 
 {-| Will match when the supplied location is the current location.
 -}
-inLocation : b -> Condition a b c e
+inLocation : location -> Condition item location character knowledge
 inLocation =
     InLocation
 
 
 {-| Will match if the specified knowledge has been acquired.
 -}
-withKnowledge : e -> Condition a b c e
+withKnowledge : knowledge -> Condition item location character knowledge
 withKnowledge =
     WithKnowledge
 
 
-{-| Will match if all of the supplied conditions match.
--}
-all : List (Condition a b c e) -> Condition a b c e
-all =
-    All
-
-
-{-| Will match if any of the supplied conditions match.
--}
-any : List (Condition a b c e) -> Condition a b c e
-any =
-    Any
-
-
 {-| Will match if the supplied condition does NOT match.
 -}
-unless : Condition a b c e -> Condition a b c e
+unless : Condition item location character knowledge -> Condition item location character knowledge
 unless =
     Unless
 
@@ -394,7 +340,7 @@ unless =
 
     moveTo Conservatory
 -}
-moveTo : b -> Story.State.ChangeWorldCommand a b c d e
+moveTo : location -> Story.State.ChangeWorldCommand item location character knowledge
 moveTo =
     Story.State.MoveTo
 
@@ -403,7 +349,7 @@ moveTo =
 
     addLocation Conservatory
 -}
-addLocation : b -> Story.State.ChangeWorldCommand a b c d e
+addLocation : location -> Story.State.ChangeWorldCommand item location character knowledge
 addLocation =
     Story.State.AddLocation
 
@@ -412,7 +358,7 @@ addLocation =
 
     removeLocation Home
 -}
-removeLocation : b -> Story.State.ChangeWorldCommand a b c d e
+removeLocation : location -> Story.State.ChangeWorldCommand item location character knowledge
 removeLocation =
     Story.State.RemoveLocation
 
@@ -421,7 +367,7 @@ removeLocation =
 
     addInventory Umbrella
 -}
-addInventory : a -> Story.State.ChangeWorldCommand a b c d e
+addInventory : item -> Story.State.ChangeWorldCommand item location character knowledge
 addInventory =
     Story.State.AddInventory
 
@@ -430,7 +376,7 @@ addInventory =
 
     removeInventory Umbrella
 -}
-removeInventory : a -> Story.State.ChangeWorldCommand a b c d e
+removeInventory : item -> Story.State.ChangeWorldCommand item location character knowledge
 removeInventory =
     Story.State.RemoveInventory
 
@@ -439,7 +385,7 @@ removeInventory =
 
     addCharacter John Conservatory
 -}
-addCharacter : c -> b -> Story.State.ChangeWorldCommand a b c d e
+addCharacter : character -> location -> Story.State.ChangeWorldCommand item location character knowledge
 addCharacter =
     Story.State.AddCharacter
 
@@ -448,7 +394,7 @@ addCharacter =
 
     removeCharacter John Conservatory
 -}
-removeCharacter : c -> b -> Story.State.ChangeWorldCommand a b c d e
+removeCharacter : character -> location -> Story.State.ChangeWorldCommand item location character knowledge
 removeCharacter =
     Story.State.RemoveCharacter
 
@@ -459,7 +405,7 @@ This command adds an item to a location.
 
     addProp Umbrella Home
 -}
-addProp : a -> b -> Story.State.ChangeWorldCommand a b c d e
+addProp : item -> location -> Story.State.ChangeWorldCommand item location character knowledge
 addProp =
     Story.State.AddProp
 
@@ -468,20 +414,20 @@ addProp =
 
     removeProp Umbrella Home
 -}
-removeProp : a -> b -> Story.State.ChangeWorldCommand a b c d e
+removeProp : item -> location -> Story.State.ChangeWorldCommand item location character knowledge
 removeProp =
     Story.State.RemoveProp
 
 
 {-| Knowledge is an intangible "flag" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.
 
-However, before turning to this tool, consider if you can use a normal, displayable story element instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can "show" to people for more information.  This keeps the story more concrete.
+However, before turning to this tool, consider if you can use a normal, displayable story displayable instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can "show" to people for more information.  This keeps the story more concrete.
 
     type MyKnowledge = LearnOfSuspect | WrongSuspect | Amnesia
 
     addKnowledge LearnOfSuspect
 -}
-addKnowledge : e -> Story.State.ChangeWorldCommand a b c d e
+addKnowledge : knowledge -> Story.State.ChangeWorldCommand item location character knowledge
 addKnowledge =
     Story.State.AddKnowledge
 
@@ -492,20 +438,24 @@ addKnowledge =
 
     loadScene SearchForClues
 -}
-loadScene : d -> Story.State.ChangeWorldCommand a b c d e
+loadScene : List (Rule item location character knowledge) -> Story.State.ChangeWorldCommand item location character knowledge
 loadScene =
     Story.State.LoadScene
 
 
 {-| Let the framework know the story has ended.  Currently this has no effect, I'm trying to figure out what should happen when stories end.
 -}
-endStory : Story.State.ChangeWorldCommand a b c d e
+endStory : Story.State.ChangeWorldCommand item location character knowledge
 endStory =
     Story.State.EndStory
 
 
-update : Elements a b c -> (d -> Scene a b c d e) -> Msg a b c -> Model a b c d e -> Model a b c d e
-update displayInfo scenes msg model =
+update :
+    StoryWorld item location character
+    -> Msg item location character
+    -> Model item location character knowledge
+    -> Model item location character knowledge
+update displayInfo msg model =
     case msg of
         NoOp ->
             model
@@ -514,14 +464,14 @@ update displayInfo scenes msg model =
             { model | route = GamePage }
 
         Interaction msg ->
-            { model | storyState = Story.Mechanics.update displayInfo scenes msg model.storyState }
+            { model | storyState = Story.Mechanics.update displayInfo msg model.storyState }
 
 
 
 -- VIEW
 
 
-view : Elements a b c -> Model a b c d e -> Html (Msg a b c)
+view : StoryWorld item location character -> Model item location character knowledge -> Html (Msg item location character)
 view displayInfo model =
     case model.route of
         TitlePage ->
@@ -531,7 +481,7 @@ view displayInfo model =
             Html.map Interaction <| Views.Game.view displayInfo model.storyState
 
 
-titelPage : Model a b c d e -> Html (Msg a b c)
+titelPage : Model item location character knowledge -> Html (Msg item location character)
 titelPage model =
     div [ class "TitlePage" ]
         [ h1 [ class "TitlePage__Title" ] [ text model.title ]

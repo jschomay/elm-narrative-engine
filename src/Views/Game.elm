@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Color exposing (..)
 import String exposing (join)
-import Story.Element exposing (..)
+import Story.Displayable exposing (..)
 import Story.State exposing (..)
 import Story.Mechanics exposing (..)
 import Views.CurrentSummary exposing (..)
@@ -13,7 +13,10 @@ import Views.Locations exposing (..)
 import Views.Inventory exposing (..)
 
 
-view : Elements a b c -> StoryState a b c d e -> Html (Story.Mechanics.Msg a b c)
+view :
+    StoryWorld item location character
+    -> StoryState item location character knowledge
+    -> Html (Story.Mechanics.Msg item location character)
 view displayInfo storyState =
     let
         toCssColor : Color -> String

@@ -4,10 +4,15 @@ import Html exposing (..)
 import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Story.Element exposing (..)
+import Story.Displayable exposing (..)
 
 
-inventory : (a -> msg) -> (a -> ItemInfo) -> List a -> (Element a b c -> Bool) -> Html msg
+inventory :
+    (item -> msg)
+    -> (item -> ItemInfo)
+    -> List item
+    -> (Displayable item location character -> Bool)
+    -> Html msg
 inventory msg itemsInfo items beenThereDoneThat =
     let
         numItems =
@@ -21,7 +26,7 @@ inventory msg itemsInfo items beenThereDoneThat =
                 classes =
                     [ ( "Inventory__Item u-selectable", True )
                     , ( "u-jump", not <| beenThereDoneThat (Item item) )
-                    , ( "u-new-story-element", not <| beenThereDoneThat (Item item) )
+                    , ( "u-new-story-displayable", not <| beenThereDoneThat (Item item) )
                     ]
             in
                 ( key
