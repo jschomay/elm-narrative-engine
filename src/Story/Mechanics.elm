@@ -1,7 +1,7 @@
 module Story.Mechanics exposing (..)
 
-import Story.Displayable exposing (..)
 import Story.State exposing (..)
+import Types exposing (..)
 
 
 type Msg item location character

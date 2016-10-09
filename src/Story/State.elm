@@ -1,59 +1,10 @@
 module Story.State exposing (..)
 
 import Dict exposing (..)
-import Story.Displayable exposing (..)
-
-
--- Rule
-
-
-type alias Rule item location character knowledge =
-    { interaction : Displayable item location character
-    , conditions : List (Condition item location character knowledge)
-    , changes : List (ChangeWorldCommand item location character knowledge)
-    , narration : String
-    }
-
-
-type Condition item location character knowledge
-    = WithItem item
-    | NearCharacter character
-    | NearProp item
-    | InLocation location
-    | WithKnowledge knowledge
-    | Unless (Condition item location character knowledge)
-
-
-type ChangeWorldCommand item location character knowledge
-    = MoveTo location
-    | AddLocation location
-    | RemoveLocation location
-    | AddInventory item
-    | RemoveInventory item
-    | AddCharacter character location
-    | RemoveCharacter character location
-    | AddProp item location
-    | RemoveProp item location
-    | AddKnowledge knowledge
-    | LoadScene (List (Rule item location character knowledge))
-    | EndStory
-
+import Types exposing (..)
 
 
 -- StoryState
-
-
-type alias StoryState item location character knowledge =
-    { currentLocation : location
-    , currentScene : List (Rule item location character knowledge)
-    , familiarWith : List (Displayable item location character)
-    , inventory : List item
-    , knownLocations : List location
-    , storyLine : List ( String, String )
-    , itemsByLocation : Dict String (List item)
-    , charactersByLocation : Dict String (List character)
-    , knowledge : List knowledge
-    }
 
 
 init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
@@ -201,6 +152,10 @@ advanceStory displayableName storyState changesWorldCommands narration =
     in
         List.foldl doCommand storyState changesWorldCommands
             |> addNarration ( displayableName, narration )
+
+
+
+-- Rules
 
 
 findMatchingRule :

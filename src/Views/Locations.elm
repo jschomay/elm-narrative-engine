@@ -5,7 +5,7 @@ import Html.Keyed
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color exposing (..)
-import Story.Displayable exposing (..)
+import Types exposing (..)
 
 
 locations :

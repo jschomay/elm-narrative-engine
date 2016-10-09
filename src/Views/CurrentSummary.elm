@@ -4,8 +4,8 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Color exposing (..)
-import Story.Displayable exposing (..)
 import Story.State exposing (..)
+import Types exposing (..)
 
 
 currentSummary :

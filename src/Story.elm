@@ -96,16 +96,17 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Markdown exposing (..)
 import Color exposing (Color)
-import Story.Displayable exposing (..)
-import Story.State exposing (..)
+import Types exposing (..)
+import Types exposing (..)
 import Story.Mechanics exposing (..)
+import Story.State exposing (..)
 import Views.Game exposing (..)
 
 
 {-| A displayable story element -- and item, location, or character in your story that can be displayed and interacted with.
 -}
 type alias Displayable item location character =
-    Story.Displayable.Displayable item location character
+    Types.Displayable item location character
 
 
 {-| A means of looking up static information about your story displayables, which gets loaded into `Story.load`.
@@ -121,25 +122,25 @@ storyWorld items locations characters =
 {-| A collection of all of the displayable elements in your story, for loading into the engine.
 -}
 type alias StoryWorld item location character =
-    Story.Displayable.StoryWorld item location character
+    Types.StoryWorld item location character
 
 
 {-| Display information for your items, including a name and description.  The description allows markdown.
 -}
 type alias ItemInfo =
-    Story.Displayable.ItemInfo
+    Types.ItemInfo
 
 
 {-| Display information for your locations, including a name, a highlight color, and a description.  The description allows markdown.
 -}
 type alias LocationInfo =
-    Story.Displayable.LocationInfo
+    Types.LocationInfo
 
 
 {-| Display information for your characters, including a name and description.  The description allows markdown.
 -}
 type alias CharacterInfo =
-    Story.Displayable.CharacterInfo
+    Types.CharacterInfo
 
 
 {-|
@@ -177,21 +178,21 @@ characterInfo name description =
 -}
 item : item -> Displayable item location character
 item =
-    Story.Displayable.Item
+    Item
 
 
 {-| Wrap your location type in an `Displayable` type when matching interactions in your rules.
 -}
 location : location -> Displayable item location character
 location =
-    Story.Displayable.Location
+    Location
 
 
 {-| Wrap your character type in an `Displayable` type when matching interactions in your rules.
 -}
 character : character -> Displayable item location character
 character =
-    Story.Displayable.Character
+    Character
 
 
 type alias Model item location character knowledge =
@@ -249,7 +250,7 @@ type Route
 type Msg item location character
     = NoOp
     | StartGame
-    | Interaction (Story.Mechanics.Msg item location character)
+    | GamePlay (Story.Mechanics.Msg item location character)
 
 
 init : Info -> Setup item location character knowledge -> Model item location character knowledge
@@ -291,7 +292,7 @@ load info displayables setup =
 {-| A declarative rule, describing how to advance your story and under what conditions.
 -}
 type alias Rule item location character knowledge =
-    Story.State.Rule item location character knowledge
+    Types.Rule item location character knowledge
 
 
 {-| Will match if the supplied item is in the inventory.
@@ -340,63 +341,63 @@ unless =
 
     moveTo Conservatory
 -}
-moveTo : location -> Story.State.ChangeWorldCommand item location character knowledge
+moveTo : location -> ChangeWorldCommand item location character knowledge
 moveTo =
-    Story.State.MoveTo
+    MoveTo
 
 
 {-| Adds a location to your list of known locations.  Any location on this list is available for the player to click on at any time.  This avoids clunky spatial navigation mechanics, but does mean that you will need to make rules to prevent against going to locations that are inaccessible (with appropriate narration).
 
     addLocation Conservatory
 -}
-addLocation : location -> Story.State.ChangeWorldCommand item location character knowledge
+addLocation : location -> ChangeWorldCommand item location character knowledge
 addLocation =
-    Story.State.AddLocation
+    AddLocation
 
 
 {-| Removes a location from your list of known locations.  You probably don't need this since once you know about a location you would always know about it, and trying to go to a location that is inaccessible for some reason could just give some narration telling why.  But maybe you will find a good reason to use it.
 
     removeLocation Home
 -}
-removeLocation : location -> Story.State.ChangeWorldCommand item location character knowledge
+removeLocation : location -> ChangeWorldCommand item location character knowledge
 removeLocation =
-    Story.State.RemoveLocation
+    RemoveLocation
 
 
 {-| Adds an item to your inventory.
 
     addInventory Umbrella
 -}
-addInventory : item -> Story.State.ChangeWorldCommand item location character knowledge
+addInventory : item -> ChangeWorldCommand item location character knowledge
 addInventory =
-    Story.State.AddInventory
+    AddInventory
 
 
 {-| Removes an item from your inventory.  The item will not show up anywhere until you add it back to your inventory or to a location.
 
     removeInventory Umbrella
 -}
-removeInventory : item -> Story.State.ChangeWorldCommand item location character knowledge
+removeInventory : item -> ChangeWorldCommand item location character knowledge
 removeInventory =
-    Story.State.RemoveInventory
+    RemoveInventory
 
 
 {-| Adds a character to a location.  (Use moveTo to move yourself between locations.)
 
     addCharacter John Conservatory
 -}
-addCharacter : character -> location -> Story.State.ChangeWorldCommand item location character knowledge
+addCharacter : character -> location -> ChangeWorldCommand item location character knowledge
 addCharacter =
-    Story.State.AddCharacter
+    AddCharacter
 
 
 {-| Removes a character from a location.  The character will not show up anywhere else until you add it to another location.  (Use moveTo to move yourself between locations.)
 
     removeCharacter John Conservatory
 -}
-removeCharacter : character -> location -> Story.State.ChangeWorldCommand item location character knowledge
+removeCharacter : character -> location -> ChangeWorldCommand item location character knowledge
 removeCharacter =
-    Story.State.RemoveCharacter
+    RemoveCharacter
 
 
 {-| "Props" are just items in a location instead of in your inventory.  They could be something fixed to the location, such as a painting on a wall that you can look at but not take, or they can be something that you can take into your inventory.
@@ -405,18 +406,18 @@ This command adds an item to a location.
 
     addProp Umbrella Home
 -}
-addProp : item -> location -> Story.State.ChangeWorldCommand item location character knowledge
+addProp : item -> location -> ChangeWorldCommand item location character knowledge
 addProp =
-    Story.State.AddProp
+    AddProp
 
 
 {-| Removes an item from a location.
 
     removeProp Umbrella Home
 -}
-removeProp : item -> location -> Story.State.ChangeWorldCommand item location character knowledge
+removeProp : item -> location -> ChangeWorldCommand item location character knowledge
 removeProp =
-    Story.State.RemoveProp
+    RemoveProp
 
 
 {-| Knowledge is an intangible "flag" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.
@@ -427,9 +428,9 @@ However, before turning to this tool, consider if you can use a normal, displaya
 
     addKnowledge LearnOfSuspect
 -}
-addKnowledge : knowledge -> Story.State.ChangeWorldCommand item location character knowledge
+addKnowledge : knowledge -> ChangeWorldCommand item location character knowledge
 addKnowledge =
-    Story.State.AddKnowledge
+    AddKnowledge
 
 
 {-| Rules are grouped into "scenes" for better organization and control.  This is how you switch between scenes when you want a different rule set.  You may want to switch scenes at a "turning point" in your story to bring about new rules for the next objective.
@@ -438,16 +439,16 @@ addKnowledge =
 
     loadScene SearchForClues
 -}
-loadScene : List (Rule item location character knowledge) -> Story.State.ChangeWorldCommand item location character knowledge
+loadScene : List (Rule item location character knowledge) -> ChangeWorldCommand item location character knowledge
 loadScene =
-    Story.State.LoadScene
+    LoadScene
 
 
 {-| Let the framework know the story has ended.  Currently this has no effect, I'm trying to figure out what should happen when stories end.
 -}
-endStory : Story.State.ChangeWorldCommand item location character knowledge
+endStory : ChangeWorldCommand item location character knowledge
 endStory =
-    Story.State.EndStory
+    EndStory
 
 
 update :
@@ -463,7 +464,7 @@ update displayInfo msg model =
         StartGame ->
             { model | route = GamePage }
 
-        Interaction msg ->
+        GamePlay msg ->
             { model | storyState = Story.Mechanics.update displayInfo msg model.storyState }
 
 
@@ -478,7 +479,7 @@ view displayInfo model =
             titelPage model
 
         GamePage ->
-            Html.map Interaction <| Views.Game.view displayInfo model.storyState
+            Html.map GamePlay <| Views.Game.view displayInfo model.storyState
 
 
 titelPage : Model item location character knowledge -> Html (Msg item location character)

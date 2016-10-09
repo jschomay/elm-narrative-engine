@@ -1,7 +1,5 @@
 module Main exposing (..)
 
-{- This file does not get checked in, it is just to test developement locally -}
-
 import Story exposing (..)
 import Color
 
@@ -14,8 +12,8 @@ main =
 info : Info
 info =
     { title = "LOCAL TESTING"
-    , byline = "Jeff Schomay"
-    , prologue = "This file does not get checked in, it is just to test developement locally"
+    , byline = "Jeff"
+    , prologue = "Just a simple story demo to test the engine with."
     }
 
 
