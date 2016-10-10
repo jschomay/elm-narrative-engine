@@ -32,7 +32,7 @@ setup =
         , addLocation Home
         , addLocation Garden
         , addLocation Marsh
-        , addCharacter Harry Garden
+        , addCharacter Harry Marsh
         ]
     }
 
@@ -66,7 +66,7 @@ characters : MyCharacter -> CharacterInfo
 characters c =
     case c of
         Harry ->
-            characterInfo "Harry" "My good friend Harry..."
+            characterInfo "Harry" "About 5 foot tall, red hair..."
 
 
 locations : MyLocation -> LocationInfo
@@ -79,19 +79,51 @@ locations l =
             locationInfo "Garden" Color.red "What a lovely garden..."
 
         Marsh ->
-            locationInfo "Marsh" Color.red "Hmm, looks like rain..."
+            locationInfo "Marsh" Color.red "Nice and green..."
 
 
 scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene1 =
+    [ { interaction = item Umbrella
+      , conditions = []
+      , changes = []
+      , narration =
+            [ "It really is a nice umbrealla."
+            , "It's not raining now."
+            , "Don't really need it."
+            ]
+      }
+    , { interaction = location Garden
+      , conditions = []
+      , changes = [ moveTo Garden, loadScene scene2 ]
+      , narration = []
+      }
+    ]
+
+
+scene2 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
+scene2 =
     [ { interaction = character Harry
       , conditions = [ inLocation Garden ]
       , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
-      , narration = "Meet me in the marsh..."
+      , narration = [ "Meet me in the marsh..." ]
+      }
+    , { interaction = item Umbrella
+      , conditions = [ inLocation Marsh ]
+      , changes = []
+      , narration = [ "Sure am glad I brought it with me!" ]
       }
     , { interaction = character Harry
       , conditions = [ inLocation Marsh ]
       , changes = []
-      , narration = "My good friend Harry..."
+      , narration =
+            [ "My good friend Harry..."
+            , "I've known him since we were young"
+            , "Looks like rain"
+            , """He seems out of things to say.
+
+I'll keep trying anyways."""
+            , "Nope, he really is out of things to say!"
+            ]
       }
     ]

@@ -64,14 +64,16 @@ A rule has four parts:
         [ { interaction = character Harry
           , conditions = [ inLocation Garden ]
           , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
-          , narration = "Meet me in the marsh..."
+          , narration = ["Meet me in the marsh..."]
           }
         , { interaction = character Harry
           , conditions = [ inLocation Marsh ]
           , changes = []
-          , narration = "My good friend Harry..."
+          , narration = ["My good friend Harry...", "I wonder what he wants to tell me..."]
           }
         ]
+
+When a rule matches multiple times (a player clicks the same story element multiple times), it will run through the list of narrations in order, one per click, repeating the final one when it reaches the end.
 
 @docs Rule
 

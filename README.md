@@ -43,12 +43,12 @@ scene1 =
     [ { interaction = character Harry
       , conditions = [ inLocation Garden ]
       , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
-      , narration = "Meet me in the marsh..."
+      , narration = ["Meet me in the marsh..."]
       }
     , { interaction = character Harry
       , conditions = [ inLocation Marsh ]
       , changes = []
-      , narration = "My good friend Harry..."
+      , narration = ["My good friend Harry..."]
       }
     ]
 ```

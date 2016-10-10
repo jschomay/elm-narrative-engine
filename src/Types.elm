@@ -11,6 +11,7 @@ type alias StoryState item location character knowledge =
     { currentLocation : location
     , currentScene : List (Rule item location character knowledge)
     , familiarWith : List (Displayable item location character)
+    , matchedRules : Dict.Dict RuleIndex Int
     , inventory : List item
     , knownLocations : List location
     , storyLine : List ( String, String )
@@ -18,6 +19,10 @@ type alias StoryState item location character knowledge =
     , charactersByLocation : Dict.Dict String (List character)
     , knowledge : List knowledge
     }
+
+
+type alias RuleIndex =
+    Int
 
 
 
@@ -28,7 +33,7 @@ type alias Rule item location character knowledge =
     { interaction : Displayable item location character
     , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
-    , narration : String
+    , narration : List String
     }
 
 

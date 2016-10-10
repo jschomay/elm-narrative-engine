@@ -9,7 +9,7 @@ import Types exposing (..)
 
 init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
 init startingLocation startingScene =
-    StoryState startingLocation startingScene [ Location startingLocation ] [] [] [] Dict.empty Dict.empty []
+    StoryState startingLocation startingScene [ Location startingLocation ] Dict.empty [] [] [] Dict.empty Dict.empty []
 
 
 getCharactersInCurrentLocation : StoryState item location character knowledge -> List character
@@ -145,6 +145,7 @@ advanceStory displayableName storyState changesWorldCommands narration =
                 LoadScene scene ->
                     { storyState
                         | currentScene = scene
+                        , matchedRules = Dict.empty
                     }
 
                 EndStory ->
@@ -159,20 +160,21 @@ advanceStory displayableName storyState changesWorldCommands narration =
 
 
 findMatchingRule :
-    Displayable item location character
+    RuleIndex
+    -> Displayable item location character
     -> List (Rule item location character knowledge)
     -> StoryState item location character knowledge
-    -> Maybe (Rule item location character knowledge)
-findMatchingRule displayable rules storyState =
+    -> Maybe ( RuleIndex, Rule item location character knowledge )
+findMatchingRule index displayable rules storyState =
     case rules of
         [] ->
             Nothing
 
         rule :: remainingRules ->
             if matchesRule rule displayable storyState then
-                Just rule
+                Just ( index, rule )
             else
-                findMatchingRule displayable remainingRules storyState
+                findMatchingRule (index + 1) displayable remainingRules storyState
 
 
 matchesRule :
