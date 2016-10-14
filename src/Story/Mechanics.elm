@@ -2,7 +2,7 @@ module Story.Mechanics exposing (..)
 
 import Story.State exposing (..)
 import Types exposing (..)
-import Dict
+import List.Zipper
 
 
 type Msg item location character
@@ -17,7 +17,7 @@ update :
 update displayInfo (Interact displayable) storyState =
     let
         addDefaultNarration newStoryState =
-            { newStoryState | storyLine = ( name, description ) :: newStoryState.storyLine }
+            { newStoryState | storyLine = ( getName displayInfo displayable, getDescription displayInfo displayable ) :: newStoryState.storyLine }
 
         goToLocation newStoryState =
             case displayable of
@@ -36,27 +36,22 @@ update displayInfo (Interact displayable) storyState =
                         newStoryState.familiarWith
             }
 
-        name =
-            case displayable of
-                Item item ->
-                    .name <| displayInfo.items item
+        updateCurrentScene ruleIndex matchedRule newStoryState =
+            let
+                nextOrLasttNarration currentNarrationZipper =
+                    Maybe.withDefault (List.Zipper.last currentNarrationZipper)
+                        (List.Zipper.next currentNarrationZipper)
 
-                Location location ->
-                    .name <| displayInfo.locations location
+                updateMatchedRule index liveRule =
+                    if index == ruleIndex then
+                        { liveRule | narration = Maybe.map nextOrLasttNarration matchedRule.narration }
+                    else
+                        liveRule
 
-                Character character ->
-                    .name <| displayInfo.characters character
-
-        description =
-            case displayable of
-                Item item ->
-                    .description <| displayInfo.items item
-
-                Location location ->
-                    .description <| displayInfo.locations location
-
-                Character character ->
-                    .description <| displayInfo.characters character
+                newCurrentScene =
+                    List.indexedMap updateMatchedRule newStoryState.currentScene
+            in
+                { newStoryState | currentScene = newCurrentScene }
 
         defaultUpdate =
             case displayable of
@@ -69,43 +64,13 @@ update displayInfo (Interact displayable) storyState =
                 Location _ ->
                     goToLocation
                         >> addDefaultNarration
-
-        getNarration : RuleIndex -> List String -> String
-        getNarration ruleIndex narrations =
-            let
-                currentRuleCount =
-                    Dict.get ruleIndex storyState.matchedRules
-                        |> Maybe.withDefault 0
-
-                lastNarration =
-                    List.drop (List.length narrations - 1) narrations
-                        |> List.head
-                        |> Maybe.withDefault description
-            in
-                case narrations of
-                    [] ->
-                        description
-
-                    _ ->
-                        List.drop currentRuleCount narrations
-                            |> List.head
-                            |> Maybe.withDefault lastNarration
-
-        updateMatchedRulesCount ruleIndex newStoryState =
-            let
-                newMatchedRules =
-                    Dict.get ruleIndex newStoryState.matchedRules
-                        |> Maybe.withDefault 0
-                        |> \count -> Dict.insert ruleIndex (count + 1) newStoryState.matchedRules
-            in
-                { newStoryState | matchedRules = newMatchedRules }
     in
         (case findMatchingRule 0 displayable storyState.currentScene storyState of
             Nothing ->
                 defaultUpdate storyState
 
             Just ( ruleIndex, rule ) ->
-                Story.State.advanceStory name storyState rule.changes (getNarration ruleIndex rule.narration)
-                    |> updateMatchedRulesCount ruleIndex
+                Story.State.advanceStory (getName displayInfo displayable) storyState rule.changes (getNarration (getDescription displayInfo displayable) rule)
+                    |> updateCurrentScene ruleIndex rule
         )
             |> addFamiliarity
