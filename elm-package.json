@@ -10,6 +10,7 @@
         "Story"
     ],
     "dependencies": {
+        "eeue56/elm-all-dict": "1.1.2 <= v < 2.0.0",
         "elm-lang/core": "4.0.0 <= v < 5.0.0",
         "elm-lang/html": "1.0.0 <= v < 2.0.0",
         "evancz/elm-markdown": "3.0.0 <= v < 4.0.0",

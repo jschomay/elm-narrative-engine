@@ -2,6 +2,7 @@ module Types exposing (..)
 
 import Dict
 import Color
+import EveryDict exposing (..)
 import List.Zipper
 
 
@@ -12,13 +13,17 @@ type alias StoryState item location character knowledge =
     { currentLocation : location
     , currentScene : List (LiveRule item location character knowledge)
     , familiarWith : List (Displayable item location character)
-    , inventory : List item
     , knownLocations : List location
     , storyLine : List ( String, String )
-    , itemsByLocation : Dict.Dict String (List item)
-    , charactersByLocation : Dict.Dict String (List character)
+    , characterPlacements : EveryDict character location
+    , itemPlacements : EveryDict item (ItemPlacement location)
     , knowledge : List knowledge
     }
+
+
+type ItemPlacement location
+    = Prop location
+    | Inventory
 
 
 
@@ -57,7 +62,7 @@ loadCurrentScene ruleData =
 type Condition item location character knowledge
     = WithItem item
     | NearCharacter character
-    | NearProp item
+    | NearItem item
     | InLocation location
     | WithKnowledge knowledge
     | Unless (Condition item location character knowledge)
@@ -69,10 +74,10 @@ type ChangeWorldCommand item location character knowledge
     | RemoveLocation location
     | AddInventory item
     | RemoveInventory item
-    | AddCharacter character location
-    | RemoveCharacter character location
-    | AddProp item location
-    | RemoveProp item location
+    | MoveCharacter character location
+    | RemoveCharacter character
+    | PlaceItem item location
+    | RemoveItem item
     | AddKnowledge knowledge
     | LoadScene (List (Rule item location character knowledge))
     | EndStory

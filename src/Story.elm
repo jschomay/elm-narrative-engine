@@ -17,7 +17,7 @@ module Story
         , Rule
         , withItem
         , nearCharacter
-        , nearProp
+        , nearItem
         , inLocation
         , withKnowledge
         , unless
@@ -26,10 +26,10 @@ module Story
         , removeLocation
         , addInventory
         , removeInventory
-        , addCharacter
+        , moveCharacter
         , removeCharacter
-        , addProp
-        , removeProp
+        , placeItem
+        , removeItem
         , addKnowledge
         , loadScene
         , endStory
@@ -81,14 +81,14 @@ When a rule matches multiple times (a player clicks the same story element multi
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  withItem , nearCharacter , nearProp , inLocation , withKnowledge , unless
+@docs  withItem , nearCharacter , nearItem , inLocation , withKnowledge , unless
 
 
 ## Changing the story world
 
 You cannot change the story directly, but you can supply "commands" describing how the story state should change.
 
-@docs moveTo, addLocation, removeLocation, addInventory, removeInventory, addCharacter, removeCharacter, addProp, removeProp, addKnowledge, loadScene, endStory
+@docs moveTo, addLocation, removeLocation, addInventory, removeInventory, moveCharacter, removeCharacter, placeItem, removeItem, addKnowledge, loadScene, endStory
 
 -}
 
@@ -215,8 +215,8 @@ type alias Model item location character knowledge =
         , startingNarration = "Home sweet home..."
         , setupCommands =
             [ addLocation Conservatory
-            , addCharacter John Conservatory
-            , addProp Umbrella Home
+            , moveCharacter John Conservatory
+            , placeItem Umbrella Home
             ]
         }
 -}
@@ -311,11 +311,11 @@ nearCharacter =
     NearCharacter
 
 
-{-| Will match if the supplied item in in the current location.
+{-| Will match if the supplied item is in the current location.  Ignores inventory.
 -}
-nearProp : item -> Condition item location character knowledge
-nearProp =
-    NearProp
+nearItem : item -> Condition item location character knowledge
+nearItem =
+    NearItem
 
 
 {-| Will match when the supplied location is the current location.
@@ -366,7 +366,7 @@ removeLocation =
     RemoveLocation
 
 
-{-| Adds an item to your inventory.
+{-| Adds an item to your inventory (if it was previously in a location, it will be removed from there, as items can only be in one place at once).
 
     addInventory Umbrella
 -}
@@ -384,42 +384,40 @@ removeInventory =
     RemoveInventory
 
 
-{-| Adds a character to a location.  (Use moveTo to move yourself between locations.)
+{-| Adds a character to a location, or moves a character to a different location (characters can only be in one location at a time, or off-screen).  (Use moveTo to move yourself between locations.)
 
-    addCharacter John Conservatory
+    moveCharacter John Conservatory
 -}
-addCharacter : character -> location -> ChangeWorldCommand item location character knowledge
-addCharacter =
-    AddCharacter
+moveCharacter : character -> location -> ChangeWorldCommand item location character knowledge
+moveCharacter =
+    MoveCharacter
 
 
-{-| Removes a character from a location.  The character will not show up anywhere else until you add it to another location.  (Use moveTo to move yourself between locations.)
+{-| Moves a character "off-screen".  The character will not show up in any locations until you use `moveCharacter` again.
 
-    removeCharacter John Conservatory
+    removeCharacter John
 -}
-removeCharacter : character -> location -> ChangeWorldCommand item location character knowledge
+removeCharacter : character -> ChangeWorldCommand item location character knowledge
 removeCharacter =
     RemoveCharacter
 
 
-{-| "Props" are just items in a location instead of in your inventory.  They could be something fixed to the location, such as a painting on a wall that you can look at but not take, or they can be something that you can take into your inventory.
+{-| Move an item to a location.  If it was in another location or your inventory before, it will remove it from there, as items can only be in one place at once.
 
-This command adds an item to a location.
-
-    addProp Umbrella Home
+    placeItem Umbrella Home
 -}
-addProp : item -> location -> ChangeWorldCommand item location character knowledge
-addProp =
-    AddProp
+placeItem : item -> location -> ChangeWorldCommand item location character knowledge
+placeItem =
+    PlaceItem
 
 
-{-| Removes an item from a location.
+{-| Moves an item "off-screen" (either from a location or the inventory).  The item will not show up in any locations or inventory until you use `placeItem` or `addInventory` again.
 
-    removeProp Umbrella Home
+    removeItem Umbrella
 -}
-removeProp : item -> location -> ChangeWorldCommand item location character knowledge
-removeProp =
-    RemoveProp
+removeItem : item -> ChangeWorldCommand item location character knowledge
+removeItem =
+    RemoveItem
 
 
 {-| Knowledge is an intangible "flag" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.

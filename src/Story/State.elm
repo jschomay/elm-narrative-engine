@@ -2,14 +2,12 @@ module Story.State exposing (..)
 
 import Dict exposing (..)
 import Types exposing (..)
-
-
--- StoryState
+import EveryDict exposing (..)
 
 
 init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
 init startingLocation startingScene =
-    StoryState startingLocation (loadCurrentScene startingScene) [ Location startingLocation ] [] [] [] Dict.empty Dict.empty []
+    StoryState startingLocation (loadCurrentScene startingScene) [ Location startingLocation ] [] [] EveryDict.empty EveryDict.empty []
 
 
 getCharactersInCurrentLocation : StoryState item location character knowledge -> List character
@@ -17,21 +15,52 @@ getCharactersInCurrentLocation storyState =
     getCharactersByLocation storyState.currentLocation storyState
 
 
-getPropsInCurrentLocation : StoryState item location character knowledge -> List item
-getPropsInCurrentLocation storyState =
+getItemsInCurrentLocation : StoryState item location character knowledge -> List item
+getItemsInCurrentLocation storyState =
     getItemsByLocation storyState.currentLocation storyState
+
+
+getInventory : StoryState item location character knowledge -> List item
+getInventory storyState =
+    let
+        find item placement acc =
+            case placement of
+                Prop _ ->
+                    acc
+
+                Inventory ->
+                    acc ++ [ item ]
+    in
+        EveryDict.foldr find [] storyState.itemPlacements
 
 
 getCharactersByLocation : location -> StoryState item location character knowledge -> List character
 getCharactersByLocation location storyState =
-    Maybe.withDefault []
-        <| Dict.get (toString location) storyState.charactersByLocation
+    let
+        find character location' acc =
+            if location' == location then
+                acc ++ [ character ]
+            else
+                acc
+    in
+        EveryDict.foldr find [] storyState.characterPlacements
 
 
 getItemsByLocation : location -> StoryState item location character knowledge -> List item
 getItemsByLocation location storyState =
-    Maybe.withDefault []
-        <| Dict.get (toString location) storyState.itemsByLocation
+    let
+        find item placement acc =
+            case placement of
+                Inventory ->
+                    acc
+
+                Prop location' ->
+                    if location' == location then
+                        acc ++ [ item ]
+                    else
+                        acc
+    in
+        EveryDict.foldr find [] storyState.itemPlacements
 
 
 advanceStory :
@@ -74,65 +103,37 @@ advanceStory displayableName storyState changesWorldCommands narration =
                     }
 
                 AddInventory item ->
-                    if List.member item storyState.inventory then
-                        storyState
-                    else
-                        { storyState
-                            | inventory = item :: storyState.inventory
-                        }
+                    { storyState
+                        | itemPlacements =
+                            EveryDict.insert item Inventory storyState.itemPlacements
+                    }
 
                 RemoveInventory item ->
                     { storyState
-                        | inventory = List.filter ((/=) item) storyState.inventory
+                        | itemPlacements = EveryDict.remove item storyState.itemPlacements
                     }
 
-                AddCharacter character location ->
-                    if List.member character (getCharactersByLocation location storyState) then
-                        storyState
-                    else
-                        { storyState
-                            | charactersByLocation =
-                                Dict.insert (toString location)
-                                    ((getCharactersByLocation location storyState) ++ [ character ])
-                                    storyState.charactersByLocation
-                        }
+                MoveCharacter character location ->
+                    { storyState
+                        | characterPlacements =
+                            EveryDict.insert character location storyState.characterPlacements
+                    }
 
-                RemoveCharacter character location ->
-                    if not <| Dict.member (toString location) storyState.charactersByLocation then
-                        storyState
-                    else
-                        { storyState
-                            | charactersByLocation =
-                                Dict.insert (toString location)
-                                    (getCharactersByLocation location storyState
-                                        |> List.filter ((/=) character)
-                                    )
-                                    storyState.charactersByLocation
-                        }
+                RemoveCharacter character ->
+                    { storyState
+                        | characterPlacements = EveryDict.remove character storyState.characterPlacements
+                    }
 
-                AddProp prop location ->
-                    if List.member prop (getItemsByLocation location storyState) then
-                        storyState
-                    else
-                        { storyState
-                            | itemsByLocation =
-                                Dict.insert (toString location)
-                                    ((getItemsByLocation location storyState) ++ [ prop ])
-                                    storyState.itemsByLocation
-                        }
+                PlaceItem item location ->
+                    { storyState
+                        | itemPlacements =
+                            EveryDict.insert item (Prop location) storyState.itemPlacements
+                    }
 
-                RemoveProp prop location ->
-                    if not <| Dict.member (toString location) storyState.itemsByLocation then
-                        storyState
-                    else
-                        { storyState
-                            | itemsByLocation =
-                                Dict.insert (toString location)
-                                    (getItemsByLocation location storyState
-                                        |> List.filter ((/=) prop)
-                                    )
-                                    storyState.itemsByLocation
-                        }
+                RemoveItem item ->
+                    { storyState
+                        | itemPlacements = EveryDict.remove item storyState.itemPlacements
+                    }
 
                 AddKnowledge knowledge ->
                     if List.member knowledge storyState.knowledge then
@@ -192,13 +193,13 @@ matchesCondition :
 matchesCondition storyState condition =
     case condition of
         WithItem item ->
-            List.member item storyState.inventory
+            List.member item <| getInventory storyState
 
         NearCharacter character ->
             List.member character <| getCharactersInCurrentLocation storyState
 
-        NearProp prop ->
-            List.member prop <| getPropsInCurrentLocation storyState
+        NearItem item ->
+            List.member item <| getItemsInCurrentLocation storyState
 
         InLocation location ->
             storyState.currentLocation == location

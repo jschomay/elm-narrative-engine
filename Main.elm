@@ -29,16 +29,18 @@ setup =
     , startingNarration = "Begin..."
     , setupCommands =
         [ addInventory Umbrella
+        , placeItem Marble Marsh
         , addLocation Home
         , addLocation Garden
         , addLocation Marsh
-        , addCharacter Harry Marsh
+        , moveCharacter Harry Marsh
         ]
     }
 
 
 type MyItem
     = Umbrella
+    | Marble
 
 
 type MyLocation
@@ -60,6 +62,9 @@ items i =
     case i of
         Umbrella ->
             itemInfo "Umbrella" "My umbrella..."
+
+        Marble ->
+            itemInfo "Marble" "Oooh, shiny.."
 
 
 characters : MyCharacter -> CharacterInfo
@@ -105,8 +110,18 @@ scene2 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene2 =
     [ { interaction = character Harry
       , conditions = [ inLocation Garden ]
-      , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
+      , changes = [ moveCharacter Harry Marsh, removeCharacter Harry ]
       , narration = [ "Meet me in the marsh..." ]
+      }
+    , { interaction = item Marble
+      , conditions = [ withItem Marble, inLocation Home ]
+      , changes = [ placeItem Marble Home ]
+      , narration = [ "I'll keep this safe here..." ]
+      }
+    , { interaction = item Marble
+      , conditions = [ unless (withItem Marble) ]
+      , changes = [ addInventory Marble ]
+      , narration = [ "Pretty!  Mine." ]
       }
     , { interaction = item Umbrella
       , conditions = [ inLocation Marsh ]

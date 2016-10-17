@@ -6,6 +6,7 @@ import Color exposing (..)
 import String exposing (join)
 import Types exposing (..)
 import Story.Mechanics exposing (..)
+import Story.State exposing (..)
 import Views.CurrentSummary exposing (..)
 import Views.Storyline exposing (..)
 import Views.Locations exposing (..)
@@ -44,7 +45,7 @@ view displayInfo storyState =
                     ]
                 , div [ class "Layout__Sidebar" ]
                     [ locations locationMsg displayInfo.locations storyState.knownLocations storyState.currentLocation toCssColor (flip List.member storyState.familiarWith)
-                    , inventory itemMsg displayInfo.items storyState.inventory (flip List.member storyState.familiarWith)
+                    , inventory itemMsg displayInfo.items (getInventory storyState) (flip List.member storyState.familiarWith)
                     ]
                 ]
             ]
