@@ -32,7 +32,6 @@ setup =
         , placeItem Marble Marsh
         , addLocation Home
         , addLocation Garden
-        , addLocation Marsh
         , moveCharacter Harry Garden
         ]
     }
@@ -110,8 +109,8 @@ scene2 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene2 =
     [ { interaction = character Harry
       , conditions = [ inLocation Garden ]
-      , changes = [ moveCharacter Harry Marsh ]
-      , narration = [ "Meet me in the marsh..." ]
+      , changes = [ moveCharacter Harry Marsh, moveTo Marsh ]
+      , narration = [ "Come with me to the marsh" ]
       }
     , { interaction = item Marble
       , conditions = [ unless (withItem Marble) ]

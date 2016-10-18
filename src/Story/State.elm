@@ -79,80 +79,141 @@ advanceStory displayableName storyState changesWorldCommands narration =
         doCommand command storyState =
             case command of
                 MoveTo location ->
-                    if List.member (Location location) storyState.familiarWith then
-                        { storyState
-                            | currentLocation = location
-                        }
-                    else
-                        { storyState
-                            | currentLocation = location
-                            , familiarWith = storyState.familiarWith ++ [ Location location ]
-                        }
+                    moveTo location storyState
+                        |> addLocation location
 
                 AddLocation location ->
-                    if List.member location storyState.knownLocations then
-                        storyState
-                    else
-                        { storyState
-                            | knownLocations = location :: storyState.knownLocations
-                        }
+                    addLocation location storyState
 
                 RemoveLocation location ->
-                    { storyState
-                        | knownLocations = List.filter ((/=) location) storyState.knownLocations
-                    }
+                    removeLocation location storyState
 
                 AddInventory item ->
-                    { storyState
-                        | itemPlacements =
-                            EveryDict.insert item Inventory storyState.itemPlacements
-                    }
+                    addInventory item storyState
 
                 RemoveInventory item ->
-                    { storyState
-                        | itemPlacements = EveryDict.remove item storyState.itemPlacements
-                    }
+                    removeInventory item storyState
 
                 MoveCharacter character location ->
-                    { storyState
-                        | characterPlacements =
-                            EveryDict.insert character location storyState.characterPlacements
-                    }
+                    moveCharacter character location storyState
 
                 RemoveCharacter character ->
-                    { storyState
-                        | characterPlacements = EveryDict.remove character storyState.characterPlacements
-                    }
+                    removeCharacter character storyState
 
                 PlaceItem item location ->
-                    { storyState
-                        | itemPlacements =
-                            EveryDict.insert item (Prop location) storyState.itemPlacements
-                    }
+                    placeItem item location storyState
 
                 RemoveItem item ->
-                    { storyState
-                        | itemPlacements = EveryDict.remove item storyState.itemPlacements
-                    }
+                    removeItem item storyState
 
                 AddKnowledge knowledge ->
-                    if List.member knowledge storyState.knowledge then
-                        storyState
-                    else
-                        { storyState
-                            | knowledge = knowledge :: storyState.knowledge
-                        }
+                    addKnowledge knowledge storyState
 
                 LoadScene scene ->
-                    { storyState
-                        | currentScene = loadCurrentScene scene
-                    }
+                    loadScene scene storyState
 
                 EndStory ->
-                    storyState
+                    endStory storyState
     in
         List.foldl doCommand storyState changesWorldCommands
             |> addNarration ( displayableName, narration )
+
+
+moveTo : location -> StoryState item location character knowledge -> StoryState item location character knowledge
+moveTo location storyState =
+    if List.member (Location location) storyState.familiarWith then
+        { storyState
+            | currentLocation = location
+        }
+    else
+        { storyState
+            | currentLocation = location
+            , familiarWith = storyState.familiarWith ++ [ Location location ]
+        }
+
+
+addLocation : location -> StoryState item location character knowledge -> StoryState item location character knowledge
+addLocation location storyState =
+    if List.member location storyState.knownLocations then
+        storyState
+    else
+        { storyState
+            | knownLocations = location :: storyState.knownLocations
+        }
+
+
+removeLocation : location -> StoryState item location character knowledge -> StoryState item location character knowledge
+removeLocation location storyState =
+    { storyState
+        | knownLocations = List.filter ((/=) location) storyState.knownLocations
+    }
+
+
+addInventory : item -> StoryState item location character knowledge -> StoryState item location character knowledge
+addInventory item storyState =
+    { storyState
+        | itemPlacements =
+            EveryDict.insert item Inventory storyState.itemPlacements
+    }
+
+
+removeItem : item -> StoryState item location character knowledge -> StoryState item location character knowledge
+removeItem item storyState =
+    { storyState
+        | itemPlacements = EveryDict.remove item storyState.itemPlacements
+    }
+
+
+removeInventory : item -> StoryState item location character knowledge -> StoryState item location character knowledge
+removeInventory item storyState =
+    { storyState
+        | itemPlacements = EveryDict.remove item storyState.itemPlacements
+    }
+
+
+moveCharacter : character -> location -> StoryState item location character knowledge -> StoryState item location character knowledge
+moveCharacter character location storyState =
+    { storyState
+        | characterPlacements =
+            EveryDict.insert character location storyState.characterPlacements
+    }
+
+
+removeCharacter : character -> StoryState item location character knowledge -> StoryState item location character knowledge
+removeCharacter character storyState =
+    { storyState
+        | characterPlacements = EveryDict.remove character storyState.characterPlacements
+    }
+
+
+placeItem : item -> location -> StoryState item location character knowledge -> StoryState item location character knowledge
+placeItem item location storyState =
+    { storyState
+        | itemPlacements =
+            EveryDict.insert item (Prop location) storyState.itemPlacements
+    }
+
+
+addKnowledge : knowledge -> StoryState item location character knowledge -> StoryState item location character knowledge
+addKnowledge knowledge storyState =
+    if List.member knowledge storyState.knowledge then
+        storyState
+    else
+        { storyState
+            | knowledge = knowledge :: storyState.knowledge
+        }
+
+
+loadScene : List (Rule item location character knowledge) -> StoryState item location character knowledge -> StoryState item location character knowledge
+loadScene scene storyState =
+    { storyState
+        | currentScene = loadCurrentScene scene
+    }
+
+
+endStory : StoryState item location character knowledge -> StoryState item location character knowledge
+endStory storyState =
+    storyState
 
 
 
