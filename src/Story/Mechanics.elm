@@ -36,7 +36,7 @@ update displayInfo (Interact displayable) storyState =
                         newStoryState.familiarWith
             }
 
-        updateCurrentScene ruleIndex matchedRule newStoryState =
+        updateCurrentScene ruleIndex newStoryState =
             let
                 nextOrLasttNarration currentNarrationZipper =
                     Maybe.withDefault (List.Zipper.last currentNarrationZipper)
@@ -44,7 +44,7 @@ update displayInfo (Interact displayable) storyState =
 
                 updateMatchedRule index liveRule =
                     if index == ruleIndex then
-                        { liveRule | narration = Maybe.map nextOrLasttNarration matchedRule.narration }
+                        { liveRule | narration = Maybe.map nextOrLasttNarration liveRule.narration }
                     else
                         liveRule
 
@@ -71,6 +71,6 @@ update displayInfo (Interact displayable) storyState =
 
             Just ( ruleIndex, rule ) ->
                 Story.State.advanceStory (getName displayInfo displayable) storyState rule.changes (getNarration (getDescription displayInfo displayable) rule)
-                    |> updateCurrentScene ruleIndex rule
+                    |> updateCurrentScene ruleIndex
         )
             |> addFamiliarity
