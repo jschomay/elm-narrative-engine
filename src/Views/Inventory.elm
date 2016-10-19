@@ -11,7 +11,7 @@ inventory :
     (item -> msg)
     -> (item -> ItemInfo)
     -> List item
-    -> (Displayable item location character -> Bool)
+    -> (Interactable item location character -> Bool)
     -> Html msg
 inventory msg itemsInfo items beenThereDoneThat =
     let
@@ -26,7 +26,7 @@ inventory msg itemsInfo items beenThereDoneThat =
                 classes =
                     [ ( "Inventory__Item u-selectable", True )
                     , ( "u-jump", not <| beenThereDoneThat (Item item) )
-                    , ( "u-new-story-displayable", not <| beenThereDoneThat (Item item) )
+                    , ( "u-new-story-interactable", not <| beenThereDoneThat (Item item) )
                     ]
             in
                 ( key

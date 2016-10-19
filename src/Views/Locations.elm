@@ -14,7 +14,7 @@ locations :
     -> List location
     -> location
     -> (Color -> String)
-    -> (Displayable item location character -> Bool)
+    -> (Interactable item location character -> Bool)
     -> Html msg
 locations msg locationsInfo locations currentLocation toCssColor beenThereDoneThat =
     let
@@ -24,7 +24,7 @@ locations msg locationsInfo locations currentLocation toCssColor beenThereDoneTh
                 , ( "Locations__Location--current", location == currentLocation )
                 , ( "u-selectable", True )
                 , ( "u-jump", not <| beenThereDoneThat (Location location) )
-                , ( "u-new-story-displayable", not <| beenThereDoneThat (Location location) )
+                , ( "u-new-story-interactable", not <| beenThereDoneThat (Location location) )
                 ]
 
         numLocations =

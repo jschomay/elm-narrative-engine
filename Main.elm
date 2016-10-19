@@ -6,7 +6,7 @@ import Color
 
 main : Program Never
 main =
-    Story.load info displayables setup
+    Story.load info interactables setup
 
 
 info : Info
@@ -17,8 +17,8 @@ info =
     }
 
 
-displayables : StoryWorld MyItem MyLocation MyCharacter
-displayables =
+interactables : StoryWorld MyItem MyLocation MyCharacter
+interactables =
     storyWorld items locations characters
 
 

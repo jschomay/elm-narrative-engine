@@ -1,6 +1,5 @@
 module Story.State exposing (..)
 
-import Dict exposing (..)
 import Types exposing (..)
 import EveryDict exposing (..)
 
@@ -69,7 +68,7 @@ advanceStory :
     -> List (ChangeWorldCommand item location character knowledge)
     -> String
     -> StoryState item location character knowledge
-advanceStory displayableName storyState changesWorldCommands narration =
+advanceStory interactableName storyState changesWorldCommands narration =
     let
         addNarration narration storyState =
             { storyState
@@ -116,7 +115,7 @@ advanceStory displayableName storyState changesWorldCommands narration =
                     endStory storyState
     in
         List.foldl doCommand storyState changesWorldCommands
-            |> addNarration ( displayableName, narration )
+            |> addNarration ( interactableName, narration )
 
 
 moveTo : location -> StoryState item location character knowledge -> StoryState item location character knowledge
@@ -222,29 +221,29 @@ endStory storyState =
 
 findMatchingRule :
     RuleIndex
-    -> Displayable item location character
+    -> Interactable item location character
     -> List (LiveRule item location character knowledge)
     -> StoryState item location character knowledge
     -> Maybe ( RuleIndex, LiveRule item location character knowledge )
-findMatchingRule index displayable rules storyState =
+findMatchingRule index interactable rules storyState =
     case rules of
         [] ->
             Nothing
 
         rule :: remainingRules ->
-            if matchesRule rule displayable storyState then
+            if matchesRule rule interactable storyState then
                 Just ( index, rule )
             else
-                findMatchingRule (index + 1) displayable remainingRules storyState
+                findMatchingRule (index + 1) interactable remainingRules storyState
 
 
 matchesRule :
     LiveRule item location character knowledge
-    -> Displayable item location character
+    -> Interactable item location character
     -> StoryState item location character knowledge
     -> Bool
-matchesRule rule displayable storyState =
-    rule.interaction == displayable && List.all (matchesCondition storyState) rule.conditions
+matchesRule rule interactable storyState =
+    rule.interaction == interactable && List.all (matchesCondition storyState) rule.conditions
 
 
 matchesCondition :

@@ -1,6 +1,5 @@
 module Types exposing (..)
 
-import Dict
 import Color
 import EveryDict exposing (..)
 import List.Zipper
@@ -12,7 +11,7 @@ import List.Zipper
 type alias StoryState item location character knowledge =
     { currentLocation : location
     , currentScene : List (LiveRule item location character knowledge)
-    , familiarWith : List (Displayable item location character)
+    , familiarWith : List (Interactable item location character)
     , knownLocations : List location
     , storyLine : List ( String, String )
     , characterPlacements : EveryDict character location
@@ -35,7 +34,7 @@ type alias RuleIndex =
 
 
 type alias Rule item location character knowledge =
-    { interaction : Displayable item location character
+    { interaction : Interactable item location character
     , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
     , narration : List String
@@ -43,7 +42,7 @@ type alias Rule item location character knowledge =
 
 
 type alias LiveRule item location character knowledge =
-    { interaction : Displayable item location character
+    { interaction : Interactable item location character
     , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
     , narration : Maybe (List.Zipper.Zipper String)
@@ -84,10 +83,10 @@ type ChangeWorldCommand item location character knowledge
 
 
 
--- Displayables
+-- Interactables
 
 
-type Displayable item location character
+type Interactable item location character
     = Item item
     | Location location
     | Character character
@@ -122,9 +121,9 @@ type alias CharacterInfo =
     BasicInfo
 
 
-getName : StoryWorld item location character -> Displayable item location character -> String
-getName displayInfo displayable =
-    case displayable of
+getName : StoryWorld item location character -> Interactable item location character -> String
+getName displayInfo interactable =
+    case interactable of
         Item item ->
             .name <| displayInfo.items item
 
@@ -135,9 +134,9 @@ getName displayInfo displayable =
             .name <| displayInfo.characters character
 
 
-getDescription : StoryWorld item location character -> Displayable item location character -> String
-getDescription displayInfo displayable =
-    case displayable of
+getDescription : StoryWorld item location character -> Interactable item location character -> String
+getDescription displayInfo interactable =
+    case interactable of
         Item item ->
             .description <| displayInfo.items item
 

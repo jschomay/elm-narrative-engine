@@ -7,7 +7,7 @@
         "name": "CharacterInfo",
         "comment": " Display information for your characters, including a name and description.  The description allows markdown.\n",
         "args": [],
-        "type": "Story.Displayable.CharacterInfo"
+        "type": "Story.Interactable.CharacterInfo"
       },
       {
         "name": "Elements",
@@ -17,7 +17,7 @@
           "b",
           "c"
         ],
-        "type": "Story.Displayable.List (Displayable item location character)"
+        "type": "Story.Interactable.List (Interactable item location character)"
       },
       {
         "name": "Info",
@@ -29,13 +29,13 @@
         "name": "ItemInfo",
         "comment": " Display information for your items, including a name and description.  The description allows markdown.\n",
         "args": [],
-        "type": "Story.Displayable.ItemInfo"
+        "type": "Story.Interactable.ItemInfo"
       },
       {
         "name": "LocationInfo",
         "comment": " Display information for your locations, including a name, a highlight color, and a description.  The description allows markdown.\n",
         "args": [],
-        "type": "Story.Displayable.LocationInfo"
+        "type": "Story.Interactable.LocationInfo"
       },
       {
         "name": "Scene",
@@ -76,7 +76,7 @@
       },
       {
         "name": "addKnowledge",
-        "comment": " Knowledge is an intangible \"flag\" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.\n\nHowever, before turning to this tool, consider if you can use a normal, displayable story displayable instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can \"show\" to people for more information.  This keeps the story more concrete.\n\n    type MyKnowledge = LearnOfSuspect | WrongSuspect | Amnesia\n\n    addKnowledge LearnOfSuspect\n",
+        "comment": " Knowledge is an intangible \"flag\" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.\n\nHowever, before turning to this tool, consider if you can use a normal, interactable story interactable instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can \"show\" to people for more information.  This keeps the story more concrete.\n\n    type MyKnowledge = LearnOfSuspect | WrongSuspect | Amnesia\n\n    addKnowledge LearnOfSuspect\n",
         "type": "e -> Story.State.ChangeWorldCommand item location character d e"
       },
       {
@@ -106,8 +106,8 @@
       },
       {
         "name": "character",
-        "comment": " Wrap your character type in an `Displayable` type\n",
-        "type": "c -> Story.Displayable.Element item location character"
+        "comment": " Wrap your character type in an `Interactable` type\n",
+        "type": "c -> Story.Interactable.Element item location character"
       },
       {
         "name": "characterInfo",
@@ -126,8 +126,8 @@
       },
       {
         "name": "firstInteractionWith",
-        "comment": " Part of the rule building DSL. See the example above.   `firstInteractionWith` is interchangeable with `interactingWith`, and will only match on the first interaction with the give story displayable.\n",
-        "type": "Story.Displayable.Element item location character -> Story.Rule.Condition item location character knowledge -> Story.State.AdvanceStory item location character d e -> Story.Rule.Rule item location character d e"
+        "comment": " Part of the rule building DSL. See the example above.   `firstInteractionWith` is interchangeable with `interactingWith`, and will only match on the first interaction with the give story interactable.\n",
+        "type": "Story.Interactable.Element item location character -> Story.Rule.Condition item location character knowledge -> Story.State.AdvanceStory item location character d e -> Story.Rule.Rule item location character d e"
       },
       {
         "name": "inLocation",
@@ -137,12 +137,12 @@
       {
         "name": "interactingWith",
         "comment": " Part of the rule building DSL. See the example above.\n",
-        "type": "Story.Displayable.Element item location character -> Story.Rule.Condition item location character knowledge -> Story.State.AdvanceStory item location character d e -> Story.Rule.Rule item location character d e"
+        "type": "Story.Interactable.Element item location character -> Story.Rule.Condition item location character knowledge -> Story.State.AdvanceStory item location character d e -> Story.Rule.Rule item location character d e"
       },
       {
         "name": "item",
-        "comment": " Wrap your item type in an `Displayable` type\n",
-        "type": "a -> Story.Displayable.Element item location character"
+        "comment": " Wrap your item type in an `Interactable` type\n",
+        "type": "a -> Story.Interactable.Element item location character"
       },
       {
         "name": "itemInfo",
@@ -151,8 +151,8 @@
       },
       {
         "name": "load",
-        "comment": " This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define displayables and scenes.\n\n    main : Program Never\n    main =\n        Story.load info displayables scenes setup\n\n",
-        "type": "Story.Info -> Story.List (Displayable item location character) -> (d -> Story.Scene item location character d e) -> Story.Setup item location character d e -> Platform.Program Basics.Never"
+        "comment": " This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define interactables and scenes.\n\n    main : Program Never\n    main =\n        Story.load info interactables scenes setup\n\n",
+        "type": "Story.Info -> Story.List (Interactable item location character) -> (d -> Story.Scene item location character d e) -> Story.Setup item location character d e -> Platform.Program Basics.Never"
       },
       {
         "name": "loadScene",
@@ -161,8 +161,8 @@
       },
       {
         "name": "location",
-        "comment": " Wrap your location type in an `Displayable` type\n",
-        "type": "b -> Story.Displayable.Element item location character"
+        "comment": " Wrap your location type in an `Interactable` type\n",
+        "type": "b -> Story.Interactable.Element item location character"
       },
       {
         "name": "locationInfo",
@@ -211,8 +211,8 @@
       },
       {
         "name": "storyWorld",
-        "comment": " A means of looking up static information about your story displayables, which gets loaded into `Story.load`.\n",
-        "type": "(a -> Story.ItemInfo) -> (b -> Story.LocationInfo) -> (c -> Story.CharacterInfo) -> Story.List (Displayable item location character)"
+        "comment": " A means of looking up static information about your story interactables, which gets loaded into `Story.load`.\n",
+        "type": "(a -> Story.ItemInfo) -> (b -> Story.LocationInfo) -> (c -> Story.CharacterInfo) -> Story.List (Interactable item location character)"
       },
       {
         "name": "unless",

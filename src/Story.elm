@@ -54,7 +54,7 @@ Rules are declarative pairings of a "matcher" and a set of "commands" to perform
 
 A rule has four parts:
 
-- a matcher against what displayable story element the user clicked on
+- a matcher against what interactable story element the user clicked on
 - a list of conditions that all must match for the rule to match
 - a list of changes to make if the rule matches
 - what to add to the story line if the rule matches
@@ -105,13 +105,13 @@ import Story.State exposing (..)
 import Views.Game exposing (..)
 
 
-{-| A displayable story element -- and item, location, or character in your story that can be displayed and interacted with.
+{-| A interactable story element -- and item, location, or character in your story that can be displayed and interacted with.
 -}
-type alias Displayable item location character =
-    Types.Displayable item location character
+type alias Interactable item location character =
+    Types.Interactable item location character
 
 
-{-| A means of looking up static information about your story displayables, which gets loaded into `Story.load`.
+{-| A means of looking up static information about your story interactables, which gets loaded into `Story.load`.
 -}
 storyWorld : (item -> ItemInfo) -> (location -> LocationInfo) -> (character -> CharacterInfo) -> StoryWorld item location character
 storyWorld items locations characters =
@@ -121,7 +121,7 @@ storyWorld items locations characters =
     }
 
 
-{-| A collection of all of the displayable elements in your story, for loading into the engine.
+{-| A collection of all of the interactable elements in your story, for loading into the engine.
 -}
 type alias StoryWorld item location character =
     Types.StoryWorld item location character
@@ -176,23 +176,23 @@ characterInfo name description =
     }
 
 
-{-| Wrap your item type in an `Displayable` type when matching interactions in your rules.
+{-| Wrap your item type in an `Interactable` type when matching interactions in your rules.
 -}
-item : item -> Displayable item location character
+item : item -> Interactable item location character
 item =
     Item
 
 
-{-| Wrap your location type in an `Displayable` type when matching interactions in your rules.
+{-| Wrap your location type in an `Interactable` type when matching interactions in your rules.
 -}
-location : location -> Displayable item location character
+location : location -> Interactable item location character
 location =
     Location
 
 
-{-| Wrap your character type in an `Displayable` type when matching interactions in your rules.
+{-| Wrap your character type in an `Interactable` type when matching interactions in your rules.
 -}
-character : character -> Displayable item location character
+character : character -> Interactable item location character
 character =
     Character
 
@@ -271,11 +271,11 @@ setUpWorld { startingScene, startingLocation, startingNarration, setupCommands }
         |> \storyState -> Story.State.advanceStory "Begin" storyState setupCommands startingNarration
 
 
-{-| This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define displayables and scenes.
+{-| This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define interactables and scenes.
 
     main : Program Never
     main =
-        Story.load info displayables setup
+        Story.load info interactables setup
 
 -}
 load :
@@ -283,11 +283,11 @@ load :
     -> StoryWorld item location character
     -> Setup item location character knowledge
     -> Program Never
-load info displayables setup =
+load info interactables setup =
     Html.beginnerProgram
         { model = init info setup
-        , view = view displayables
-        , update = update displayables
+        , view = view interactables
+        , update = update interactables
         }
 
 
@@ -422,7 +422,7 @@ removeItem =
 
 {-| Knowledge is an intangible "flag" that you can match against in your rules.  For example if you add knowledge of learning about a suspect, then going back to people you have already interacted with can give you new information about the suspect when you interact with them again.  You can also use this for acquiring skills or bonuses or anything intangible that would not be displayed in the story.  You could track your actions, such as if you were kind or mean to an important character in an earlier scene.
 
-However, before turning to this tool, consider if you can use a normal, displayable story displayable instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can "show" to people for more information.  This keeps the story more concrete.
+However, before turning to this tool, consider if you can use a normal, story interactable instead.  For example, perhaps you get a sketch of the suspect in your inventory, which you can "show" to people for more information.  This keeps the story more concrete.
 
     type MyKnowledge = LearnOfSuspect | WrongSuspect | Amnesia
 

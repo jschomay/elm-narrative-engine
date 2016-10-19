@@ -19,7 +19,7 @@ See https://github.com/jschomay/elm-interactive-story-starter.git for everything
 
 ## Basic Usage
 
-Step 1: Define your "story displayables" (items, locations, and characters)
+Step 1: Define your "story interactables" (items, locations, and characters)
 
 ```elm
 type MyItem
@@ -53,10 +53,10 @@ scene1 =
     ]
 ```
 
-Step 3: Load your story displayables and rules into the framework
+Step 3: Load your story interactables and rules into the framework
 
 ```elm
-Story.load info displayables setup
+Story.load info interactables setup
 ```
 
 ## Sample Stories

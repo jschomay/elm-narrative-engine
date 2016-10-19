@@ -6,7 +6,7 @@ import List.Zipper
 
 
 type Msg item location character
-    = Interact (Displayable item location character)
+    = Interact (Interactable item location character)
 
 
 update :
@@ -14,24 +14,24 @@ update :
     -> Msg item location character
     -> StoryState item location character knowledge
     -> StoryState item location character knowledge
-update displayInfo (Interact displayable) storyState =
+update displayInfo (Interact interactable) storyState =
     let
         addDefaultNarration newStoryState =
-            { newStoryState | storyLine = ( getName displayInfo displayable, getDescription displayInfo displayable ) :: newStoryState.storyLine }
+            { newStoryState | storyLine = ( getName displayInfo interactable, getDescription displayInfo interactable ) :: newStoryState.storyLine }
 
         goToLocation newStoryState =
-            case displayable of
+            case interactable of
                 Location location ->
                     { newStoryState | currentLocation = location }
 
                 _ ->
-                    Debug.crash "It should be impossible for a non-location displayable to get here"
+                    Debug.crash "It should be impossible for a non-location interactable to get here"
 
         addFamiliarity newStoryState =
             { newStoryState
                 | familiarWith =
-                    if not <| List.member displayable newStoryState.familiarWith then
-                        displayable :: newStoryState.familiarWith
+                    if not <| List.member interactable newStoryState.familiarWith then
+                        interactable :: newStoryState.familiarWith
                     else
                         newStoryState.familiarWith
             }
@@ -54,7 +54,7 @@ update displayInfo (Interact displayable) storyState =
                 { newStoryState | currentScene = newCurrentScene }
 
         defaultUpdate =
-            case displayable of
+            case interactable of
                 Item _ ->
                     addDefaultNarration
 
@@ -65,12 +65,12 @@ update displayInfo (Interact displayable) storyState =
                     goToLocation
                         >> addDefaultNarration
     in
-        (case findMatchingRule 0 displayable storyState.currentScene storyState of
+        (case findMatchingRule 0 interactable storyState.currentScene storyState of
             Nothing ->
                 defaultUpdate storyState
 
             Just ( ruleIndex, rule ) ->
-                Story.State.advanceStory (getName displayInfo displayable) storyState rule.changes (getNarration (getDescription displayInfo displayable) rule)
+                Story.State.advanceStory (getName displayInfo interactable) storyState rule.changes (getNarration (getDescription displayInfo interactable) rule)
                     |> updateCurrentScene ruleIndex
         )
             |> addFamiliarity

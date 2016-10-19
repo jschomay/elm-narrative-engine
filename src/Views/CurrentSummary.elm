@@ -13,10 +13,10 @@ currentSummary :
     -> (character -> msg)
     -> StoryWorld item location character
     -> (Color -> String)
-    -> (Displayable item location character -> Bool)
+    -> (Interactable item location character -> Bool)
     -> StoryState item location character knowledge
     -> Html msg
-currentSummary itemMsg charcterMsg displayables toCssColor beenThereDoneThat storyState =
+currentSummary itemMsg charcterMsg interactables toCssColor beenThereDoneThat storyState =
     let
         currentLocation =
             storyState.currentLocation
@@ -27,28 +27,28 @@ currentSummary itemMsg charcterMsg displayables toCssColor beenThereDoneThat sto
                 |> (==) 0
 
         locationName =
-            .name <| displayables.locations currentLocation
+            .name <| interactables.locations currentLocation
 
-        displayableDom displayable =
+        interactableDom interactable =
             let
                 classes =
                     [ ( "CurrentSummary__StoryElement u-selectable", True )
-                    , ( "u-new-story-displayable", not <| beenThereDoneThat displayable )
+                    , ( "u-new-story-interactable", not <| beenThereDoneThat interactable )
                     ]
 
-                displayableName =
-                    case displayable of
+                interactableName =
+                    case interactable of
                         Item item ->
-                            .name <| displayables.items item
+                            .name <| interactables.items item
 
                         Character character ->
-                            .name <| displayables.characters character
+                            .name <| interactables.characters character
 
                         x ->
                             Debug.crash <| "Error: only characters and items should appear here, got " ++ (toString x)
 
-                displayableMsg =
-                    case displayable of
+                interactableMsg =
+                    case interactable of
                         Item item ->
                             itemMsg item
 
@@ -60,13 +60,13 @@ currentSummary itemMsg charcterMsg displayables toCssColor beenThereDoneThat sto
             in
                 span
                     [ classList <| classes
-                    , onClick <| displayableMsg
+                    , onClick <| interactableMsg
                     ]
-                    [ text <| displayableName ]
+                    [ text <| interactableName ]
 
         format list =
             let
-                displayables =
+                interactables =
                     if List.length list > 2 then
                         (List.take (List.length list - 1) list
                             |> List.intersperse (text ", ")
@@ -76,15 +76,15 @@ currentSummary itemMsg charcterMsg displayables toCssColor beenThereDoneThat sto
                     else
                         List.intersperse (text " and ") list
             in
-                displayables ++ [ text "." ]
+                interactables ++ [ text "." ]
 
         cssColor =
-            toCssColor <| .color <| displayables.locations currentLocation
+            toCssColor <| .color <| interactables.locations currentLocation
 
         charactersList =
             if not <| List.isEmpty <| getCharactersByLocation currentLocation storyState then
                 getCharactersByLocation currentLocation storyState
-                    |> List.map (displayableDom << Character)
+                    |> List.map (interactableDom << Character)
                     |> format
                     |> (::) (text "Characters here: ")
                     |> p []
@@ -94,7 +94,7 @@ currentSummary itemMsg charcterMsg displayables toCssColor beenThereDoneThat sto
         itemsList =
             if not <| List.isEmpty <| getItemsByLocation currentLocation storyState then
                 getItemsByLocation currentLocation storyState
-                    |> List.map (displayableDom << Item)
+                    |> List.map (interactableDom << Item)
                     |> format
                     |> (::) (text "Items here: ")
                     |> p []
