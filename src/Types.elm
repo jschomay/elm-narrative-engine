@@ -5,7 +5,28 @@ import EveryDict exposing (..)
 import List.Zipper
 
 
+-- msg
+
+
+type Msg item location character
+    = NoOp
+    | StartGame
+    | Interact (Interactable item location character)
+    | Rollback Int
+
+
+
 -- StoryState
+
+
+type alias StoryHistory item location character knowledge =
+    { interactions : List (Interaction item location character)
+    , startingState : StoryState item location character knowledge
+    }
+
+
+type Interaction item location character
+    = Interaction (Interactable item location character)
 
 
 type alias StoryState item location character knowledge =

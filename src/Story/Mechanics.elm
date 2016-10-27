@@ -1,20 +1,27 @@
-module Story.Mechanics exposing (..)
+module Story.Mechanics exposing (buildStoryState)
 
 import Story.State exposing (..)
 import Types exposing (..)
+import List
 import List.Zipper
 
 
-type Msg item location character
-    = Interact (Interactable item location character)
-
-
-update :
+buildStoryState :
     StoryWorld item location character
-    -> Msg item location character
+    -> { startingState : StoryState item location character knowledge
+       , interactions : List (Interaction item location character)
+       }
+    -> StoryState item location character knowledge
+buildStoryState displayInfo { interactions, startingState } =
+    List.foldl (step displayInfo) startingState interactions
+
+
+step :
+    StoryWorld item location character
+    -> Interaction item location character
     -> StoryState item location character knowledge
     -> StoryState item location character knowledge
-update displayInfo (Interact interactable) storyState =
+step displayInfo (Interaction interactable) storyState =
     let
         addDefaultNarration newStoryState =
             { newStoryState | storyLine = ( getName displayInfo interactable, getDescription displayInfo interactable ) :: newStoryState.storyLine }

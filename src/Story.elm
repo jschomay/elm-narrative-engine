@@ -202,7 +202,7 @@ type alias Model item location character knowledge =
     , byline : String
     , prologue : String
     , route : Route
-    , storyState : StoryState item location character knowledge
+    , storyHistory : StoryHistory item location character knowledge
     }
 
 
@@ -249,19 +249,13 @@ type Route
     | GamePage
 
 
-type Msg item location character
-    = NoOp
-    | StartGame
-    | GamePlay (Story.Mechanics.Msg item location character)
-
-
 init : Info -> Setup item location character knowledge -> Model item location character knowledge
 init { title, byline, prologue } setup =
     { title = title
     , byline = byline
     , prologue = prologue
     , route = TitlePage
-    , storyState = setUpWorld setup
+    , storyHistory = StoryHistory [] (setUpWorld setup)
     }
 
 
@@ -456,7 +450,7 @@ update :
     -> Msg item location character
     -> Model item location character knowledge
     -> Model item location character knowledge
-update displayInfo msg model =
+update displayInfo msg ({ storyHistory } as model) =
     case msg of
         NoOp ->
             model
@@ -464,8 +458,19 @@ update displayInfo msg model =
         StartGame ->
             { model | route = GamePage }
 
-        GamePlay msg ->
-            { model | storyState = Story.Mechanics.update displayInfo msg model.storyState }
+        Interact interactable ->
+            { model
+                | storyHistory =
+                    { storyHistory
+                        | interactions =
+                            model.storyHistory.interactions ++ [ Interaction interactable ]
+                    }
+            }
+
+        Rollback i ->
+            { model
+                | storyHistory = { storyHistory | interactions = List.take i model.storyHistory.interactions }
+            }
 
 
 
@@ -479,7 +484,7 @@ view displayInfo model =
             titelPage model
 
         GamePage ->
-            Html.map GamePlay <| Views.Game.view displayInfo model.storyState
+            Views.Game.view displayInfo <| Story.Mechanics.buildStoryState displayInfo model.storyHistory
 
 
 titelPage : Model item location character knowledge -> Html (Msg item location character)

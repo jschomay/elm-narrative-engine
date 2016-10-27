@@ -6,7 +6,14 @@ import EveryDict exposing (..)
 
 init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
 init startingLocation startingScene =
-    StoryState startingLocation (loadCurrentScene startingScene) [ Location startingLocation ] [] [] EveryDict.empty EveryDict.empty []
+    StoryState startingLocation
+        (loadCurrentScene startingScene)
+        [ Location startingLocation ]
+        []
+        []
+        EveryDict.empty
+        EveryDict.empty
+        []
 
 
 getCharactersInCurrentLocation : StoryState item location character knowledge -> List character

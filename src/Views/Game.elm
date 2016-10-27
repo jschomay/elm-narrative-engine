@@ -16,7 +16,7 @@ import Views.Inventory exposing (..)
 view :
     StoryWorld item location character
     -> StoryState item location character knowledge
-    -> Html (Story.Mechanics.Msg item location character)
+    -> Html (Msg item location character)
 view displayInfo storyState =
     let
         toCssColor : Color -> String
@@ -27,13 +27,13 @@ view displayInfo storyState =
             toCssColor <| .color <| displayInfo.locations storyState.currentLocation
 
         itemMsg =
-            Story.Mechanics.Interact << Item
+            Interact << Item
 
         locationMsg =
-            Story.Mechanics.Interact << Location
+            Interact << Location
 
         characterMsg =
-            Story.Mechanics.Interact << Character
+            Interact << Character
     in
         div [ class "GamePage" ]
             [ div [ class "Layout" ]
