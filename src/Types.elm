@@ -55,7 +55,7 @@ type alias RuleIndex =
 
 
 type alias Rule item location character knowledge =
-    { interaction : Interactable item location character
+    { interaction : InteractionMatcher item location character
     , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
     , narration : List String
@@ -63,24 +63,25 @@ type alias Rule item location character knowledge =
 
 
 type alias LiveRule item location character knowledge =
-    { interaction : Interactable item location character
+    { interaction : InteractionMatcher item location character
     , conditions : List (Condition item location character knowledge)
     , changes : List (ChangeWorldCommand item location character knowledge)
     , narration : Maybe (List.Zipper.Zipper String)
     }
 
 
-loadCurrentScene : List (Rule item location character knowledge) -> List (LiveRule item location character knowledge)
-loadCurrentScene ruleData =
-    let
-        toLiveRule rule =
-            LiveRule rule.interaction rule.conditions rule.changes (List.Zipper.fromList rule.narration)
-    in
-        List.map toLiveRule ruleData
+type InteractionMatcher item location character
+    = WithAnything
+    | WithAnyItem
+    | WithAnyLocation
+    | WithAnyCharacter
+    | WithItem item
+    | WithLocation location
+    | WithCharacter character
 
 
 type Condition item location character knowledge
-    = WithItem item
+    = WithInventory item
     | NearCharacter character
     | NearItem item
     | InLocation location
@@ -140,36 +141,3 @@ type alias LocationInfo =
 
 type alias CharacterInfo =
     BasicInfo
-
-
-getName : StoryWorld item location character -> Interactable item location character -> String
-getName displayInfo interactable =
-    case interactable of
-        Item item ->
-            .name <| displayInfo.items item
-
-        Location location ->
-            .name <| displayInfo.locations location
-
-        Character character ->
-            .name <| displayInfo.characters character
-
-
-getDescription : StoryWorld item location character -> Interactable item location character -> String
-getDescription displayInfo interactable =
-    case interactable of
-        Item item ->
-            .description <| displayInfo.items item
-
-        Location location ->
-            .description <| displayInfo.locations location
-
-        Character character ->
-            .description <| displayInfo.characters character
-
-
-getNarration : String -> LiveRule item location character knowledge -> String
-getNarration default matchedRule =
-    matchedRule.narration
-        |> Maybe.map List.Zipper.current
-        |> Maybe.withDefault default

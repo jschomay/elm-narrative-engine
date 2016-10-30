@@ -88,7 +88,7 @@ locations l =
 
 scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene1 =
-    [ { interaction = item Umbrella
+    [ { interaction = withItem Umbrella
       , conditions = []
       , changes = []
       , narration =
@@ -97,7 +97,7 @@ scene1 =
             , "Don't really need it."
             ]
       }
-    , { interaction = location Garden
+    , { interaction = withLocation Garden
       , conditions = []
       , changes = [ moveTo Garden, loadScene scene2 ]
       , narration = []
@@ -107,27 +107,27 @@ scene1 =
 
 scene2 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene2 =
-    [ { interaction = character Harry
+    [ { interaction = withCharacter Harry
       , conditions = [ inLocation Garden ]
       , changes = [ moveCharacter Harry Marsh, moveTo Marsh ]
       , narration = [ "Come with me to the marsh" ]
       }
-    , { interaction = item Marble
-      , conditions = [ unless (withItem Marble) ]
+    , { interaction = withItem Marble
+      , conditions = [ unless (withInventory Marble) ]
       , changes = [ addInventory Marble ]
       , narration = [ "Pretty!  Mine." ]
       }
-    , { interaction = item Marble
-      , conditions = [ withItem Marble, inLocation Home ]
-      , changes = [ placeItem Marble Home ]
-      , narration = [ "I'll keep this safe here..." ]
+    , { interaction = withItem Marble
+      , conditions = []
+      , changes = [ loadScene scene3 ]
+      , narration = [ "I should take this home." ]
       }
-    , { interaction = item Umbrella
+    , { interaction = withItem Umbrella
       , conditions = [ inLocation Marsh ]
       , changes = []
       , narration = [ "Sure am glad I brought it with me!" ]
       }
-    , { interaction = character Harry
+    , { interaction = withCharacter Harry
       , conditions = [ inLocation Marsh ]
       , changes = []
       , narration =
@@ -139,5 +139,39 @@ scene2 =
 I'll keep trying anyways."""
             , "Nope, he really is out of things to say!"
             ]
+      }
+    ]
+
+
+scene3 =
+    [ { interaction = withLocation Home
+      , conditions = [ withInventory Marble ]
+      , changes = [ moveTo Home, placeItem Marble Home ]
+      , narration =
+            [ "This will be safe here." ]
+      }
+    , { interaction = withAnything
+      , conditions = [ inLocation Home ]
+      , changes = []
+      , narration =
+            [ "That's enough adventuring for today" ]
+      }
+    , { interaction = withAnyItem
+      , conditions = []
+      , changes = []
+      , narration =
+            [ "I don't want to mess with that, I need to get home." ]
+      }
+    , { interaction = withAnyLocation
+      , conditions = []
+      , changes = []
+      , narration =
+            [ "I'm only concerned with getting home." ]
+      }
+    , { interaction = withAnyCharacter
+      , conditions = []
+      , changes = []
+      , narration =
+            [ "No time to talk, I need to get home." ]
       }
     ]

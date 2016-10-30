@@ -11,11 +11,15 @@ module Story
         , itemInfo
         , locationInfo
         , characterInfo
-        , item
-        , location
-        , character
         , Rule
         , withItem
+        , withLocation
+        , withCharacter
+        , withAnything
+        , withAnyItem
+        , withAnyLocation
+        , withAnyCharacter
+        , withInventory
         , nearCharacter
         , nearItem
         , inLocation
@@ -45,31 +49,31 @@ The framework takes care of managing all of the state, views, and interaction ha
 
 # Defining your story world
 
-@docs storyWorld, StoryWorld, ItemInfo, LocationInfo, CharacterInfo, itemInfo, locationInfo, characterInfo, item, location, character
+@docs storyWorld, StoryWorld, ItemInfo, LocationInfo, CharacterInfo, itemInfo, locationInfo, characterInfo
 
 # Defining story rules
 
-Rules are declarative pairings of a "matcher" and a set of "commands" to perform if the rule matches.  Rules are grouped into "scenes" for better control and organization.  If no rules match, the framework will perform a default rule, which is usually just to narrate the description of what was interacted with.
+Rules are how you progress the story.  They are made up of matching conditions and commands to perform if the rule matches.  Rules are grouped into "scenes" for better control and organization.  The engine will run through the active scene from the beginning, looking for the first matching rule, then run it.  If no rules match, the framework will perform a default command, which is usually just to narrate the description of what was interacted with.
 
 
 A rule has four parts:
 
-- a matcher against what interactable story element the user clicked on
-- a list of conditions that all must match for the rule to match
-- a list of changes to make if the rule matches
-- what to add to the story line if the rule matches
+1. A matcher against what interactable story element the user clicked on
+2. A list of conditions that all must match for the rule to match
+3. A list of changes to make if the rule matches
+4. Narration to add to the story line if the rule matches (note that you can use markdown)
 
     scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
     scene1 =
-        [ { interaction = character Harry
+        [ { interaction = withCharacter Harry
           , conditions = [ inLocation Garden ]
-          , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
-          , narration = ["Meet me in the marsh..."]
+          , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
+          , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
           }
-        , { interaction = character Harry
-          , conditions = [ inLocation Marsh ]
-          , changes = []
-          , narration = ["My good friend Harry...", "I wonder what he wants to tell me..."]
+        , { interaction = withInventory NoteFromHarry
+          , conditions = []
+          , changes = [ addLocation Marsh ]
+          , narration = [ """It says, "*Meet me in the marsh.*" """ ]
           }
         ]
 
@@ -77,11 +81,18 @@ When a rule matches multiple times (a player clicks the same story element multi
 
 @docs Rule
 
+## Interaction matchers
+
+The following interaction matchers can be used in the `interaction` part of the rule record.
+
+@docs withItem, withLocation, withCharacter, withAnything, withAnyItem, withAnyLocation, withAnyCharacter
+
+
 ## Conditions
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  withItem , nearCharacter , nearItem , inLocation , withKnowledge , unless
+@docs  withInventory , nearCharacter , nearItem , inLocation , withKnowledge , unless
 
 
 ## Changing the story world
@@ -174,27 +185,6 @@ characterInfo name description =
     { name = name
     , description = description
     }
-
-
-{-| Wrap your item type in an `Interactable` type when matching interactions in your rules.
--}
-item : item -> Interactable item location character
-item =
-    Item
-
-
-{-| Wrap your location type in an `Interactable` type when matching interactions in your rules.
--}
-location : location -> Interactable item location character
-location =
-    Location
-
-
-{-| Wrap your character type in an `Interactable` type when matching interactions in your rules.
--}
-character : character -> Interactable item location character
-character =
-    Character
 
 
 type alias Model item location character knowledge =
@@ -291,42 +281,91 @@ type alias Rule item location character knowledge =
     Types.Rule item location character knowledge
 
 
-{-| Will match if the supplied item is in the inventory.
+{-| Will only match the `interaction` part of a story rule if the player interacted with the specified item.
 -}
-withItem : item -> Condition item location character knowledge
-withItem =
-    WithItem
+withItem : item -> InteractionMatcher item location character
+withItem item =
+    WithItem item
 
 
-{-| Will match if the supplied character in in the current location.
+{-| Will only match the `interaction` part of a story rule if the player interacted with the specified location.
+-}
+withLocation : location -> InteractionMatcher item location character
+withLocation location =
+    WithLocation location
+
+
+{-| Will only match the `interaction` part of a story rule if the player interacted with the specified character.
+-}
+withCharacter : character -> InteractionMatcher item location character
+withCharacter character =
+    WithCharacter character
+
+
+{-| Will match the `interaction` part of a story rule if the player interacted with any item (be careful about the the order and conditions of your rules since this matcher is so broad).
+-}
+withAnyItem : InteractionMatcher item location character
+withAnyItem =
+    WithAnyItem
+
+
+{-| Will match the `interaction` part of a story rule if the player interacted with any location (be careful about the the order and conditions of your rules since this matcher is so broad).
+-}
+withAnyLocation : InteractionMatcher item location character
+withAnyLocation =
+    WithAnyLocation
+
+
+{-| Will match the `interaction` part of a story rule if the player interacted with any character (be careful about the the order and conditions of your rules since this matcher is so broad).
+-}
+withAnyCharacter : InteractionMatcher item location character
+withAnyCharacter =
+    WithAnyCharacter
+
+
+{-| Will match the `interaction` part of a story rule every time (be careful about the the order and conditions of your rules since this matcher is so broad).
+-}
+withAnything : InteractionMatcher item location character
+withAnything =
+    WithAnything
+
+
+{-| Will only match if the supplied item is in the inventory.
+-}
+withInventory : item -> Condition item location character knowledge
+withInventory =
+    WithInventory
+
+
+{-| Will only match if the supplied character in in the current location.
 -}
 nearCharacter : character -> Condition item location character knowledge
 nearCharacter =
     NearCharacter
 
 
-{-| Will match if the supplied item is in the current location.  Ignores inventory.
+{-| Will only match if the supplied item is in the current location.  Ignores inventory.
 -}
 nearItem : item -> Condition item location character knowledge
 nearItem =
     NearItem
 
 
-{-| Will match when the supplied location is the current location.
+{-| Will only match when the supplied location is the current location.
 -}
 inLocation : location -> Condition item location character knowledge
 inLocation =
     InLocation
 
 
-{-| Will match if the specified knowledge has been acquired.
+{-| Will only match if the specified knowledge has been acquired.
 -}
 withKnowledge : knowledge -> Condition item location character knowledge
 withKnowledge =
     WithKnowledge
 
 
-{-| Will match if the supplied condition does NOT match.
+{-| Will only match if the supplied condition does NOT match.
 -}
 unless : Condition item location character knowledge -> Condition item location character knowledge
 unless =

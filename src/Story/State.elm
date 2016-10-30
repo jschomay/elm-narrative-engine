@@ -2,6 +2,7 @@ module Story.State exposing (..)
 
 import Types exposing (..)
 import EveryDict exposing (..)
+import List.Zipper
 
 
 init : location -> List (Rule item location character knowledge) -> StoryState item location character knowledge
@@ -67,6 +68,78 @@ getItemsByLocation location storyState =
                         acc
     in
         EveryDict.foldr find [] storyState.itemPlacements
+
+
+getName : StoryWorld item location character -> Interactable item location character -> String
+getName displayInfo interactable =
+    case interactable of
+        Item item ->
+            .name <| displayInfo.items item
+
+        Location location ->
+            .name <| displayInfo.locations location
+
+        Character character ->
+            .name <| displayInfo.characters character
+
+
+getDescription : StoryWorld item location character -> Interactable item location character -> String
+getDescription displayInfo interactable =
+    case interactable of
+        Item item ->
+            .description <| displayInfo.items item
+
+        Location location ->
+            .description <| displayInfo.locations location
+
+        Character character ->
+            .description <| displayInfo.characters character
+
+
+getNarration : String -> LiveRule item location character knowledge -> String
+getNarration default matchedRule =
+    matchedRule.narration
+        |> Maybe.map List.Zipper.current
+        |> Maybe.withDefault default
+
+
+isItem : Interactable item location character -> Bool
+isItem interactable =
+    case interactable of
+        Item _ ->
+            True
+
+        _ ->
+            False
+
+
+isLocation : Interactable item location character -> Bool
+isLocation interactable =
+    case interactable of
+        Location _ ->
+            True
+
+        _ ->
+            False
+
+
+isCharacter : Interactable item location character -> Bool
+isCharacter interactable =
+    case interactable of
+        Character _ ->
+            True
+
+        _ ->
+            False
+
+
+loadCurrentScene : List (Rule item location character knowledge) -> List (LiveRule item location character knowledge)
+loadCurrentScene ruleData =
+    let
+        toLiveRule rule =
+            LiveRule rule.interaction rule.conditions rule.changes (List.Zipper.fromList rule.narration)
+    in
+        List.map toLiveRule ruleData
 
 
 advanceStory :
@@ -249,8 +322,37 @@ matchesRule :
     -> Interactable item location character
     -> StoryState item location character knowledge
     -> Bool
-matchesRule rule interactable storyState =
-    rule.interaction == interactable && List.all (matchesCondition storyState) rule.conditions
+matchesRule { interaction, conditions } interactable storyState =
+    matchesInteraction interaction interactable
+        && List.all (matchesCondition storyState) conditions
+
+
+matchesInteraction :
+    InteractionMatcher item location character
+    -> Interactable item location character
+    -> Bool
+matchesInteraction interactionMatcher interactable =
+    case interactionMatcher of
+        WithAnything ->
+            True
+
+        WithAnyItem ->
+            isItem interactable
+
+        WithAnyLocation ->
+            isLocation interactable
+
+        WithAnyCharacter ->
+            isCharacter interactable
+
+        WithItem item ->
+            Item item == interactable
+
+        WithLocation location ->
+            Location location == interactable
+
+        WithCharacter character ->
+            Character character == interactable
 
 
 matchesCondition :
@@ -259,7 +361,7 @@ matchesCondition :
     -> Bool
 matchesCondition storyState condition =
     case condition of
-        WithItem item ->
+        WithInventory item ->
             List.member item <| getInventory storyState
 
         NearCharacter character ->
