@@ -40,15 +40,15 @@ Step 2: Define your declarative "story rules," broken up into "scenes"
 ```elm
 scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
 scene1 =
-    [ { interaction = character Harry
+    [ { interaction = withCharacter Harry
       , conditions = [ inLocation Garden ]
-      , changes = [ addCharacter Harry Marsh, removeCharacter Harry Garden ]
-      , narration = ["Meet me in the marsh..."]
+      , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
+      , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
       }
-    , { interaction = character Harry
-      , conditions = [ inLocation Marsh ]
-      , changes = []
-      , narration = ["My good friend Harry..."]
+    , { interaction = withInventory NoteFromHarry
+      , conditions = []
+      , changes = [ addLocation Marsh ]
+      , narration = [ "It says, \"*Meet me in the marsh.*\"" ]
       }
     ]
 ```
@@ -56,9 +56,13 @@ scene1 =
 Step 3: Load your story interactables and rules into the framework
 
 ```elm
-Story.load info interactables setup
+Story.load info world setup
 ```
 
 ## Sample Stories
 
-* coming soon...
+[See sample stories here](http://blog.elmnarrativeengine.com/sample-stories/)
+
+## Development blog
+
+[Follow along with the development here](http://blog.elmnarrativeengine.com)

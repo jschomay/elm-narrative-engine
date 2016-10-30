@@ -11,7 +11,7 @@ import Types exposing (..)
 currentSummary :
     (item -> msg)
     -> (character -> msg)
-    -> StoryWorld item location character
+    -> World item location character
     -> (Color -> String)
     -> (Interactable item location character -> Bool)
     -> StoryState item location character knowledge

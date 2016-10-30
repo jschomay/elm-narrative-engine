@@ -17,12 +17,12 @@ info =
     }
 
 
-interactables : StoryWorld MyItem MyLocation MyCharacter
+interactables : World MyItem MyLocation MyCharacter
 interactables =
-    storyWorld items locations characters
+    world items locations characters
 
 
-setup : Setup MyItem MyLocation MyCharacter MyKnowledge
+setup : StartingState MyItem MyLocation MyCharacter MyKnowledge
 setup =
     { startingScene = scene1
     , startingLocation = Home

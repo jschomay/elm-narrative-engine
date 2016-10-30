@@ -7,7 +7,7 @@ import List.Zipper
 
 
 buildStoryState :
-    StoryWorld item location character
+    World item location character
     -> { startingState : StoryState item location character knowledge
        , interactions : List (Interaction item location character)
        }
@@ -17,7 +17,7 @@ buildStoryState displayInfo { interactions, startingState } =
 
 
 step :
-    StoryWorld item location character
+    World item location character
     -> Interaction item location character
     -> StoryState item location character knowledge
     -> StoryState item location character knowledge

@@ -70,7 +70,7 @@ getItemsByLocation location storyState =
         EveryDict.foldr find [] storyState.itemPlacements
 
 
-getName : StoryWorld item location character -> Interactable item location character -> String
+getName : World item location character -> Interactable item location character -> String
 getName displayInfo interactable =
     case interactable of
         Item item ->
@@ -83,7 +83,7 @@ getName displayInfo interactable =
             .name <| displayInfo.characters character
 
 
-getDescription : StoryWorld item location character -> Interactable item location character -> String
+getDescription : World item location character -> Interactable item location character -> String
 getDescription displayInfo interactable =
     case interactable of
         Item item ->

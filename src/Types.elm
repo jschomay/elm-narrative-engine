@@ -114,7 +114,7 @@ type Interactable item location character
     | Character character
 
 
-type alias StoryWorld item location character =
+type alias World item location character =
     { items : item -> ItemInfo
     , locations : location -> LocationInfo
     , characters : character -> CharacterInfo

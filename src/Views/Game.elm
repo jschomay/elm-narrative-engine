@@ -14,7 +14,7 @@ import Views.Inventory exposing (..)
 
 
 view :
-    StoryWorld item location character
+    World item location character
     -> StoryState item location character knowledge
     -> Html (Msg item location character)
 view displayInfo storyState =
