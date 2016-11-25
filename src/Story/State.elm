@@ -41,6 +41,21 @@ getInventory storyState =
         EveryDict.foldr find [] storyState.itemPlacements
 
 
+getCurrentLocation : StoryState item location character knowledge -> location
+getCurrentLocation =
+    .currentLocation
+
+
+getLocations : StoryState item location character knowledge -> List location
+getLocations =
+    .knownLocations
+
+
+getStoryLine : StoryState item location character knowledge -> List ( String, String )
+getStoryLine =
+    .storyLine
+
+
 getCharactersByLocation : location -> StoryState item location character knowledge -> List character
 getCharactersByLocation location storyState =
     let

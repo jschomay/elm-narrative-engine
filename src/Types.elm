@@ -10,7 +10,6 @@ import List.Zipper
 
 type Msg item location character
     = NoOp
-    | StartGame
     | Interact (Interactable item location character)
     | Rollback Int
 

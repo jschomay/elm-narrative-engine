@@ -1,7 +1,19 @@
 module Story
     exposing
-        ( load
-        , Info
+        ( Model
+        , Msg
+        , itemMsg
+        , locationMsg
+        , characterMsg
+        , rollbackMsg
+        , init
+        , update
+        , getCurrentLocation
+        , getNearByProps
+        , getNearByCharacters
+        , getInventory
+        , getLocations
+        , getStoryLine
         , StartingState
         , world
         , World
@@ -42,13 +54,15 @@ module Story
         , endStory
         )
 
-{-| Main engine API, with functions for you to load your story and build rules.
+{-| The story engine handles storing and advancing your story state by running through your story rules on each interaction.  It allows the client code to handle building the story world, story rules, and display layer.
 
-The framework takes care of managing all of the state, views, and interaction handling, allowing the client code to focus purely on the story.
+# Embedding the story engine
 
-# Loading the story
+The story engine is designed to be embedded in your own Elm app, allowing for maximum flexibility and customization.
 
-@docs load, Info, StartingState
+You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
+
+@docs Model, Msg, itemMsg, locationMsg, characterMsg, rollbackMsg, init, update, getCurrentLocation, getNearByProps, getNearByCharacters, getInventory, getLocations, getStoryLine, StartingState
 
 # Defining your story world
 
@@ -109,15 +123,11 @@ You cannot change the story directly, but you can supply "commands" describing h
 
 import Html exposing (..)
 import Html.App as Html
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Markdown exposing (..)
 import Color exposing (Color)
 import Types exposing (..)
 import Types exposing (..)
 import Story.Mechanics exposing (..)
 import Story.State exposing (..)
-import Views.Game exposing (..)
 
 
 {-| A interactable story element -- and item, location, or character in your story that can be displayed and interacted with.
@@ -191,13 +201,44 @@ characterInfo name description =
     }
 
 
-type alias Model item location character knowledge =
-    { title : String
-    , byline : String
-    , prologue : String
-    , route : Route
-    , storyHistory : StoryHistory item location character knowledge
-    }
+{-| You'll need this type if you embed the engine in your own app.
+-}
+type Model item location character knowledge
+    = Model (StoryHistory item location character knowledge)
+
+
+{-| This too
+-}
+type alias Msg item location character =
+    Types.Msg item location character
+
+
+{-| Let the engine know the user interacted with an item
+-}
+itemMsg : item -> Types.Msg item location character
+itemMsg =
+    Interact << Item
+
+
+{-| Let the engine know the user interacted with a location
+-}
+locationMsg : location -> Types.Msg item location character
+locationMsg =
+    Interact << Location
+
+
+{-| Let the engine know the user interacted with a character
+-}
+characterMsg : character -> Types.Msg item location character
+characterMsg =
+    Interact << Character
+
+
+{-| Let the engine know to "roll back" the story.  The `Int` indicates the number of interactions to keep.  For example, `Story.rollbackMsg <| (List.length Story.getStoryLine) - 1` would "undo" the last move, and `Story.rollback 0` would "reset" the entire story.
+-}
+rollbackMsg : Int -> Types.Msg item location character
+rollbackMsg =
+    Rollback
 
 
 {-| Information for the starting state of your story.  See the "Changing the story world" section for more information on the setupCommands.
@@ -222,61 +263,79 @@ type alias StartingState item location character knowledge =
     }
 
 
-{-| Basic information about the story, which gets displayed on the "title page" before beginning the story.
-
-    info : Info
-    info =
-        { title = "The Continuing Adventures of Bartholomew Barrymore"
-        , byline = "B. Barrymore"
-        , prologue = "Mr. Barrymore is at it again, with more shenanigans in this comedy-mystery..."
-        }
--}
-type alias Info =
-    { title : String
-    , byline : String
-    , prologue : String
-    }
-
-
-type Route
-    = TitlePage
-    | GamePage
-
-
-init : Info -> StartingState item location character knowledge -> Model item location character knowledge
-init { title, byline, prologue } setup =
-    { title = title
-    , byline = byline
-    , prologue = prologue
-    , route = TitlePage
-    , storyHistory = StoryHistory [] (setUpWorld setup)
-    }
-
-
 setUpWorld : StartingState item location character knowledge -> StoryState item location character knowledge
 setUpWorld { startingScene, startingLocation, startingNarration, setupCommands } =
     Story.State.init startingLocation startingScene
         |> \storyState -> Story.State.advanceStory "Begin" storyState setupCommands startingNarration
 
 
-{-| This is where you load all of your story details into the framework (from the client's `Main.elm` file).  See https://github.com/jschomay/elm-interactive-story-starter.git for an example of how to define interactables and scenes.
-
-    main : Program Never
-    main =
-        Story.load info world setup
-
+{-| Initialize the `Model` for use when embedding in your own app.
 -}
-load :
-    Info
-    -> World item location character
-    -> StartingState item location character knowledge
-    -> Program Never
-load info interactables setup =
-    Html.beginnerProgram
-        { model = init info setup
-        , view = view interactables
-        , update = update interactables
-        }
+init :
+    StartingState item location character knowledge
+    -> Model item location character knowledge
+init setup =
+    Model <| StoryHistory [] (setUpWorld setup)
+
+
+{-| Get the current location to display
+-}
+getCurrentLocation :
+    World item location character
+    -> Model item location character knowledge
+    -> location
+getCurrentLocation world (Model storyState) =
+    Story.State.getCurrentLocation <| buildStoryState world storyState
+
+
+{-| Get a list of the items in the current location to display
+-}
+getNearByProps :
+    World item location character
+    -> Model item location character knowledge
+    -> List item
+getNearByProps world (Model storyState) =
+    Story.State.getItemsInCurrentLocation <| buildStoryState world storyState
+
+
+{-| Get a list of the characters in the current location to display
+-}
+getNearByCharacters :
+    World item location character
+    -> Model item location character knowledge
+    -> List character
+getNearByCharacters world (Model storyState) =
+    Story.State.getCharactersInCurrentLocation <| buildStoryState world storyState
+
+
+{-| Get a list of the items in your inventory to display
+-}
+getInventory :
+    World item location character
+    -> Model item location character knowledge
+    -> List item
+getInventory world (Model storyState) =
+    Story.State.getInventory <| buildStoryState world storyState
+
+
+{-| Get a list of the known locations to display
+-}
+getLocations :
+    World item location character
+    -> Model item location character knowledge
+    -> List location
+getLocations world (Model storyState) =
+    Story.State.getLocations <| buildStoryState world storyState
+
+
+{-| Get the story revealed so far as a list of narration items.
+-}
+getStoryLine :
+    World item location character
+    -> Model item location character knowledge
+    -> List ( String, String )
+getStoryLine world (Model storyState) =
+    Story.State.getStoryLine <| buildStoryState world storyState
 
 
 {-| A declarative rule, describing how to advance your story and under what conditions.
@@ -487,53 +546,19 @@ endStory =
     EndStory
 
 
+{-| The update function you'll need if embedding the engine in your own app to progress the `Model`
+-}
 update :
-    World item location character
-    -> Msg item location character
+    Msg item location character
     -> Model item location character knowledge
     -> Model item location character knowledge
-update displayInfo msg ({ storyHistory } as model) =
+update msg (Model storyHistory) =
     case msg of
         NoOp ->
-            model
-
-        StartGame ->
-            { model | route = GamePage }
+            Model storyHistory
 
         Interact interactable ->
-            { model
-                | storyHistory =
-                    { storyHistory
-                        | interactions =
-                            model.storyHistory.interactions ++ [ Interaction interactable ]
-                    }
-            }
+            Model { storyHistory | interactions = storyHistory.interactions ++ [ Interaction interactable ] }
 
         Rollback i ->
-            { model
-                | storyHistory = { storyHistory | interactions = List.take i model.storyHistory.interactions }
-            }
-
-
-
--- VIEW
-
-
-view : World item location character -> Model item location character knowledge -> Html (Msg item location character)
-view displayInfo model =
-    case model.route of
-        TitlePage ->
-            titelPage model
-
-        GamePage ->
-            Views.Game.view displayInfo <| Story.Mechanics.buildStoryState displayInfo model.storyHistory
-
-
-titelPage : Model item location character knowledge -> Html (Msg item location character)
-titelPage model =
-    div [ class "TitlePage" ]
-        [ h1 [ class "TitlePage__Title" ] [ text model.title ]
-        , h3 [ class "TitlePage__Byline" ] [ text <| "An interactive story by " ++ model.byline ]
-        , toHtml [ class "TitlePage__Prologue markdown-body" ] model.prologue
-        , span [ class "TitlePage__StartGame", onClick StartGame ] [ text "Play" ]
-        ]
+            Model { storyHistory | interactions = List.take i storyHistory.interactions }
