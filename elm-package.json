@@ -7,7 +7,7 @@
         "src"
     ],
     "exposed-modules": [
-        "Story"
+        "Engine"
     ],
     "dependencies": {
         "eeue56/elm-all-dict": "1.1.2 <= v < 2.0.0",

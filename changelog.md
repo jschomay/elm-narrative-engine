@@ -2,6 +2,32 @@
 
 Follow along with development on the [developement blog](http://blog.elmnarrativeengine.com/).
 
+## 3.0.0
+
+Many breaking changes this time around breaking the view layer out of the story engine.  Now, instead of loading your "story config" into the engine, you embed the engine in your own app, and provide your own view layer (with the help of many new accessor functions).  See the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git) to see how that works.
+
+Also, this release changes the top level module namespace from `Story` to `Engine`.
+
+This release also upgrades to Elm 0.18 behind the scenes.
+
+### Changes
+
+- removed `load` and added `init` and `update` for use in your own app's model and update functions
+- exposed opaque types `Engine.Model` and `Engine.Msg` for the type signatures in your app
+- added functions to generate `Engine.Msg` messages:
+  - `itemMsg`
+  - `locationMsg`
+  - `characterMsg`
+  - `rollbackMsg`
+- added many accessor functions:
+  - `getCurrentLocation`
+  - `getInventory`
+  - `getLocations`
+  - `getNearByCharacters`
+  - `getNearByProps`
+  - `getStoryLine`
+
+
 ## 2.0.0
 
 This version adds some new features, fixes some bugs, and changes the public api significantly for design reasons (partially leading towards future versions).

@@ -1,4 +1,4 @@
-module Story
+module Engine
     exposing
         ( Model
         , Msg
@@ -81,7 +81,7 @@ A rule has four parts:
 4. Narration to add to the story line if the rule matches (note that you can use markdown)
 
 
-    scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
+    scene1 : List (Engine.Rule MyItem MyLocation MyCharacter MyKnowledge)
     scene1 =
         [ { interaction = withCharacter Harry
           , conditions = [ inLocation Garden ]
@@ -121,13 +121,11 @@ You cannot change the story directly, but you can supply "commands" describing h
 
 -}
 
-import Html exposing (..)
-import Html.App as Html
 import Color exposing (Color)
 import Types exposing (..)
 import Types exposing (..)
-import Story.Mechanics exposing (..)
-import Story.State exposing (..)
+import Engine.Mechanics exposing (..)
+import Engine.State exposing (..)
 
 
 {-| A interactable story element -- and item, location, or character in your story that can be displayed and interacted with.
@@ -136,7 +134,7 @@ type alias Interactable item location character =
     Types.Interactable item location character
 
 
-{-| A means of looking up static information about your story interactables, which gets loaded into `Story.load`.
+{-| A means of looking up static information about your story interactables, which gets loaded into `Engine.load`.
 -}
 world : (item -> ItemInfo) -> (location -> LocationInfo) -> (character -> CharacterInfo) -> World item location character
 world items locations characters =
@@ -234,7 +232,7 @@ characterMsg =
     Interact << Character
 
 
-{-| Let the engine know to "roll back" the story.  The `Int` indicates the number of interactions to keep.  For example, `Story.rollbackMsg <| (List.length Story.getStoryLine) - 1` would "undo" the last move, and `Story.rollback 0` would "reset" the entire story.
+{-| Let the engine know to "roll back" the story.  The `Int` indicates the number of interactions to keep.  For example, `Engine.rollbackMsg <| (List.length Engine.getStoryLine) - 1` would "undo" the last move, and `Engine.rollback 0` would "reset" the entire story.
 -}
 rollbackMsg : Int -> Types.Msg item location character
 rollbackMsg =
@@ -265,8 +263,8 @@ type alias StartingState item location character knowledge =
 
 setUpWorld : StartingState item location character knowledge -> StoryState item location character knowledge
 setUpWorld { startingScene, startingLocation, startingNarration, setupCommands } =
-    Story.State.init startingLocation startingScene
-        |> \storyState -> Story.State.advanceStory "Begin" storyState setupCommands startingNarration
+    Engine.State.init startingLocation startingScene
+        |> \storyState -> Engine.State.advanceStory "Begin" storyState setupCommands startingNarration
 
 
 {-| Initialize the `Model` for use when embedding in your own app.
@@ -285,7 +283,7 @@ getCurrentLocation :
     -> Model item location character knowledge
     -> location
 getCurrentLocation world (Model storyState) =
-    Story.State.getCurrentLocation <| buildStoryState world storyState
+    Engine.State.getCurrentLocation <| buildStoryState world storyState
 
 
 {-| Get a list of the items in the current location to display
@@ -295,7 +293,7 @@ getNearByProps :
     -> Model item location character knowledge
     -> List item
 getNearByProps world (Model storyState) =
-    Story.State.getItemsInCurrentLocation <| buildStoryState world storyState
+    Engine.State.getItemsInCurrentLocation <| buildStoryState world storyState
 
 
 {-| Get a list of the characters in the current location to display
@@ -305,7 +303,7 @@ getNearByCharacters :
     -> Model item location character knowledge
     -> List character
 getNearByCharacters world (Model storyState) =
-    Story.State.getCharactersInCurrentLocation <| buildStoryState world storyState
+    Engine.State.getCharactersInCurrentLocation <| buildStoryState world storyState
 
 
 {-| Get a list of the items in your inventory to display
@@ -315,7 +313,7 @@ getInventory :
     -> Model item location character knowledge
     -> List item
 getInventory world (Model storyState) =
-    Story.State.getInventory <| buildStoryState world storyState
+    Engine.State.getInventory <| buildStoryState world storyState
 
 
 {-| Get a list of the known locations to display
@@ -325,7 +323,7 @@ getLocations :
     -> Model item location character knowledge
     -> List location
 getLocations world (Model storyState) =
-    Story.State.getLocations <| buildStoryState world storyState
+    Engine.State.getLocations <| buildStoryState world storyState
 
 
 {-| Get the story revealed so far as a list of narration items.
@@ -335,7 +333,7 @@ getStoryLine :
     -> Model item location character knowledge
     -> List ( String, String )
 getStoryLine world (Model storyState) =
-    Story.State.getStoryLine <| buildStoryState world storyState
+    Engine.State.getStoryLine <| buildStoryState world storyState
 
 
 {-| A declarative rule, describing how to advance your story and under what conditions.

@@ -1,6 +1,6 @@
-module Story.Mechanics exposing (buildStoryState)
+module Engine.Mechanics exposing (buildStoryState)
 
-import Story.State exposing (..)
+import Engine.State exposing (..)
 import Types exposing (..)
 import List
 import List.Zipper
@@ -77,7 +77,7 @@ step displayInfo (Interaction interactable) storyState =
                 defaultUpdate storyState
 
             Just ( ruleIndex, rule ) ->
-                Story.State.advanceStory (getName displayInfo interactable) storyState rule.changes (getNarration (getDescription displayInfo interactable) rule)
+                Engine.State.advanceStory (getName displayInfo interactable) storyState rule.changes (getNarration (getDescription displayInfo interactable) rule)
                     |> updateCurrentScene ruleIndex
         )
             |> addFamiliarity
