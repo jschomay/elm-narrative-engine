@@ -13,6 +13,15 @@ This release also upgrades to Elm 0.18 behind the scenes.
 ### Changes
 
 - removed `load` and added `init` and `update` for use in your own app's model and update functions
+- removed functions and types to do with defining interactables, which now get loaded as a "manifest" via `init`
+  - `world`
+  - `World`
+  - `ItemInfo`
+  - `LocationInfo`
+  - `CharacterInfo`
+  - `itemInfo`
+  - `locationInfo`
+  - `characterInfo`
 - exposed opaque types `Engine.Model` and `Engine.Msg` for the type signatures in your app
 - added functions to generate `Engine.Msg` messages:
   - `itemMsg`
@@ -27,6 +36,34 @@ This release also upgrades to Elm 0.18 behind the scenes.
   - `getNearByProps`
   - `getStoryLine`
 
+  - removed RemoveItem and RemoveInventory in favor of MoveItemOffScreen
+  - renamed PlaceItem to MoveItem
+  - renamed AddInventory to MoveItemToInventory
+  - renamed RemoveCharacter to MoveCharacterOffScreen
+
+  - rename getInventory to getItemsInInventory
+  - rename getNearByItems to getItemsInLocation
+  - rename getInventory to getItemsInInventory
+  - rename getNearByCharacters to getCharactersInLocation
+
+  - rename withInventory to itemIsInInventory
+  - rename nearCharacter to characterIsPresent
+  - rename nearItem to characterItem
+
+  - remove unless and add itemIsNotInInventory, itemIsNotPresent, characterIsNotPresent, and isNotInLocation
+
+  - endStory now takes a string that is associated with the story ending
+
+Really changed everything to let the engine store the story state as stateful manifest and scenes, along with some other story state in the model - no more types, just strings for ids, which you have to define.
+You no longer give a starting narration or starting state or starting location, you just give a list of commands to do.  Be sure to include a loadScene and moveTo command or the story won't work!  If you want a starting narration, just add that yourself in the view.
+
+
+- narration has many values to use in the view, but the initial idea of a narration is now a maybe, which the view can handle as it sees fit (the interactable attributes are availabel as a good default option)
+
+- scenes get a name now
+- each rule gets a name now
+
+
 
 ## 2.0.0
 
@@ -39,7 +76,7 @@ This version adds some new features, fixes some bugs, and changes the public api
       scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
       scene1 =
           [ { interaction = withCharacter Harry
-            , conditions = [ inLocation Garden ]
+            , conditions = [ isInLocation Garden ]
             , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
             , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
             }

@@ -1,9 +1,13 @@
-module Tests exposing (suite)
+module Tests exposing (..)
 
+import Tests.Manifest
+import Tests.Scenes
 import Test exposing (..)
 
 
-suite : Test
-suite =
-    describe "Full suite"
-        []
+all : Test
+all =
+    describe "Suites"
+        [ Tests.Manifest.all
+        , Tests.Scenes.all
+        ]

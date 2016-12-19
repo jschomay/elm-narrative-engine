@@ -1,48 +1,83 @@
 module Types exposing (..)
 
-import Color
-import EveryDict exposing (..)
-import List.Zipper
+import Dict exposing (Dict)
+import List.Zipper exposing (Zipper)
 
 
--- msg
+-- Msg
 
 
-type Msg item location character
+type Msg
     = NoOp
-    | Interact (Interactable item location character)
-    | Rollback Int
+    | Interact ID
 
 
 
--- StoryState
+-- Model
 
 
-type alias StoryHistory item location character knowledge =
-    { interactions : List (Interaction item location character)
-    , startingState : StoryState item location character knowledge
+type alias Story =
+    { currentLocation : ID
+    , currentScene : ID
+    , history : List ID
+    , manifest : Manifest
+    , scenes : Scenes
+    , theEnd : Maybe String
+    , storyLine : List Narration
     }
 
 
-type Interaction item location character
-    = Interaction (Interactable item location character)
+type alias Narration =
+    ( SceneName, Maybe RuleName, Maybe Attributes, Maybe String )
 
 
-type alias StoryState item location character knowledge =
-    { currentLocation : location
-    , currentScene : List (LiveRule item location character knowledge)
-    , familiarWith : List (Interactable item location character)
-    , knownLocations : List location
-    , storyLine : List ( String, String )
-    , characterPlacements : EveryDict character location
-    , itemPlacements : EveryDict item (ItemPlacement location)
-    , knowledge : List knowledge
-    }
+type alias SceneName =
+    String
 
 
-type ItemPlacement location
-    = Prop location
-    | Inventory
+type alias RuleName =
+    String
+
+
+type alias ID =
+    String
+
+
+
+-- Manifest
+
+
+type alias Manifest =
+    Dict ID Interactable
+
+
+type alias Shown =
+    Bool
+
+
+type alias Attributes =
+    { name : String, description : String }
+
+
+type CharacterPlacement
+    = CharacterInLocation ID
+    | CharacterOffScreen
+
+
+type ItemPlacement
+    = ItemInLocation ID
+    | ItemInInventory
+    | ItemOffScreen
+
+
+
+-- TODO - make Attributes genaric if possible
+
+
+type Interactable
+    = Item ItemPlacement Attributes
+    | Location Shown Attributes
+    | Character CharacterPlacement Attributes
 
 
 
@@ -53,90 +88,59 @@ type alias RuleIndex =
     Int
 
 
-type alias Rule item location character knowledge =
-    { interaction : InteractionMatcher item location character
-    , conditions : List (Condition item location character knowledge)
-    , changes : List (ChangeWorldCommand item location character knowledge)
+type alias Scenes =
+    Dict ID Scene
+
+
+type alias Scene =
+    Dict ID LiveRule
+
+
+type alias Rule =
+    { interaction : InteractionMatcher
+    , conditions : List Condition
+    , changes : List ChangeWorldCommand
     , narration : List String
     }
 
 
-type alias LiveRule item location character knowledge =
-    { interaction : InteractionMatcher item location character
-    , conditions : List (Condition item location character knowledge)
-    , changes : List (ChangeWorldCommand item location character knowledge)
-    , narration : Maybe (List.Zipper.Zipper String)
+type alias LiveRule =
+    { interaction : InteractionMatcher
+    , conditions : List Condition
+    , changes : List ChangeWorldCommand
+    , narration : Zipper (Maybe String)
     }
 
 
-type InteractionMatcher item location character
+type InteractionMatcher
     = WithAnything
     | WithAnyItem
     | WithAnyLocation
     | WithAnyCharacter
-    | WithItem item
-    | WithLocation location
-    | WithCharacter character
+    | WithItem ID
+    | WithLocation ID
+    | WithCharacter ID
 
 
-type Condition item location character knowledge
-    = WithInventory item
-    | NearCharacter character
-    | NearItem item
-    | InLocation location
-    | WithKnowledge knowledge
-    | Unless (Condition item location character knowledge)
+type Condition
+    = ItemIsInInventory ID
+    | CharacterIsPresent ID
+    | ItemIsPresent ID
+    | IsInLocation ID
+    | ItemIsNotInInventory ID
+    | CharacterIsNotPresent ID
+    | ItemIsNotPresent ID
+    | IsNotInLocation ID
 
 
-type ChangeWorldCommand item location character knowledge
-    = MoveTo location
-    | AddLocation location
-    | RemoveLocation location
-    | AddInventory item
-    | RemoveInventory item
-    | MoveCharacter character location
-    | RemoveCharacter character
-    | PlaceItem item location
-    | RemoveItem item
-    | AddKnowledge knowledge
-    | LoadScene (List (Rule item location character knowledge))
-    | EndStory
-
-
-
--- Interactables
-
-
-type Interactable item location character
-    = Item item
-    | Location location
-    | Character character
-
-
-type alias World item location character =
-    { items : item -> ItemInfo
-    , locations : location -> LocationInfo
-    , characters : character -> CharacterInfo
-    }
-
-
-type alias BasicInfo =
-    { name : String
-    , description : String
-    }
-
-
-type alias WithColor a =
-    { a | color : Color.Color }
-
-
-type alias ItemInfo =
-    BasicInfo
-
-
-type alias LocationInfo =
-    WithColor BasicInfo
-
-
-type alias CharacterInfo =
-    BasicInfo
+type ChangeWorldCommand
+    = MoveTo ID
+    | AddLocation ID
+    | RemoveLocation ID
+    | MoveItem ID ID
+    | MoveItemToInventory ID
+    | MoveItemOffScreen ID
+    | MoveCharacter ID ID
+    | MoveCharacterOffScreen ID
+    | LoadScene String
+    | EndStory String
