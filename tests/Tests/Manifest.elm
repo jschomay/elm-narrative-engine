@@ -31,7 +31,7 @@ all =
                         manifest =
                             Engine.Manifest.update (MoveItemToInventory "item2") baseManifest
                     in
-                        Expect.equal (Engine.Manifest.getInventory manifest) [ ( "item2", attrs "item2" ) ]
+                        Expect.equal (Engine.Manifest.getItemsInInventory manifest) [ ( "item2", attrs "item2" ) ]
             , test "getLocations"
                 <| \() ->
                     let
