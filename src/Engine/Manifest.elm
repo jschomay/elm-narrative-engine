@@ -288,16 +288,16 @@ moveCharacterOffScreen interactable =
 itemIsInInventory : String -> Manifest -> Bool
 itemIsInInventory id manifest =
     getItemsInInventory manifest
-        |> List.any (fst >> (==) id)
+        |> List.any (Tuple.first >> (==) id)
 
 
 characterIsPresent : String -> String -> Manifest -> Bool
 characterIsPresent character currentLocation manifest =
     getCharactersInLocation currentLocation manifest
-        |> List.any (fst >> (==) character)
+        |> List.any (Tuple.first >> (==) character)
 
 
 itemIsPresent : String -> String -> Manifest -> Bool
 itemIsPresent item currentLocation manifest =
     getItemsInLocation currentLocation manifest
-        |> List.any (fst >> (==) item)
+        |> List.any (Tuple.first >> (==) item)

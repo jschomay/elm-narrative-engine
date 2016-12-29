@@ -11,8 +11,8 @@ import List.Zipper
 all : Test
 all =
     describe "Scenes"
-        [ test "init"
-            <| \() ->
+        [ test "init" <|
+            \() ->
                 let
                     expected =
                         Dict.fromList
@@ -28,19 +28,20 @@ all =
                             ]
                 in
                     Expect.equal expected baseScenes
-        , test "update"
-            <| \() ->
+        , test "update" <|
+            \() ->
                 Expect.equal (Just "narration2")
                     (baseScenes
                         |> Engine.Scenes.update "scene1" "sample rule"
                         |> Engine.Scenes.update "scene1" "sample rule"
                         |> Dict.get "scene1"
-                        |> flip Maybe.andThen (Dict.get "sample rule")
-                        |> flip Maybe.andThen Engine.Scenes.getNarration
+                        |> Maybe.andThen (Dict.get "sample rule")
+                        |> Maybe.andThen Engine.Scenes.getNarration
                     )
         ]
 
 
+baseScenes : Scenes
 baseScenes =
     Engine.Scenes.init
         [ ( "scene1"

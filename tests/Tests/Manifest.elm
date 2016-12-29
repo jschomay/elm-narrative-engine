@@ -10,8 +10,8 @@ import Types exposing (..)
 all : Test
 all =
     describe "Manifest"
-        [ test "init"
-            <| \() ->
+        [ test "init" <|
+            \() ->
                 let
                     expected =
                         Dict.fromList
@@ -25,22 +25,22 @@ all =
                 in
                     Expect.equal expected baseManifest
         , describe "getters"
-            [ test "getInventory"
-                <| \() ->
+            [ test "getInventory" <|
+                \() ->
                     let
                         manifest =
                             Engine.Manifest.update (MoveItemToInventory "item2") baseManifest
                     in
                         Expect.equal (Engine.Manifest.getItemsInInventory manifest) [ ( "item2", attrs "item2" ) ]
-            , test "getLocations"
-                <| \() ->
+            , test "getLocations" <|
+                \() ->
                     let
                         manifest =
                             Engine.Manifest.update (AddLocation "location2") baseManifest
                     in
                         Expect.equal (Engine.Manifest.getLocations manifest) [ ( "location2", attrs "location2" ) ]
-            , test "getCharactersInLocation"
-                <| \() ->
+            , test "getCharactersInLocation" <|
+                \() ->
                     let
                         manifest =
                             baseManifest
@@ -49,8 +49,8 @@ all =
                     in
                         Expect.equal (Engine.Manifest.getCharactersInLocation "location2" manifest)
                             [ ( "character1", attrs "character1" ) ]
-            , test "getItemsInLocation"
-                <| \() ->
+            , test "getItemsInLocation" <|
+                \() ->
                     let
                         manifest =
                             baseManifest
@@ -61,16 +61,16 @@ all =
                             [ ( "item2", attrs "item2" ) ]
             ]
         , describe "matchers"
-            [ test "itemIsInInventory"
-                <| \() ->
+            [ test "itemIsInInventory" <|
+                \() ->
                     let
                         manifest =
                             baseManifest
                                 |> Engine.Manifest.update (MoveItemToInventory "item2")
                     in
                         Expect.equal (Engine.Manifest.itemIsInInventory "item2" manifest) True
-            , test "characterIsPresent"
-                <| \() ->
+            , test "characterIsPresent" <|
+                \() ->
                     let
                         manifest =
                             baseManifest
@@ -78,8 +78,8 @@ all =
                                 |> Engine.Manifest.update (MoveTo "location1")
                     in
                         Expect.equal (Engine.Manifest.characterIsPresent "character1" "location1" manifest) True
-            , test "itemIsPresent"
-                <| \() ->
+            , test "itemIsPresent" <|
+                \() ->
                     let
                         manifest =
                             baseManifest
