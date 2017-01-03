@@ -6,12 +6,12 @@ module Engine
         , init
         , update
         , getCurrentLocation
-        , getItemsInLocation
-        , getCharactersInLocation
+        , getItemsInCurrentLocation
+        , getCharactersInCurrentLocation
         , getItemsInInventory
         , getLocations
         , getStoryLine
-        , getTheEnd
+        , getEnding
         , Rule
         , InteractionMatcher
         , withItem
@@ -51,7 +51,7 @@ The story engine is designed to be embedded in your own Elm app, allowing for ma
 
 You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
 
-@docs Model, Msg, interactMsg, init, update, getCurrentLocation, getItemsInLocation, getCharactersInLocation, getItemsInInventory, getLocations, getStoryLine, getTheEnd
+@docs Model, Msg, interactMsg, init, update, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getStoryLine, getEnding
 
 # Defining your story world
 
@@ -173,20 +173,20 @@ getCurrentLocation (Model story) =
 
 {-| Get a list of the items in the current location to display
 -}
-getItemsInLocation :
+getItemsInCurrentLocation :
     Model
     -> List ( String, Attributes )
-getItemsInLocation (Model story) =
-    Engine.Manifest.getItemsInLocation story.currentLocation story.manifest
+getItemsInCurrentLocation (Model story) =
+    Engine.Manifest.getItemsInCurrentLocation story.currentLocation story.manifest
 
 
 {-| Get a list of the characters in the current location to display
 -}
-getCharactersInLocation :
+getCharactersInCurrentLocation :
     Model
     -> List ( String, Attributes )
-getCharactersInLocation (Model story) =
-    Engine.Manifest.getCharactersInLocation story.currentLocation story.manifest
+getCharactersInCurrentLocation (Model story) =
+    Engine.Manifest.getCharactersInCurrentLocation story.currentLocation story.manifest
 
 
 {-| Get a list of the items in your inventory to display
@@ -218,8 +218,8 @@ getStoryLine (Model story) =
 
 {-| Get the story ending, if it has ended.  (Set with `EndStory`)
 -}
-getTheEnd : Model -> Maybe String
-getTheEnd (Model story) =
+getEnding : Model -> Maybe String
+getEnding (Model story) =
     story.theEnd
 
 

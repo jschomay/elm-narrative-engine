@@ -47,9 +47,9 @@ all =
                                 |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location1")
                                 |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location2")
                     in
-                        Expect.equal (Engine.Manifest.getCharactersInLocation "location2" manifest)
+                        Expect.equal (Engine.Manifest.getCharactersInCurrentLocation "location2" manifest)
                             [ ( "character1", attrs "character1" ) ]
-            , test "getItemsInLocation" <|
+            , test "getItemsInCurrentLocation" <|
                 \() ->
                     let
                         manifest =
@@ -57,7 +57,7 @@ all =
                                 |> Engine.Manifest.update (MoveItemToLocation "item1" "location1")
                                 |> Engine.Manifest.update (MoveItemToLocation "item2" "location2")
                     in
-                        Expect.equal (Engine.Manifest.getItemsInLocation "location2" manifest)
+                        Expect.equal (Engine.Manifest.getItemsInCurrentLocation "location2" manifest)
                             [ ( "item2", attrs "item2" ) ]
             ]
         , describe "matchers"

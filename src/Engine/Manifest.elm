@@ -7,8 +7,8 @@ module Engine.Manifest
         , getAttributes
         , getItemsInInventory
         , getLocations
-        , getCharactersInLocation
-        , getItemsInLocation
+        , getCharactersInCurrentLocation
+        , getItemsInCurrentLocation
         , itemIsInInventory
         , characterIsInLocation
         , itemIsInLocation
@@ -108,8 +108,8 @@ getLocations manifest =
             |> List.filterMap isShownLocation
 
 
-getCharactersInLocation : String -> Manifest -> List ( String, Attributes )
-getCharactersInLocation locationId manifest =
+getCharactersInCurrentLocation : String -> Manifest -> List ( String, Attributes )
+getCharactersInCurrentLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
@@ -126,8 +126,8 @@ getCharactersInLocation locationId manifest =
             |> List.filterMap isInLocation
 
 
-getItemsInLocation : String -> Manifest -> List ( String, Attributes )
-getItemsInLocation locationId manifest =
+getItemsInCurrentLocation : String -> Manifest -> List ( String, Attributes )
+getItemsInCurrentLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
@@ -293,11 +293,11 @@ itemIsInInventory id manifest =
 
 characterIsInLocation : String -> String -> Manifest -> Bool
 characterIsInLocation character currentLocation manifest =
-    getCharactersInLocation currentLocation manifest
+    getCharactersInCurrentLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) character)
 
 
 itemIsInLocation : String -> String -> Manifest -> Bool
 itemIsInLocation item currentLocation manifest =
-    getItemsInLocation currentLocation manifest
+    getItemsInCurrentLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) item)
