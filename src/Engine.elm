@@ -22,25 +22,25 @@ module Engine
         , withAnyLocation
         , withAnyCharacter
         , Condition
+        , characterIsNotInLocation
+        , characterIsInLocation
+        , currentLocationIs
+        , currentLocationIsNot
         , itemIsInInventory
-        , characterIsPresent
-        , itemIsPresent
-        , isInLocation
         , itemIsNotInInventory
-        , characterIsNotPresent
-        , itemIsNotPresent
-        , isNotInLocation
+        , itemIsNotInLocation
+        , itemIsInLocation
         , ChangeWorldCommand
-        , moveTo
         , addLocation
-        , removeLocation
-        , moveItemToInventory
-        , moveCharacter
-        , moveCharacterOffScreen
-        , moveItem
-        , moveItemOffScreen
-        , loadScene
         , endStory
+        , loadScene
+        , moveCharacterToLocation
+        , moveCharacterOffScreen
+        , moveItemToLocation
+        , moveItemOffScreen
+        , moveItemToInventory
+        , moveTo
+        , removeLocation
         )
 
 {-| The story engine handles storing and advancing your story state by running through your story rules on each interaction.  It allows the client code to handle building the story world, story rules, and display layer.
@@ -69,12 +69,13 @@ A rule has four parts:
 3. A list of changes to make if the rule matches
 4. Narration to add to the story line if the rule matches (note that you can use markdown)
 
+TODO - UPDATE THIS!!!!!!!!!!
 
     scene1 : List Engine.Rule
     scene1 =
         [ { interaction = withCharacter Harry
-          , conditions = [ isInLocation Garden ]
-          , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
+          , conditions = [ currentLocationIs Garden ]
+          , changes = [ moveCharacterToLocation Harry Marsh, addInventory NoteFromHarry ]
           , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
           }
         , { interaction = itemIsInInventory NoteFromHarry
@@ -99,14 +100,14 @@ The following interaction matchers can be used in the `interaction` part of the 
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  Condition, itemIsInInventory , characterIsPresent , itemIsPresent , isInLocation, itemIsNotInInventory , characterIsNotPresent , itemIsNotPresent , isNotInLocation
+@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
 
 
 ## Changing the story world
 
 You cannot change the story directly, but you can supply "commands" describing how the story state should change.
 
-@docs ChangeWorldCommand, moveTo, addLocation, removeLocation, moveItemToInventory, moveCharacter, moveCharacterOffScreen, moveItem, moveItemOffScreen, loadScene, endStory
+@docs ChangeWorldCommand, moveTo, addLocation, removeLocation, moveItemToInventory, moveCharacterToLocation, moveCharacterOffScreen, moveItemToLocation, moveItemOffScreen, loadScene, endStory
 
 -}
 
@@ -411,46 +412,62 @@ itemIsNotInInventory =
     ItemIsNotInInventory
 
 
-{-| Will only match if the supplied character in in the current location.
+{-| Will only match if the supplied character is in the supplied location.
+
+The first String is a character id, the second is a location id.
+
+    characterIsInLocation "Harry" "Marsh"
 -}
-characterIsPresent : String -> Condition
-characterIsPresent =
-    CharacterIsPresent
+characterIsInLocation : String -> String -> Condition
+characterIsInLocation =
+    CharacterIsInLocation
 
 
-{-| Will only match if the supplied character in *not* in the current location.
+{-| Will only match if the supplied character is not in the supplied location.
+
+The first String is a character id, the second is a location id.
+
+    characterIsNotInLocation "Harry" "Marsh"
 -}
-characterIsNotPresent : String -> Condition
-characterIsNotPresent =
-    CharacterIsNotPresent
+characterIsNotInLocation : String -> String -> Condition
+characterIsNotInLocation =
+    CharacterIsNotInLocation
 
 
-{-| Will only match if the supplied item is in the current location.  Ignores inventory.
+{-| Will only match if the supplied item is in the supplied location.
+
+The first String is a item id, the second is a location id.
+
+    itemIsInLocation "Umbrella" "Marsh"
 -}
-itemIsPresent : String -> Condition
-itemIsPresent =
-    ItemIsPresent
+itemIsInLocation : String -> String -> Condition
+itemIsInLocation =
+    ItemIsInLocation
 
 
-{-| Will only match if the supplied item is *not* in the current location.  Ignores inventory.
+{-| Will only match if the supplied item is not in the supplied location.
+
+The first String is a item id, the second is a location id.
+
+    itemIsNotInLocation "Umbrella" "Marsh"
 -}
-itemIsNotPresent : String -> Condition
-itemIsNotPresent =
-    ItemIsNotPresent
+itemIsNotInLocation : String -> String -> Condition
+itemIsNotInLocation =
+    ItemIsNotInLocation
 
 
 {-| Will only match when the supplied location is the current location.
 -}
-isInLocation : String -> Condition
-isInLocation =
-    IsInLocation
+currentLocationIs : String -> Condition
+currentLocationIs =
+    CurrentLocationIs
 
 
 {-| Will only match when the supplied location is *not* the current location.
 -}
-isNotInLocation : String -> Condition
-isNotInLocation =
-    IsNotInLocation
+currentLocationIsNot : String -> Condition
+currentLocationIsNot =
+    CurrentLocationIsNot
 
 
 {-| -}
@@ -487,13 +504,17 @@ moveItemToInventory =
 
 
 {-| Adds a character to a location, or moves a character to a different location (characters can only be in one location at a time, or off-screen).  (Use moveTo to move yourself between locations.)
+
+The first String is a character id, the second is a location id.
+
+    moveCharacterToLocation "Harry" "Marsh"
 -}
-moveCharacter : String -> String -> ChangeWorldCommand
-moveCharacter =
-    MoveCharacter
+moveCharacterToLocation : String -> String -> ChangeWorldCommand
+moveCharacterToLocation =
+    MoveCharacterToLocation
 
 
-{-| Moves a character "off-screen".  The character will not show up in any locations until you use `moveCharacter` again.
+{-| Moves a character "off-screen".  The character will not show up in any locations until you use `moveCharacterToLocation` again.
 -}
 moveCharacterOffScreen : String -> ChangeWorldCommand
 moveCharacterOffScreen =
@@ -501,10 +522,14 @@ moveCharacterOffScreen =
 
 
 {-| Move an item to a location.  If it was in another location or your inventory before, it will remove it from there, as items can only be in one place at once.
+
+The first String is an item id, the second is a location id.
+
+    MoveItemToLocation "Umbrella" "Marsh"
 -}
-moveItem : String -> String -> ChangeWorldCommand
-moveItem =
-    MoveItem
+moveItemToLocation : String -> String -> ChangeWorldCommand
+moveItemToLocation =
+    MoveItemToLocation
 
 
 {-| Moves an item "off-screen" (either from a location or the inventory).  The item will not show up in any locations or inventory until you use `placeItem` or `addInventory` again.

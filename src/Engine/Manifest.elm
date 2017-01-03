@@ -10,8 +10,8 @@ module Engine.Manifest
         , getCharactersInLocation
         , getItemsInLocation
         , itemIsInInventory
-        , characterIsPresent
-        , itemIsPresent
+        , characterIsInLocation
+        , itemIsInLocation
         , isItem
         , isLocation
         , isCharacter
@@ -199,14 +199,14 @@ update change manifest =
         MoveItemToInventory id ->
             Dict.update id moveItemToInventory manifest
 
-        MoveItem itemId locationId ->
-            Dict.update itemId (moveItem locationId) manifest
+        MoveItemToLocation itemId locationId ->
+            Dict.update itemId (moveItemToLocation locationId) manifest
 
         MoveItemOffScreen id ->
             Dict.update id moveItemOffScreen manifest
 
-        MoveCharacter characterId locationId ->
-            Dict.update characterId (moveCharacter locationId) manifest
+        MoveCharacterToLocation characterId locationId ->
+            Dict.update characterId (moveCharacterToLocation locationId) manifest
 
         MoveCharacterOffScreen id ->
             Dict.update id moveCharacterOffScreen manifest
@@ -255,8 +255,8 @@ moveItemOffScreen interactable =
             Nothing
 
 
-moveItem : String -> Maybe Interactable -> Maybe Interactable
-moveItem locationId interactable =
+moveItemToLocation : String -> Maybe Interactable -> Maybe Interactable
+moveItemToLocation locationId interactable =
     case interactable of
         Just (Item _ attrs) ->
             Just (Item (ItemInLocation locationId) attrs)
@@ -265,8 +265,8 @@ moveItem locationId interactable =
             Nothing
 
 
-moveCharacter : String -> Maybe Interactable -> Maybe Interactable
-moveCharacter locationId interactable =
+moveCharacterToLocation : String -> Maybe Interactable -> Maybe Interactable
+moveCharacterToLocation locationId interactable =
     case interactable of
         Just (Character _ attrs) ->
             Just (Character (CharacterInLocation locationId) attrs)
@@ -291,13 +291,13 @@ itemIsInInventory id manifest =
         |> List.any (Tuple.first >> (==) id)
 
 
-characterIsPresent : String -> String -> Manifest -> Bool
-characterIsPresent character currentLocation manifest =
+characterIsInLocation : String -> String -> Manifest -> Bool
+characterIsInLocation character currentLocation manifest =
     getCharactersInLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) character)
 
 
-itemIsPresent : String -> String -> Manifest -> Bool
-itemIsPresent item currentLocation manifest =
+itemIsInLocation : String -> String -> Manifest -> Bool
+itemIsInLocation item currentLocation manifest =
     getItemsInLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) item)

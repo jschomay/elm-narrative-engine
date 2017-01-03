@@ -44,8 +44,8 @@ all =
                     let
                         manifest =
                             baseManifest
-                                |> Engine.Manifest.update (MoveCharacter "character1" "location1")
-                                |> Engine.Manifest.update (MoveCharacter "character1" "location2")
+                                |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location1")
+                                |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location2")
                     in
                         Expect.equal (Engine.Manifest.getCharactersInLocation "location2" manifest)
                             [ ( "character1", attrs "character1" ) ]
@@ -54,8 +54,8 @@ all =
                     let
                         manifest =
                             baseManifest
-                                |> Engine.Manifest.update (MoveItem "item1" "location1")
-                                |> Engine.Manifest.update (MoveItem "item2" "location2")
+                                |> Engine.Manifest.update (MoveItemToLocation "item1" "location1")
+                                |> Engine.Manifest.update (MoveItemToLocation "item2" "location2")
                     in
                         Expect.equal (Engine.Manifest.getItemsInLocation "location2" manifest)
                             [ ( "item2", attrs "item2" ) ]
@@ -69,24 +69,24 @@ all =
                                 |> Engine.Manifest.update (MoveItemToInventory "item2")
                     in
                         Expect.equal (Engine.Manifest.itemIsInInventory "item2" manifest) True
-            , test "characterIsPresent" <|
+            , test "characterIsInLocation" <|
                 \() ->
                     let
                         manifest =
                             baseManifest
-                                |> Engine.Manifest.update (MoveCharacter "character1" "location1")
+                                |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location1")
                                 |> Engine.Manifest.update (MoveTo "location1")
                     in
-                        Expect.equal (Engine.Manifest.characterIsPresent "character1" "location1" manifest) True
-            , test "itemIsPresent" <|
+                        Expect.equal (Engine.Manifest.characterIsInLocation "character1" "location1" manifest) True
+            , test "itemIsInLocation" <|
                 \() ->
                     let
                         manifest =
                             baseManifest
-                                |> Engine.Manifest.update (MoveItem "item1" "location1")
+                                |> Engine.Manifest.update (MoveItemToLocation "item1" "location1")
                                 |> Engine.Manifest.update (MoveTo "location1")
                     in
-                        Expect.equal (Engine.Manifest.itemIsPresent "item1" "location1" manifest) True
+                        Expect.equal (Engine.Manifest.itemIsInLocation "item1" "location1" manifest) True
             ]
         ]
 

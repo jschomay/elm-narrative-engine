@@ -137,23 +137,23 @@ matchesCondition currentLocationId manifest condition =
         ItemIsInInventory item ->
             itemIsInInventory item manifest
 
-        CharacterIsPresent character ->
-            characterIsPresent character currentLocationId manifest
+        CharacterIsInLocation character location ->
+            characterIsInLocation character location manifest
 
-        ItemIsPresent item ->
-            itemIsPresent item currentLocationId manifest
+        ItemIsInLocation item location ->
+            itemIsInLocation item location manifest
 
-        IsInLocation location ->
+        CurrentLocationIs location ->
             currentLocationId == location
 
         ItemIsNotInInventory item ->
             not <| itemIsInInventory item manifest
 
-        CharacterIsNotPresent character ->
-            not <| characterIsPresent character currentLocationId manifest
+        CharacterIsNotInLocation character location ->
+            not <| characterIsInLocation character location manifest
 
-        ItemIsNotPresent item ->
-            not <| itemIsPresent item currentLocationId manifest
+        ItemIsNotInLocation item location ->
+            not <| itemIsInLocation item location manifest
 
-        IsNotInLocation location ->
+        CurrentLocationIsNot location ->
             not <| currentLocationId == location

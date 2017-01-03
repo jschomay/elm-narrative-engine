@@ -36,10 +36,12 @@ This release also upgrades to Elm 0.18 behind the scenes.
   - `getNearByProps`
   - `getStoryLine`
 
+
   - removed RemoveItem and RemoveInventory in favor of MoveItemOffScreen
-  - renamed PlaceItem to MoveItem
+  - renamed PlaceItem to MoveItemToLoaiton
   - renamed AddInventory to MoveItemToInventory
   - renamed RemoveCharacter to MoveCharacterOffScreen
+  - renamed MoveCharacter to MoveCharacterToLocation
 
   - rename getInventory to getItemsInInventory
   - rename getNearByItems to getItemsInLocation
@@ -47,10 +49,12 @@ This release also upgrades to Elm 0.18 behind the scenes.
   - rename getNearByCharacters to getCharactersInLocation
 
   - rename withInventory to itemIsInInventory
-  - rename nearCharacter to characterIsPresent
+  - rename nearCharacter to characterIsInLocation
   - rename nearItem to characterItem
 
-  - remove unless and add itemIsNotInInventory, itemIsNotPresent, characterIsNotPresent, and isNotInLocation
+  - remove unless and add itemIsNotInInventory, itemIsNotInLocation, characterIsNotInLocation, and CurrentLocationIsNot
+
+  - rename isLocation to currentLocationIs
 
   - endStory now takes a string that is associated with the story ending
 
@@ -76,7 +80,7 @@ This version adds some new features, fixes some bugs, and changes the public api
       scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
       scene1 =
           [ { interaction = withCharacter Harry
-            , conditions = [ isInLocation Garden ]
+            , conditions = [ currentLocationIs Garden ]
             , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
             , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
             }

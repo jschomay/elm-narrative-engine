@@ -71,9 +71,6 @@ type ItemPlacement
 
 
 
--- TODO - make Attributes genaric if possible
-
-
 type Interactable
     = Item ItemPlacement Attributes
     | Location Shown Attributes
@@ -124,23 +121,23 @@ type InteractionMatcher
 
 type Condition
     = ItemIsInInventory ID
-    | CharacterIsPresent ID
-    | ItemIsPresent ID
-    | IsInLocation ID
+    | CharacterIsInLocation ID ID
+    | CharacterIsNotInLocation ID ID
+    | CurrentLocationIs ID
+    | CurrentLocationIsNot ID
+    | ItemIsInLocation ID ID
     | ItemIsNotInInventory ID
-    | CharacterIsNotPresent ID
-    | ItemIsNotPresent ID
-    | IsNotInLocation ID
+    | ItemIsNotInLocation ID ID
 
 
 type ChangeWorldCommand
     = MoveTo ID
     | AddLocation ID
     | RemoveLocation ID
-    | MoveItem ID ID
+    | MoveItemToLocation ID ID
     | MoveItemToInventory ID
     | MoveItemOffScreen ID
-    | MoveCharacter ID ID
+    | MoveCharacterToLocation ID ID
     | MoveCharacterOffScreen ID
     | LoadScene String
     | EndStory String
