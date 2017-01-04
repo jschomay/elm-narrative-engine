@@ -1,20 +1,20 @@
 module Engine.Manifest
     exposing
         ( init
-        , item
-        , location
         , character
+        , characterIsInLocation
         , getAttributes
+        , getCharactersInLocation
+        , getItemsInLocation
         , getItemsInInventory
         , getLocations
-        , getCharactersInCurrentLocation
-        , getItemsInCurrentLocation
-        , itemIsInInventory
-        , characterIsInLocation
-        , itemIsInLocation
+        , isCharacter
         , isItem
         , isLocation
-        , isCharacter
+        , item
+        , itemIsInInventory
+        , itemIsInLocation
+        , location
         , update
         )
 
@@ -47,7 +47,7 @@ init { items, locations, characters } =
 
 item : Attributes -> Interactable
 item attrs =
-    Item ItemOffScreen attrs
+    Item False ItemOffScreen attrs
 
 
 location : Attributes -> Interactable
@@ -65,7 +65,7 @@ getAttributes id manifest =
     let
         getAttrs interactable =
             case interactable of
-                Item _ attrs ->
+                Item _ _ attrs ->
                     attrs
 
                 Location _ attrs ->
@@ -83,7 +83,7 @@ getItemsInInventory manifest =
     let
         isInInventory ( id, interactable ) =
             case interactable of
-                Item ItemInInventory attrs ->
+                Item _ ItemInInventory attrs ->
                     Just ( id, attrs )
 
                 _ ->
@@ -108,8 +108,8 @@ getLocations manifest =
             |> List.filterMap isShownLocation
 
 
-getCharactersInCurrentLocation : String -> Manifest -> List ( String, Attributes )
-getCharactersInCurrentLocation locationId manifest =
+getCharactersInLocation : String -> Manifest -> List ( String, Attributes )
+getCharactersInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
@@ -126,12 +126,12 @@ getCharactersInCurrentLocation locationId manifest =
             |> List.filterMap isInLocation
 
 
-getItemsInCurrentLocation : String -> Manifest -> List ( String, Attributes )
-getItemsInCurrentLocation locationId manifest =
+getItemsInLocation : String -> Manifest -> List ( String, Attributes )
+getItemsInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
-                Item (ItemInLocation location) attrs ->
+                Item _ (ItemInLocation location) attrs ->
                     if location == locationId then
                         Just ( id, attrs )
                     else
@@ -149,7 +149,7 @@ isItem id manifest =
     Dict.get id manifest
         |> \interactable ->
             case interactable of
-                Just (Item _ _) ->
+                Just (Item _ _ _) ->
                     True
 
                 _ ->
@@ -202,6 +202,9 @@ update change manifest =
         MoveItemToLocation itemId locationId ->
             Dict.update itemId (moveItemToLocation locationId) manifest
 
+        MoveItemToLocationFixed itemId locationId ->
+            Dict.update itemId (moveItemToLocationFixed locationId) manifest
+
         MoveItemOffScreen id ->
             Dict.update id moveItemOffScreen manifest
 
@@ -222,7 +225,7 @@ addLocation interactable =
             Just (Location True attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 removeLocation : Maybe Interactable -> Maybe Interactable
@@ -232,37 +235,47 @@ removeLocation interactable =
             Just (Location False attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 moveItemToInventory : Maybe Interactable -> Maybe Interactable
 moveItemToInventory interactable =
     case interactable of
-        Just (Item _ attrs) ->
-            Just (Item ItemInInventory attrs)
+        Just (Item False _ attrs) ->
+            Just (Item False ItemInInventory attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 moveItemOffScreen : Maybe Interactable -> Maybe Interactable
 moveItemOffScreen interactable =
     case interactable of
-        Just (Item _ attrs) ->
-            Just (Item ItemOffScreen attrs)
+        Just (Item _ _ attrs) ->
+            Just (Item False ItemOffScreen attrs)
 
         _ ->
-            Nothing
+            interactable
+
+
+moveItemToLocationFixed : String -> Maybe Interactable -> Maybe Interactable
+moveItemToLocationFixed locationId interactable =
+    case interactable of
+        Just (Item _ _ attrs) ->
+            Just (Item True (ItemInLocation locationId) attrs)
+
+        _ ->
+            interactable
 
 
 moveItemToLocation : String -> Maybe Interactable -> Maybe Interactable
 moveItemToLocation locationId interactable =
     case interactable of
-        Just (Item _ attrs) ->
-            Just (Item (ItemInLocation locationId) attrs)
+        Just (Item _ _ attrs) ->
+            Just (Item False (ItemInLocation locationId) attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 moveCharacterToLocation : String -> Maybe Interactable -> Maybe Interactable
@@ -272,7 +285,7 @@ moveCharacterToLocation locationId interactable =
             Just (Character (CharacterInLocation locationId) attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 moveCharacterOffScreen : Maybe Interactable -> Maybe Interactable
@@ -282,7 +295,7 @@ moveCharacterOffScreen interactable =
             Just (Character CharacterOffScreen attrs)
 
         _ ->
-            Nothing
+            interactable
 
 
 itemIsInInventory : String -> Manifest -> Bool
@@ -293,11 +306,11 @@ itemIsInInventory id manifest =
 
 characterIsInLocation : String -> String -> Manifest -> Bool
 characterIsInLocation character currentLocation manifest =
-    getCharactersInCurrentLocation currentLocation manifest
+    getCharactersInLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) character)
 
 
 itemIsInLocation : String -> String -> Manifest -> Bool
 itemIsInLocation item currentLocation manifest =
-    getItemsInCurrentLocation currentLocation manifest
+    getItemsInLocation currentLocation manifest
         |> List.any (Tuple.first >> (==) item)

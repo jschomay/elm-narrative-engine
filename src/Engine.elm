@@ -37,6 +37,7 @@ module Engine
         , moveCharacterToLocation
         , moveCharacterOffScreen
         , moveItemToLocation
+        , moveItemToLocationFixed
         , moveItemOffScreen
         , moveItemToInventory
         , moveTo
@@ -59,7 +60,7 @@ TODO
 
 # Defining story rules
 
-Rules are how you progress the story.  They are made up of conditions to match against and commands to perform if the rule matches.  Rules are grouped into "scenes" for better control and organization.  The engine will run through the active scene from the beginning, looking for the first matching rule, then run it.  If no rules match, the framework will perform a default command, which is usually just to narrate the description of what was interacted with.
+Rules are how you progress the story.  They are made up of conditions to match against and commands to perform if the rule matches.  Rules are grouped into "scenes" for better control and organization.  The engine will run through the active scene from the beginning, looking for the first matching rule, then run it.  If no rules match, the framework will perform a default command, which is usually just to narrate the description of what was interacted with, or to move you to that location or take that item.
 
 
 A rule has four parts:
@@ -107,7 +108,7 @@ The following condition matchers can be used in the `conditions` part of the rul
 
 You cannot change the story directly, but you can supply "commands" describing how the story state should change.
 
-@docs ChangeWorldCommand, moveTo, addLocation, removeLocation, moveItemToInventory, moveCharacterToLocation, moveCharacterOffScreen, moveItemToLocation, moveItemOffScreen, loadScene, endStory
+@docs ChangeWorldCommand, moveTo, addLocation, removeLocation, moveItemToInventory, moveCharacterToLocation, moveCharacterOffScreen, moveItemToLocation, moveItemToLocationFixed, moveItemOffScreen, loadScene, endStory
 
 -}
 
@@ -177,7 +178,7 @@ getItemsInCurrentLocation :
     Model
     -> List ( String, Attributes )
 getItemsInCurrentLocation (Model story) =
-    Engine.Manifest.getItemsInCurrentLocation story.currentLocation story.manifest
+    Engine.Manifest.getItemsInLocation story.currentLocation story.manifest
 
 
 {-| Get a list of the characters in the current location to display
@@ -186,7 +187,7 @@ getCharactersInCurrentLocation :
     Model
     -> List ( String, Attributes )
 getCharactersInCurrentLocation (Model story) =
-    Engine.Manifest.getCharactersInCurrentLocation story.currentLocation story.manifest
+    Engine.Manifest.getCharactersInLocation story.currentLocation story.manifest
 
 
 {-| Get a list of the items in your inventory to display
@@ -253,6 +254,8 @@ update msg (Model story) =
                         changes =
                             if Engine.Manifest.isLocation interactableId story.manifest then
                                 [ MoveTo interactableId ]
+                            else if Engine.Manifest.isItem interactableId story.manifest then
+                                [ MoveItemToInventory interactableId ]
                             else
                                 []
                     in
@@ -496,7 +499,8 @@ removeLocation =
     RemoveLocation
 
 
-{-| Adds an item to your inventory (if it was previously in a location, it will be removed from there, as items can only be in one place at once).
+{-| Adds an item to your inventory (if it was previously in a location, it will be removed from there, as items can only be in one place at once).  If the item is "fixed" this will not move it (if you want to "unfix" an item, use `moveItemOffScreen` or `MoveItemToLocation` first).
+
 -}
 moveItemToInventory : String -> ChangeWorldCommand
 moveItemToInventory =
@@ -519,6 +523,19 @@ moveCharacterToLocation =
 moveCharacterOffScreen : String -> ChangeWorldCommand
 moveCharacterOffScreen =
     MoveCharacterOffScreen
+
+
+{-| Move an item to a location and set it as "fixed."  Fixed items are like scenery, they can be interacted with, but they cannot be added to inventory.
+
+If it was in another location or your inventory before, it will remove it from there, as items can only be in one place at once.
+
+The first String is an item id, the second is a location id.
+
+    MoveItemToLocationFixed "Umbrella" "Marsh"
+-}
+moveItemToLocationFixed : String -> String -> ChangeWorldCommand
+moveItemToLocationFixed =
+    MoveItemToLocationFixed
 
 
 {-| Move an item to a location.  If it was in another location or your inventory before, it will remove it from there, as items can only be in one place at once.

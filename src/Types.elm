@@ -70,9 +70,12 @@ type ItemPlacement
     | ItemOffScreen
 
 
+type alias Fixed =
+    Bool
+
 
 type Interactable
-    = Item ItemPlacement Attributes
+    = Item Fixed ItemPlacement Attributes
     | Location Shown Attributes
     | Character CharacterPlacement Attributes
 
@@ -134,6 +137,7 @@ type ChangeWorldCommand
     = MoveTo ID
     | AddLocation ID
     | RemoveLocation ID
+    | MoveItemToLocationFixed ID ID
     | MoveItemToLocation ID ID
     | MoveItemToInventory ID
     | MoveItemOffScreen ID

@@ -38,7 +38,8 @@ This release also upgrades to Elm 0.18 behind the scenes.
 
 
   - removed RemoveItem and RemoveInventory in favor of MoveItemOffScreen
-  - renamed PlaceItem to MoveItemToLoaiton
+  - renamed PlaceItem to MoveItemToLocation
+  - add MoveItemToLocationFixed
   - renamed AddInventory to MoveItemToInventory
   - renamed RemoveCharacter to MoveCharacterOffScreen
   - renamed MoveCharacter to MoveCharacterToLocation
