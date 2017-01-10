@@ -3,7 +3,6 @@ module Engine.Manifest
         ( init
         , character
         , characterIsInLocation
-        , getAttributes
         , getCharactersInLocation
         , getItemsInLocation
         , getItemsInInventory
@@ -26,15 +25,15 @@ import Dict exposing (Dict)
 
 
 init :
-    { items : List ( String, Attributes )
-    , locations : List ( String, Attributes )
-    , characters : List ( String, Attributes )
+    { items : List String
+    , locations : List String
+    , characters : List String
     }
     -> Manifest
 init { items, locations, characters } =
     let
-        insertFn interactableConstructor ( id, attrs ) acc =
-            Dict.insert id (interactableConstructor attrs) acc
+        insertFn interactableConstructor id acc =
+            Dict.insert id (interactableConstructor) acc
 
         foldFn interactableConstructor interactableList acc =
             List.foldr (insertFn interactableConstructor) acc interactableList
@@ -45,46 +44,28 @@ init { items, locations, characters } =
             |> foldFn character characters
 
 
-item : Attributes -> Interactable
-item attrs =
-    Item False ItemOffScreen attrs
+item : Interactable
+item =
+    Item False ItemOffScreen
 
 
-location : Attributes -> Interactable
-location attrs =
-    Location False attrs
+location : Interactable
+location =
+    Location False
 
 
-character : Attributes -> Interactable
-character attrs =
-    Character CharacterOffScreen attrs
+character : Interactable
+character =
+    Character CharacterOffScreen
 
 
-getAttributes : String -> Manifest -> Maybe Attributes
-getAttributes id manifest =
-    let
-        getAttrs interactable =
-            case interactable of
-                Item _ _ attrs ->
-                    attrs
-
-                Location _ attrs ->
-                    attrs
-
-                Character _ attrs ->
-                    attrs
-    in
-        Dict.get id manifest
-            |> Maybe.map getAttrs
-
-
-getItemsInInventory : Manifest -> List ( String, Attributes )
+getItemsInInventory : Manifest -> List String
 getItemsInInventory manifest =
     let
         isInInventory ( id, interactable ) =
             case interactable of
-                Item _ ItemInInventory attrs ->
-                    Just ( id, attrs )
+                Item _ ItemInInventory ->
+                    Just id
 
                 _ ->
                     Nothing
@@ -93,13 +74,13 @@ getItemsInInventory manifest =
             |> List.filterMap isInInventory
 
 
-getLocations : Manifest -> List ( String, Attributes )
+getLocations : Manifest -> List String
 getLocations manifest =
     let
         isShownLocation ( id, interactable ) =
             case interactable of
-                Location True attrs ->
-                    Just ( id, attrs )
+                Location True ->
+                    Just id
 
                 _ ->
                     Nothing
@@ -108,14 +89,14 @@ getLocations manifest =
             |> List.filterMap isShownLocation
 
 
-getCharactersInLocation : String -> Manifest -> List ( String, Attributes )
+getCharactersInLocation : String -> Manifest -> List String
 getCharactersInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
-                Character (CharacterInLocation location) attrs ->
+                Character (CharacterInLocation location) ->
                     if location == locationId then
-                        Just ( id, attrs )
+                        Just id
                     else
                         Nothing
 
@@ -126,14 +107,14 @@ getCharactersInLocation locationId manifest =
             |> List.filterMap isInLocation
 
 
-getItemsInLocation : String -> Manifest -> List ( String, Attributes )
+getItemsInLocation : String -> Manifest -> List String
 getItemsInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
-                Item _ (ItemInLocation location) attrs ->
+                Item _ (ItemInLocation location) ->
                     if location == locationId then
-                        Just ( id, attrs )
+                        Just id
                     else
                         Nothing
 
@@ -149,7 +130,7 @@ isItem id manifest =
     Dict.get id manifest
         |> \interactable ->
             case interactable of
-                Just (Item _ _ _) ->
+                Just (Item _ _) ->
                     True
 
                 _ ->
@@ -161,7 +142,7 @@ isLocation id manifest =
     Dict.get id manifest
         |> \interactable ->
             case interactable of
-                Just (Location _ _) ->
+                Just (Location _) ->
                     True
 
                 _ ->
@@ -173,7 +154,7 @@ isCharacter id manifest =
     Dict.get id manifest
         |> \interactable ->
             case interactable of
-                Just (Character _ _) ->
+                Just (Character _) ->
                     True
 
                 _ ->
@@ -221,8 +202,8 @@ update change manifest =
 addLocation : Maybe Interactable -> Maybe Interactable
 addLocation interactable =
     case interactable of
-        Just (Location _ attrs) ->
-            Just (Location True attrs)
+        Just (Location _) ->
+            Just (Location True)
 
         _ ->
             interactable
@@ -231,8 +212,8 @@ addLocation interactable =
 removeLocation : Maybe Interactable -> Maybe Interactable
 removeLocation interactable =
     case interactable of
-        Just (Location _ attrs) ->
-            Just (Location False attrs)
+        Just (Location _) ->
+            Just (Location False)
 
         _ ->
             interactable
@@ -241,8 +222,8 @@ removeLocation interactable =
 moveItemToInventory : Maybe Interactable -> Maybe Interactable
 moveItemToInventory interactable =
     case interactable of
-        Just (Item False _ attrs) ->
-            Just (Item False ItemInInventory attrs)
+        Just (Item False _) ->
+            Just (Item False ItemInInventory)
 
         _ ->
             interactable
@@ -251,8 +232,8 @@ moveItemToInventory interactable =
 moveItemOffScreen : Maybe Interactable -> Maybe Interactable
 moveItemOffScreen interactable =
     case interactable of
-        Just (Item _ _ attrs) ->
-            Just (Item False ItemOffScreen attrs)
+        Just (Item _ _) ->
+            Just (Item False ItemOffScreen)
 
         _ ->
             interactable
@@ -261,8 +242,8 @@ moveItemOffScreen interactable =
 moveItemToLocationFixed : String -> Maybe Interactable -> Maybe Interactable
 moveItemToLocationFixed locationId interactable =
     case interactable of
-        Just (Item _ _ attrs) ->
-            Just (Item True (ItemInLocation locationId) attrs)
+        Just (Item _ _) ->
+            Just (Item True (ItemInLocation locationId))
 
         _ ->
             interactable
@@ -271,8 +252,8 @@ moveItemToLocationFixed locationId interactable =
 moveItemToLocation : String -> Maybe Interactable -> Maybe Interactable
 moveItemToLocation locationId interactable =
     case interactable of
-        Just (Item _ _ attrs) ->
-            Just (Item False (ItemInLocation locationId) attrs)
+        Just (Item _ _) ->
+            Just (Item False (ItemInLocation locationId))
 
         _ ->
             interactable
@@ -281,8 +262,8 @@ moveItemToLocation locationId interactable =
 moveCharacterToLocation : String -> Maybe Interactable -> Maybe Interactable
 moveCharacterToLocation locationId interactable =
     case interactable of
-        Just (Character _ attrs) ->
-            Just (Character (CharacterInLocation locationId) attrs)
+        Just (Character _) ->
+            Just (Character (CharacterInLocation locationId))
 
         _ ->
             interactable
@@ -291,8 +272,8 @@ moveCharacterToLocation locationId interactable =
 moveCharacterOffScreen : Maybe Interactable -> Maybe Interactable
 moveCharacterOffScreen interactable =
     case interactable of
-        Just (Character _ attrs) ->
-            Just (Character CharacterOffScreen attrs)
+        Just (Character _) ->
+            Just (Character CharacterOffScreen)
 
         _ ->
             interactable
@@ -301,16 +282,16 @@ moveCharacterOffScreen interactable =
 itemIsInInventory : String -> Manifest -> Bool
 itemIsInInventory id manifest =
     getItemsInInventory manifest
-        |> List.any (Tuple.first >> (==) id)
+        |> List.any ((==) id)
 
 
 characterIsInLocation : String -> String -> Manifest -> Bool
 characterIsInLocation character currentLocation manifest =
     getCharactersInLocation currentLocation manifest
-        |> List.any (Tuple.first >> (==) character)
+        |> List.any ((==) character)
 
 
 itemIsInLocation : String -> String -> Manifest -> Bool
 itemIsInLocation item currentLocation manifest =
     getItemsInLocation currentLocation manifest
-        |> List.any (Tuple.first >> (==) item)
+        |> List.any ((==) item)

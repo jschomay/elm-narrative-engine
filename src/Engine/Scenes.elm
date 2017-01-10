@@ -1,15 +1,12 @@
 module Engine.Scenes
     exposing
         ( init
-        , getNarration
         , getCurrentScene
-        , update
         , findMatchingRule
         )
 
 import Types exposing (..)
 import Dict exposing (Dict)
-import List.Zipper
 import Engine.Manifest exposing (..)
 
 
@@ -19,28 +16,13 @@ import Engine.Manifest exposing (..)
 init : List ( String, List ( String, Rule ) ) -> Scenes
 init scenes =
     let
-        toLiveRule { interaction, conditions, changes, narration } =
-            LiveRule interaction
-                conditions
-                changes
-                (narration
-                    |> List.map Just
-                    |> List.Zipper.fromList
-                    |> List.Zipper.withDefault Nothing
-                )
-
         insertRuleFn ( id, rule ) acc =
-            Dict.insert id (toLiveRule rule) acc
+            Dict.insert id rule acc
 
         insertSceneFn ( id, rules ) acc =
             Dict.insert id (List.foldl insertRuleFn Dict.empty rules) acc
     in
         List.foldl insertSceneFn Dict.empty scenes
-
-
-getNarration : LiveRule -> Maybe String
-getNarration rule =
-    List.Zipper.current rule.narration
 
 
 getCurrentScene : String -> Scenes -> Scene
@@ -49,29 +31,13 @@ getCurrentScene sceneName scenes =
         |> Maybe.withDefault Dict.empty
 
 
-
--- Update
-
-
-update : String -> String -> Scenes -> Scenes
-update sceneId ruleId scenes =
-    let
-        updateRuleFn rule =
-            { rule | narration = List.Zipper.next rule.narration |> Maybe.withDefault rule.narration }
-
-        updateRulesFn rules =
-            Dict.update ruleId (Maybe.map updateRuleFn) rules
-    in
-        Dict.update sceneId (Maybe.map updateRulesFn) scenes
-
-
 findMatchingRule :
     { interactableId : String
     , currentLocationId : String
     , manifest : Manifest
     , rules : Scene
     }
-    -> Maybe ( String, LiveRule )
+    -> Maybe ( String, Rule )
 findMatchingRule { interactableId, currentLocationId, manifest, rules } =
     Dict.filter
         (matchesRule
@@ -91,7 +57,7 @@ matchesRule :
     , manifest : Manifest
     }
     -> String
-    -> LiveRule
+    -> Rule
     -> Bool
 matchesRule { interactableId, currentLocationId, manifest } ruleId rule =
     matchesInteraction manifest rule.interaction interactableId

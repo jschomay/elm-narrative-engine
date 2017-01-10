@@ -1,8 +1,6 @@
 module Engine
     exposing
         ( Model
-        , Msg
-        , interactMsg
         , init
         , update
         , getCurrentLocation
@@ -10,7 +8,6 @@ module Engine
         , getCharactersInCurrentLocation
         , getItemsInInventory
         , getLocations
-        , getStoryLine
         , getEnding
         , Rule
         , InteractionMatcher
@@ -52,7 +49,7 @@ The story engine is designed to be embedded in your own Elm app, allowing for ma
 
 You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
 
-@docs Model, Msg, interactMsg, init, update, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getStoryLine, getEnding
+@docs Model, init, update, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
 
 # Defining your story world
 
@@ -113,7 +110,6 @@ You cannot change the story directly, but you can supply "commands" describing h
 -}
 
 import Types exposing (..)
-import Types exposing (..)
 import Engine.Manifest exposing (..)
 import Engine.Scenes exposing (..)
 
@@ -133,18 +129,12 @@ type Model
     = Model Types.Story
 
 
-{-| This too
--}
-type alias Msg =
-    Types.Msg
-
-
 {-| Initialize the `Model` for use when embedding in your own app.
 -}
 init :
-    { items : List ( String, Attributes )
-    , locations : List ( String, Attributes )
-    , characters : List ( String, Attributes )
+    { items : List String
+    , locations : List String
+    , characters : List String
     }
     -> List ( String, List ( String, Rule ) )
     -> List ChangeWorldCommand
@@ -156,27 +146,25 @@ init manifest scenes setup =
         , scenes = Engine.Scenes.init scenes
         , currentScene = ""
         , currentLocation = ""
-        , storyLine = []
         , theEnd = Nothing
         }
-        |> changeWorld setup
+        |> update_ setup
 
 
 {-| Get the current location to display
 -}
 getCurrentLocation :
     Model
-    -> Maybe ( String, Attributes )
+    -> String
 getCurrentLocation (Model story) =
-    Engine.Manifest.getAttributes story.currentLocation story.manifest
-        |> Maybe.map (\attrs -> ( story.currentLocation, attrs ))
+    story.currentLocation
 
 
 {-| Get a list of the items in the current location to display
 -}
 getItemsInCurrentLocation :
     Model
-    -> List ( String, Attributes )
+    -> List String
 getItemsInCurrentLocation (Model story) =
     Engine.Manifest.getItemsInLocation story.currentLocation story.manifest
 
@@ -185,7 +173,7 @@ getItemsInCurrentLocation (Model story) =
 -}
 getCharactersInCurrentLocation :
     Model
-    -> List ( String, Attributes )
+    -> List String
 getCharactersInCurrentLocation (Model story) =
     Engine.Manifest.getCharactersInLocation story.currentLocation story.manifest
 
@@ -194,7 +182,7 @@ getCharactersInCurrentLocation (Model story) =
 -}
 getItemsInInventory :
     Model
-    -> List ( String, Attributes )
+    -> List String
 getItemsInInventory (Model story) =
     Engine.Manifest.getItemsInInventory story.manifest
 
@@ -203,18 +191,9 @@ getItemsInInventory (Model story) =
 -}
 getLocations :
     Model
-    -> List ( String, Attributes )
+    -> List String
 getLocations (Model story) =
     Engine.Manifest.getLocations story.manifest
-
-
-{-| Get the story revealed so far as a list of narration items.
--}
-getStoryLine :
-    Model
-    -> List Narration
-getStoryLine (Model story) =
-    story.storyLine
 
 
 {-| Get the story ending, if it has ended.  (Set with `EndStory`)
@@ -228,89 +207,54 @@ getEnding (Model story) =
 -- Update
 
 
-{-| Construct a `Msg` letting the engine know the user interacted with something (item, location, or character)
--}
-interactMsg : String -> Msg
-interactMsg =
-    Interact
+{-| The update function you'll need if embedding the engine in your own app to progress the `Model`.
 
-
-{-| The update function you'll need if embedding the engine in your own app to progress the `Model`
+Returns the updated Engine.Model along with the id of the matching rule (if any).
 -}
 update :
-    Msg
+    String
     -> Model
-    -> Model
-update msg (Model story) =
-    case msg of
-        NoOp ->
-            Model story
+    -> ( Model, Maybe String )
+update interactableId ((Model story) as model) =
+    let
+        defaultChanges : List ChangeWorldCommand
+        defaultChanges =
+            if Engine.Manifest.isLocation interactableId story.manifest then
+                [ MoveTo interactableId ]
+            else if Engine.Manifest.isItem interactableId story.manifest then
+                [ MoveItemToInventory interactableId ]
+            else
+                []
 
-        Interact interactableId ->
-            let
-                defaultUpdate : Story
-                defaultUpdate =
-                    let
-                        changes =
-                            if Engine.Manifest.isLocation interactableId story.manifest then
-                                [ MoveTo interactableId ]
-                            else if Engine.Manifest.isItem interactableId story.manifest then
-                                [ MoveItemToInventory interactableId ]
-                            else
-                                []
-                    in
-                        Model story
-                            |> changeWorld changes
-                            |> \(Model story) -> addNarration Nothing Nothing story
+        matchingRule : Maybe ( String, Rule )
+        matchingRule =
+            findMatchingRule
+                { interactableId = interactableId
+                , currentLocationId = story.currentLocation
+                , manifest = story.manifest
+                , rules = (Engine.Scenes.getCurrentScene story.currentScene story.scenes)
+                }
 
-                addNarration : Maybe String -> Maybe String -> Story -> Story
-                addNarration ruleName narration nextStory =
-                    let
-                        newNarration =
-                            ( story.currentScene, ruleName, Engine.Manifest.getAttributes interactableId story.manifest, narration )
-                    in
-                        { nextStory | storyLine = newNarration :: story.storyLine }
+        changes : List ChangeWorldCommand
+        changes =
+            matchingRule
+                |> Maybe.map (Tuple.second >> .changes)
+                |> Maybe.withDefault defaultChanges
 
-                addHistory : Story -> Story
-                addHistory story =
-                    { story | history = story.history ++ [ interactableId ] }
-
-                updateScenes : String -> Story -> Story
-                updateScenes ruleId nextStory =
-                    let
-                        newScenes =
-                            Engine.Scenes.update story.currentScene ruleId story.scenes
-                    in
-                        { nextStory | scenes = newScenes }
-
-                updateStory : Maybe ( String, LiveRule ) -> Story
-                updateStory rule =
-                    case rule of
-                        Nothing ->
-                            defaultUpdate
-
-                        Just ( ruleId, rule ) ->
-                            Model story
-                                |> changeWorld rule.changes
-                                |> (\(Model story) -> addNarration (Just ruleId) (Engine.Scenes.getNarration rule) story)
-                                |> updateScenes ruleId
-            in
-                findMatchingRule
-                    { interactableId = interactableId
-                    , currentLocationId = story.currentLocation
-                    , manifest = story.manifest
-                    , rules = (Engine.Scenes.getCurrentScene story.currentScene story.scenes)
-                    }
-                    |> updateStory
-                    |> addHistory
-                    |> Model
+        addHistory : Model -> Model
+        addHistory (Model story) =
+            Model <| { story | history = story.history ++ [ interactableId ] }
+    in
+        ( update_ changes model |> addHistory
+        , Maybe.map Tuple.first matchingRule
+        )
 
 
-changeWorld :
+update_ :
     List ChangeWorldCommand
     -> Model
     -> Model
-changeWorld changes (Model story) =
+update_ changes (Model story) =
     let
         doChange change story =
             case change of

@@ -5,7 +5,6 @@ import Test exposing (..)
 import Expect
 import Dict
 import Types exposing (..)
-import List.Zipper
 
 
 all : Test
@@ -21,23 +20,12 @@ all =
                                     { interaction = WithAnything
                                     , conditions = []
                                     , changes = []
-                                    , narration = List.Zipper.fromList [ Just "narration1", Just "narration2" ] |> List.Zipper.withDefault Nothing
                                     }
                               )
                             , ( "scene2", Dict.empty )
                             ]
                 in
                     Expect.equal expected baseScenes
-        , test "update" <|
-            \() ->
-                Expect.equal (Just "narration2")
-                    (baseScenes
-                        |> Engine.Scenes.update "scene1" "sample rule"
-                        |> Engine.Scenes.update "scene1" "sample rule"
-                        |> Dict.get "scene1"
-                        |> Maybe.andThen (Dict.get "sample rule")
-                        |> Maybe.andThen Engine.Scenes.getNarration
-                    )
         ]
 
 
@@ -49,7 +37,6 @@ baseScenes =
               , { interaction = WithAnything
                 , conditions = []
                 , changes = []
-                , narration = [ "narration1", "narration2" ]
                 }
               )
             ]
