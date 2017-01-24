@@ -3,6 +3,7 @@ module Engine
         ( Model
         , init
         , update
+        , getCurrentScene
         , getCurrentLocation
         , getItemsInCurrentLocation
         , getCharactersInCurrentLocation
@@ -27,6 +28,7 @@ module Engine
         , itemIsNotInInventory
         , itemIsNotInLocation
         , itemIsInLocation
+        , beenThereDoneThat
         , ChangeWorldCommand
         , addLocation
         , endStory
@@ -49,7 +51,7 @@ The story engine is designed to be embedded in your own Elm app, allowing for ma
 
 You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
 
-@docs Model, init, update, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
+@docs Model, init, update, getCurrentScene, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
 
 # Defining your story world
 
@@ -98,7 +100,7 @@ The following interaction matchers can be used in the `interaction` part of the 
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
+@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
 
 
 ## Changing the story world
@@ -149,6 +151,15 @@ init manifest scenes setup =
         , theEnd = Nothing
         }
         |> update_ setup
+
+
+{-| Get the current sceen to display
+-}
+getCurrentScene :
+    Model
+    -> String
+getCurrentScene (Model story) =
+    story.currentScene
 
 
 {-| Get the current location to display
@@ -233,6 +244,7 @@ update interactableId ((Model story) as model) =
                 , currentLocationId = story.currentLocation
                 , manifest = story.manifest
                 , rules = (Engine.Scenes.getCurrentScene story.currentScene story.scenes)
+                , history = story.history
                 }
 
         changes : List ChangeWorldCommand
@@ -369,6 +381,12 @@ characterIsInLocation : String -> String -> Condition
 characterIsInLocation =
     CharacterIsInLocation
 
+
+{-| Will only match if the supplied interactable has already been interacted with.
+-}
+beenThereDoneThat : String -> Condition
+beenThereDoneThat =
+    BeenThereDoneThat
 
 {-| Will only match if the supplied character is not in the supplied location.
 

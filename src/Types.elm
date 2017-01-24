@@ -103,6 +103,7 @@ type Condition
     | ItemIsInLocation ID ID
     | ItemIsNotInInventory ID
     | ItemIsNotInLocation ID ID
+    | BeenThereDoneThat ID
 
 
 type ChangeWorldCommand

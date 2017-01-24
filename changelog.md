@@ -49,6 +49,8 @@ This release also upgrades to Elm 0.18 behind the scenes.
   - rename getInventory to getItemsInInventory
   - rename getNearByCharacters to getCharactersInLocation
 
+  - add getCurrentScene
+
   - rename withInventory to itemIsInInventory
   - rename nearCharacter to characterIsInLocation
   - rename nearItem to characterItem
@@ -56,6 +58,8 @@ This release also upgrades to Elm 0.18 behind the scenes.
   - remove unless and add itemIsNotInInventory, itemIsNotInLocation, characterIsNotInLocation, and CurrentLocationIsNot
 
   - rename isLocation to currentLocationIs
+
+  - add beenThereDoneThat
 
   - endStory now takes a string that is associated with the story ending
 

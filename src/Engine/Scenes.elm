@@ -36,14 +36,16 @@ findMatchingRule :
     , currentLocationId : String
     , manifest : Manifest
     , rules : Scene
+    , history : List ID
     }
     -> Maybe ( String, Rule )
-findMatchingRule { interactableId, currentLocationId, manifest, rules } =
+findMatchingRule { interactableId, currentLocationId, manifest, rules, history } =
     Dict.filter
         (matchesRule
             { interactableId = interactableId
             , currentLocationId = currentLocationId
             , manifest = manifest
+            , history = history
             }
         )
         rules
@@ -55,13 +57,14 @@ matchesRule :
     { interactableId : String
     , currentLocationId : String
     , manifest : Manifest
+    , history : List ID
     }
     -> String
     -> Rule
     -> Bool
-matchesRule { interactableId, currentLocationId, manifest } ruleId rule =
+matchesRule { interactableId, currentLocationId, manifest, history } ruleId rule =
     matchesInteraction manifest rule.interaction interactableId
-        && List.all (matchesCondition currentLocationId manifest) rule.conditions
+        && List.all (matchesCondition history currentLocationId manifest) rule.conditions
 
 
 matchesInteraction :
@@ -94,11 +97,12 @@ matchesInteraction manifest interactionMatcher interactableId =
 
 
 matchesCondition :
-    String
+    List ID
+    -> String
     -> Manifest
     -> Condition
     -> Bool
-matchesCondition currentLocationId manifest condition =
+matchesCondition history currentLocationId manifest condition =
     case condition of
         ItemIsInInventory item ->
             itemIsInInventory item manifest
@@ -123,3 +127,6 @@ matchesCondition currentLocationId manifest condition =
 
         CurrentLocationIsNot location ->
             not <| currentLocationId == location
+
+        BeenThereDoneThat id ->
+            List.member id history
