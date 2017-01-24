@@ -104,6 +104,7 @@ type Condition
     | ItemIsNotInInventory ID
     | ItemIsNotInLocation ID ID
     | BeenThereDoneThat ID
+    | NotBeenThereDoneThat ID
 
 
 type ChangeWorldCommand

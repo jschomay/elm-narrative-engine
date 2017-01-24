@@ -29,6 +29,7 @@ module Engine
         , itemIsNotInLocation
         , itemIsInLocation
         , beenThereDoneThat
+        , notBeenThereDoneThat
         , ChangeWorldCommand
         , addLocation
         , endStory
@@ -100,7 +101,7 @@ The following interaction matchers can be used in the `interaction` part of the 
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
+@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, notBeenThereDoneThat, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
 
 
 ## Changing the story world
@@ -387,6 +388,14 @@ characterIsInLocation =
 beenThereDoneThat : String -> Condition
 beenThereDoneThat =
     BeenThereDoneThat
+
+
+{-| Will only match if the supplied interactable has not already been interacted with.
+-}
+notBeenThereDoneThat : String -> Condition
+notBeenThereDoneThat =
+    NotBeenThereDoneThat
+
 
 {-| Will only match if the supplied character is not in the supplied location.
 

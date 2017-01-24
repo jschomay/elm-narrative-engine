@@ -130,3 +130,6 @@ matchesCondition history currentLocationId manifest condition =
 
         BeenThereDoneThat id ->
             List.member id history
+
+        NotBeenThereDoneThat id ->
+            not <| List.member id history
