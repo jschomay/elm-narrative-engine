@@ -135,20 +135,23 @@ type Model
 {-| Initialize the `Model` for use when embedding in your own app.
 -}
 init :
-    { items : List String
-    , locations : List String
-    , characters : List String
+    { manifest: { items : List String
+      , locations : List String
+      , characters : List String
+      }
+    , scenes: List ( String, List ( String, Rule ) )
+    , startingScene:  String
+    , startingLocation: String
+    , setup:  List ChangeWorldCommand
     }
-    -> List ( String, List ( String, Rule ) )
-    -> List ChangeWorldCommand
     -> Model
-init manifest scenes setup =
+init {manifest, scenes, startingScene, startingLocation, setup} =
     Model
         { history = []
         , manifest = Engine.Manifest.init manifest
         , scenes = Engine.Scenes.init scenes
-        , currentScene = ""
-        , currentLocation = ""
+        , currentScene = startingScene
+        , currentLocation = startingLocation
         , theEnd = Nothing
         }
         |> update_ setup
