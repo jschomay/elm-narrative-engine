@@ -73,6 +73,14 @@ You no longer give a starting narration or starting state or starting location, 
 - scenes get a name now
 - each rule gets a name now
 
+---
+
+ECS changes
+
+some stuff above will need to change
+
+- Rules module instead of Scenes
+- no more scenes as groups of rules concept - now scenes are just another conditional matcher
 
 
 ## 2.0.0

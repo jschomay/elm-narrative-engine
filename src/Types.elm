@@ -11,17 +11,9 @@ type alias Story =
     , currentScene : ID
     , history : List ID
     , manifest : Manifest
-    , scenes : Scenes
+    , rules : Rules
     , theEnd : Maybe String
     }
-
-
-type alias SceneName =
-    String
-
-
-type alias RuleName =
-    String
 
 
 type alias ID =
@@ -65,15 +57,8 @@ type Interactable
 -- Rules
 
 
-type alias RuleIndex =
-    Int
 
-
-type alias Scenes =
-    Dict ID Scene
-
-
-type alias Scene =
+type alias Rules =
     Dict ID Rule
 
 
@@ -105,6 +90,7 @@ type Condition
     | ItemIsNotInLocation ID ID
     | BeenThereDoneThat ID
     | NotBeenThereDoneThat ID
+    | CurrentSceneIs ID
 
 
 type ChangeWorldCommand

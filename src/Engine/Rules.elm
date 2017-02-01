@@ -1,8 +1,6 @@
-module Engine.Scenes
+module Engine.Rules
     exposing
-        ( init
-        , getCurrentScene
-        , findMatchingRule
+        ( findMatchingRule
         )
 
 import Types exposing (..)
@@ -13,37 +11,23 @@ import Engine.Manifest exposing (..)
 -- Model
 
 
-init : List ( String, List ( String, Rule ) ) -> Scenes
-init scenes =
-    let
-        insertRuleFn ( id, rule ) acc =
-            Dict.insert id rule acc
-
-        insertSceneFn ( id, rules ) acc =
-            Dict.insert id (List.foldl insertRuleFn Dict.empty rules) acc
-    in
-        List.foldl insertSceneFn Dict.empty scenes
-
-
-getCurrentScene : String -> Scenes -> Scene
-getCurrentScene sceneName scenes =
-    Dict.get sceneName scenes
-        |> Maybe.withDefault Dict.empty
 
 
 findMatchingRule :
     { interactableId : String
     , currentLocationId : String
+    , currentSceneId : String
     , manifest : Manifest
-    , rules : Scene
+    , rules : Rules
     , history : List ID
     }
     -> Maybe ( String, Rule )
-findMatchingRule { interactableId, currentLocationId, manifest, rules, history } =
+findMatchingRule { interactableId, currentLocationId, currentSceneId, manifest, rules, history } =
     Dict.filter
         (matchesRule
             { interactableId = interactableId
             , currentLocationId = currentLocationId
+            , currentSceneId = currentSceneId
             , manifest = manifest
             , history = history
             }
@@ -56,15 +40,16 @@ findMatchingRule { interactableId, currentLocationId, manifest, rules, history }
 matchesRule :
     { interactableId : String
     , currentLocationId : String
+    , currentSceneId : String
     , manifest : Manifest
     , history : List ID
     }
     -> String
     -> Rule
     -> Bool
-matchesRule { interactableId, currentLocationId, manifest, history } ruleId rule =
+matchesRule { interactableId, currentLocationId, currentSceneId, manifest, history } ruleId rule =
     matchesInteraction manifest rule.interaction interactableId
-        && List.all (matchesCondition history currentLocationId manifest) rule.conditions
+        && List.all (matchesCondition history currentLocationId currentSceneId manifest) rule.conditions
 
 
 matchesInteraction :
@@ -99,10 +84,11 @@ matchesInteraction manifest interactionMatcher interactableId =
 matchesCondition :
     List ID
     -> String
+    -> String
     -> Manifest
     -> Condition
     -> Bool
-matchesCondition history currentLocationId manifest condition =
+matchesCondition history currentLocationId currentSceneId manifest condition =
     case condition of
         ItemIsInInventory item ->
             itemIsInInventory item manifest
@@ -133,3 +119,6 @@ matchesCondition history currentLocationId manifest condition =
 
         NotBeenThereDoneThat id ->
             not <| List.member id history
+
+        CurrentSceneIs id ->
+            currentSceneId == id

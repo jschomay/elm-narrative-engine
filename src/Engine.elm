@@ -10,6 +10,7 @@ module Engine
         , getItemsInInventory
         , getLocations
         , getEnding
+        , Rules
         , Rule
         , InteractionMatcher
         , withItem
@@ -30,6 +31,7 @@ module Engine
         , itemIsInLocation
         , beenThereDoneThat
         , notBeenThereDoneThat
+        , currentSceneIs
         , ChangeWorldCommand
         , addLocation
         , endStory
@@ -88,7 +90,7 @@ TODO - UPDATE THIS!!!!!!!!!!
 
 When a rule matches multiple times (a player clicks the same story element multiple times), it will run through the list of narrations in order, one per click, repeating the final one when it reaches the end.
 
-@docs Rule
+@docs Rule, Rules
 
 ## Interaction matchers
 
@@ -101,7 +103,7 @@ The following interaction matchers can be used in the `interaction` part of the 
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, notBeenThereDoneThat, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
+@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, notBeenThereDoneThat, currentSceneIs, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
 
 
 ## Changing the story world
@@ -114,7 +116,7 @@ You cannot change the story directly, but you can supply "commands" describing h
 
 import Types exposing (..)
 import Engine.Manifest exposing (..)
-import Engine.Scenes exposing (..)
+import Engine.Rules exposing (..)
 
 
 -- Model
@@ -139,17 +141,17 @@ init :
       , locations : List String
       , characters : List String
       }
-    , scenes: List ( String, List ( String, Rule ) )
+    , rules: Rules
     , startingScene:  String
     , startingLocation: String
     , setup:  List ChangeWorldCommand
     }
     -> Model
-init {manifest, scenes, startingScene, startingLocation, setup} =
+init {manifest, rules, startingScene, startingLocation, setup} =
     Model
         { history = []
         , manifest = Engine.Manifest.init manifest
-        , scenes = Engine.Scenes.init scenes
+        , rules = rules
         , currentScene = startingScene
         , currentLocation = startingLocation
         , theEnd = Nothing
@@ -246,8 +248,9 @@ update interactableId ((Model story) as model) =
             findMatchingRule
                 { interactableId = interactableId
                 , currentLocationId = story.currentLocation
+                , currentSceneId = story.currentScene
                 , manifest = story.manifest
-                , rules = (Engine.Scenes.getCurrentScene story.currentScene story.scenes)
+                , rules = story.rules
                 , history = story.history
                 }
 
@@ -300,6 +303,11 @@ update_ changes (Model story) =
 -}
 type alias Rule =
     Types.Rule
+
+{-| All the rules in your story.
+-}
+type alias Rules =
+    Types.Rules
 
 
 {-| -}
@@ -445,6 +453,13 @@ currentLocationIs =
 currentLocationIsNot : String -> Condition
 currentLocationIsNot =
     CurrentLocationIsNot
+
+
+{-| Will only match when the supplied location is *not* the current location.
+-}
+currentSceneIs : String -> Condition
+currentSceneIs =
+    CurrentSceneIs
 
 
 {-| -}
