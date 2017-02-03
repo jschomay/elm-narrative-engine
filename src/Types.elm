@@ -57,7 +57,6 @@ type Interactable
 -- Rules
 
 
-
 type alias Rules =
     Dict ID Rule
 

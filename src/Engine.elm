@@ -137,17 +137,18 @@ type Model
 {-| Initialize the `Model` for use when embedding in your own app.
 -}
 init :
-    { manifest: { items : List String
-      , locations : List String
-      , characters : List String
-      }
-    , rules: Rules
-    , startingScene:  String
-    , startingLocation: String
-    , setup:  List ChangeWorldCommand
+    { manifest :
+        { items : List String
+        , locations : List String
+        , characters : List String
+        }
+    , rules : Rules
+    , startingScene : String
+    , startingLocation : String
+    , setup : List ChangeWorldCommand
     }
     -> Model
-init {manifest, rules, startingScene, startingLocation, setup} =
+init { manifest, rules, startingScene, startingLocation, setup } =
     Model
         { history = []
         , manifest = Engine.Manifest.init manifest
@@ -303,6 +304,7 @@ update_ changes (Model story) =
 -}
 type alias Rule =
     Types.Rule
+
 
 {-| All the rules in your story.
 -}

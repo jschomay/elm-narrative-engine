@@ -83,6 +83,8 @@ some stuff above will need to change
 - no more scenes as groups of rules concept - now scenes are just another conditional matcher
 
 
+- weighted rules matching
+
 ## 2.0.0
 
 This version adds some new features, fixes some bugs, and changes the public api significantly for design reasons (partially leading towards future versions).

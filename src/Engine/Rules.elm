@@ -1,6 +1,7 @@
 module Engine.Rules
     exposing
         ( findMatchingRule
+        , bestMatch
         )
 
 import Types exposing (..)
@@ -9,8 +10,6 @@ import Engine.Manifest exposing (..)
 
 
 -- Model
-
-
 
 
 findMatchingRule :
@@ -34,7 +33,71 @@ findMatchingRule { interactableId, currentLocationId, currentSceneId, manifest, 
         )
         rules
         |> Dict.toList
-        |> List.head
+        |> bestMatch
+
+
+{-| Feed two functions the same value and add their results. Like a Reader, but adds the results of the functions instead of composing them.
+-}
+(+>) : (a -> Int) -> (a -> Int) -> (a -> Int)
+(+>) f1 f2 a =
+    f1 a + f2 a
+
+
+bestMatch : List ( String, Rule ) -> Maybe ( String, Rule )
+bestMatch matchingRules =
+    let
+        numConstrictions rule =
+            rule
+                |> .conditions
+                |> List.length
+
+        sceneConstraint rule =
+            let
+                hasSceneConstraints condition =
+                    case condition of
+                        CurrentSceneIs _ ->
+                            True
+
+                        _ ->
+                            False
+            in
+                if List.any hasSceneConstraints rule.conditions then
+                    300
+                else
+                    0
+
+        specificity rule =
+            case rule.interaction of
+                WithItem _ ->
+                    200
+
+                WithLocation _ ->
+                    200
+
+                WithCharacter _ ->
+                    200
+
+                WithAnyItem ->
+                    100
+
+                WithAnyLocation ->
+                    100
+
+                WithAnyCharacter ->
+                    100
+
+                WithAnything ->
+                    0
+
+        weighting =
+            always 0
+                +> numConstrictions
+                +> sceneConstraint
+                +> specificity
+    in
+        List.sortBy (Tuple.second >> weighting) matchingRules
+            |> List.reverse
+            |> List.head
 
 
 matchesRule :
