@@ -177,10 +177,10 @@ matchesCondition history currentLocationId currentSceneId manifest condition =
         CurrentLocationIsNot location ->
             not <| currentLocationId == location
 
-        BeenThereDoneThat id ->
+        HasPreviouslyInteractedWith id ->
             List.member id history
 
-        NotBeenThereDoneThat id ->
+        HasNotPreviouslyInteractedWith id ->
             not <| List.member id history
 
         CurrentSceneIs id ->

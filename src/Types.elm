@@ -87,8 +87,8 @@ type Condition
     | ItemIsInLocation ID ID
     | ItemIsNotInInventory ID
     | ItemIsNotInLocation ID ID
-    | BeenThereDoneThat ID
-    | NotBeenThereDoneThat ID
+    | HasPreviouslyInteractedWith ID
+    | HasNotPreviouslyInteractedWith ID
     | CurrentSceneIs ID
 
 

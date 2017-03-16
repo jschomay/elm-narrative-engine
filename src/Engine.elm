@@ -29,8 +29,8 @@ module Engine
         , itemIsNotInInventory
         , itemIsNotInLocation
         , itemIsInLocation
-        , beenThereDoneThat
-        , notBeenThereDoneThat
+        , hasPreviouslyInteractedWith
+        , hasNotPreviouslyInteractedWith
         , currentSceneIs
         , ChangeWorldCommand
         , addLocation
@@ -103,7 +103,7 @@ The following interaction matchers can be used in the `interaction` part of the 
 
 The following condition matchers can be used in the `conditions` part of the rule record.
 
-@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , beenThereDoneThat, notBeenThereDoneThat, currentSceneIs, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
+@docs  Condition, itemIsInInventory , characterIsInLocation , itemIsInLocation , currentLocationIs, itemIsNotInInventory , hasPreviouslyInteractedWith, hasNotPreviouslyInteractedWith, currentSceneIs, characterIsNotInLocation , itemIsNotInLocation , currentLocationIsNot
 
 
 ## Changing the story world
@@ -398,16 +398,16 @@ characterIsInLocation =
 
 {-| Will only match if the supplied interactable has already been interacted with.
 -}
-beenThereDoneThat : String -> Condition
-beenThereDoneThat =
-    BeenThereDoneThat
+hasPreviouslyInteractedWith : String -> Condition
+hasPreviouslyInteractedWith =
+    HasPreviouslyInteractedWith
 
 
 {-| Will only match if the supplied interactable has not already been interacted with.
 -}
-notBeenThereDoneThat : String -> Condition
-notBeenThereDoneThat =
-    NotBeenThereDoneThat
+hasNotPreviouslyInteractedWith : String -> Condition
+hasNotPreviouslyInteractedWith =
+    HasNotPreviouslyInteractedWith
 
 
 {-| Will only match if the supplied character is not in the supplied location.

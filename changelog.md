@@ -59,8 +59,8 @@ This release also upgrades to Elm 0.18 behind the scenes.
 
   - rename isLocation to currentLocationIs
 
-  - add beenThereDoneThat
-  - add notBeenThereDoneThat
+  - add hasPreviouslyInteractedWith
+  - add hasNotPreviouslyInteractedWith
 
   - endStory now takes a string that is associated with the story ending
 
