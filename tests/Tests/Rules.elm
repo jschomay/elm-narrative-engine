@@ -4,63 +4,74 @@ import Engine.Rules
 import Test exposing (..)
 import Expect
 import Types exposing (..)
+import Dict
 
 
 all : Test
 all =
     describe "Rules"
-        [ describe "bestMatch"
+        [ describe "findMatchingRule"
             [ test "at the same specificity and without scene constraints, rules with more conditions win" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule1, rule2 ]
+                        rules =
+                            [ rule1, rule2, ruleX ]
                     in
                         Expect.equal (Just rule2) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "at the same specificity and without scene constraints, rules with more conditions win (sanity check)" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule2, rule1 ]
+                        rules =
+                            [ rule2, rule1, ruleX ]
                     in
                         Expect.equal (Just rule2) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
               -- the following would be good fuzz test candidates...
             , test "any specific-matching rule always beats any non-specific-matching rule" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule1, rule4 ]
+                        rules =
+                            [ rule1, rule4, ruleX ]
                     in
                         Expect.equal (Just rule1) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "any entity-class-matching rule always beats any anything-matching rule" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule6, rule4 ]
+                        rules =
+                            [ rule6, rule4, ruleX ]
                     in
                         Expect.equal (Just rule4) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "any scene-specific rule always beats any non-scene-specific rule" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule1, rule3, rule2 ]
+                        rules =
+                            [ rule1, rule3, rule2, ruleX ]
                     in
                         Expect.equal (Just rule3) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "scene-specific rules trump specific-matching rules" <|
                 \() ->
                     let
-                        matchingRules =
-                            [ rule5, rule2 ]
+                        rules =
+                            [ rule5, rule2, ruleX ]
                     in
                         Expect.equal (Just rule5) <|
-                            Engine.Rules.bestMatch matchingRules
+                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             ]
         ]
+
+
+story =
+    { currentLocation = "x"
+    , currentScene = "x"
+    , manifest = Dict.fromList [ ( "x", Item False ItemInInventory ) ]
+    , history = []
+    , rules = Dict.empty
+    , theEnd = Nothing
+    }
 
 
 rule1 =
@@ -118,5 +129,13 @@ rule6 =
         , ItemIsInInventory "x"
         , ItemIsInInventory "x"
         ]
+        []
+    )
+
+
+ruleX =
+    ( "7"
+    , Rule (WithItem "does not exist")
+        []
         []
     )

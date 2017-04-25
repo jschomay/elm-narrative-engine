@@ -3,6 +3,7 @@ module Engine
         ( Model
         , init
         , update
+        , chooseFrom
         , getCurrentScene
         , getCurrentLocation
         , getItemsInCurrentLocation
@@ -54,7 +55,7 @@ The story engine is designed to be embedded in your own Elm app, allowing for ma
 
 You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
 
-@docs Model, init, update, getCurrentScene, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
+@docs Model, init, update, chooseFrom, getCurrentScene, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
 
 # Defining your story world
 
@@ -117,9 +118,6 @@ You cannot change the story directly, but you can supply "commands" describing h
 import Types exposing (..)
 import Engine.Manifest exposing (..)
 import Engine.Rules exposing (..)
-
-
--- Model
 
 
 {-| A interactable story element -- and item, location, or character in your story that can be displayed and interacted with.
@@ -221,10 +219,6 @@ getEnding (Model story) =
     story.theEnd
 
 
-
--- Update
-
-
 {-| The update function you'll need if embedding the engine in your own app to progress the `Model`.
 
 Returns the updated Engine.Model along with the id of the matching rule (if any).
@@ -246,14 +240,7 @@ update interactableId ((Model story) as model) =
 
         matchingRule : Maybe ( String, Rule )
         matchingRule =
-            findMatchingRule
-                { interactableId = interactableId
-                , currentLocationId = story.currentLocation
-                , currentSceneId = story.currentScene
-                , manifest = story.manifest
-                , rules = story.rules
-                , history = story.history
-                }
+            findMatchingRule story interactableId
 
         changes : List ChangeWorldCommand
         changes =
@@ -296,8 +283,11 @@ update_ changes (Model story) =
             |> Model
 
 
-
--- API
+{-| Given a list of choices, this will return only the choice that matches the associated conditions, if any.  Useful for conditional descriptions, for example, where an item has a different description depending on where it is.
+-}
+chooseFrom : Model -> List { a | conditions : List Condition } -> Maybe { a | conditions : List Condition }
+chooseFrom (Model story) choices =
+    Engine.Rules.chooseFrom story choices
 
 
 {-| A declarative rule, describing how to advance your story and under what conditions.

@@ -21,9 +21,6 @@ import Types exposing (..)
 import Dict exposing (Dict)
 
 
--- Model
-
-
 init :
     { items : List String
     , locations : List String
@@ -159,10 +156,6 @@ isCharacter id manifest =
 
                 _ ->
                     False
-
-
-
--- Update
 
 
 update : ChangeWorldCommand -> Manifest -> Manifest

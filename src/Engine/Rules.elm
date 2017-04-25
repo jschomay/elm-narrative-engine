@@ -2,6 +2,7 @@ module Engine.Rules
     exposing
         ( findMatchingRule
         , bestMatch
+        , chooseFrom
         )
 
 import Types exposing (..)
@@ -9,31 +10,24 @@ import Dict exposing (Dict)
 import Engine.Manifest exposing (..)
 
 
--- Model
-
-
-findMatchingRule :
-    { interactableId : String
-    , currentLocationId : String
-    , currentSceneId : String
-    , manifest : Manifest
-    , rules : Rules
-    , history : List ID
-    }
-    -> Maybe ( String, Rule )
-findMatchingRule { interactableId, currentLocationId, currentSceneId, manifest, rules, history } =
-    Dict.filter
-        (matchesRule
-            { interactableId = interactableId
-            , currentLocationId = currentLocationId
-            , currentSceneId = currentSceneId
-            , manifest = manifest
-            , history = history
-            }
-        )
-        rules
+findMatchingRule : Story -> String -> Maybe ( String, Rule )
+findMatchingRule story interaction =
+    story.rules
         |> Dict.toList
+        |> List.filter (Tuple.second >> matchesRule story interaction)
+        |> List.map
+            (\( id, { interaction, conditions, changes } ) ->
+                { id = id, interaction = interaction, conditions = conditions, changes = changes }
+            )
         |> bestMatch
+            (numConstrictionsWeight
+                +> sceneConstraintWeight
+                +> specificityWeight
+            )
+        |> Maybe.map
+            (\{ id, interaction, conditions, changes } ->
+                ( id, { interaction = interaction, conditions = conditions, changes = changes } )
+            )
 
 
 {-| Feed two functions the same value and add their results. Like a Reader, but adds the results of the functions instead of composing them.
@@ -43,76 +37,70 @@ findMatchingRule { interactableId, currentLocationId, currentSceneId, manifest, 
     f1 a + f2 a
 
 
-bestMatch : List ( String, Rule ) -> Maybe ( String, Rule )
-bestMatch matchingRules =
+bestMatch : (a -> Int) -> List a -> Maybe a
+bestMatch heuristics matchingRules =
+    List.sortBy heuristics matchingRules
+        |> List.reverse
+        |> List.head
+
+
+numConstrictionsWeight : { a | conditions : List Condition } -> Int
+numConstrictionsWeight =
+    .conditions >> List.length
+
+
+sceneConstraintWeight : { a | conditions : List Condition } -> Int
+sceneConstraintWeight rule =
     let
-        numConstrictions rule =
-            rule
-                |> .conditions
-                |> List.length
+        hasSceneConstraints condition =
+            case condition of
+                CurrentSceneIs _ ->
+                    True
 
-        sceneConstraint rule =
-            let
-                hasSceneConstraints condition =
-                    case condition of
-                        CurrentSceneIs _ ->
-                            True
-
-                        _ ->
-                            False
-            in
-                if List.any hasSceneConstraints rule.conditions then
-                    300
-                else
-                    0
-
-        specificity rule =
-            case rule.interaction of
-                WithItem _ ->
-                    200
-
-                WithLocation _ ->
-                    200
-
-                WithCharacter _ ->
-                    200
-
-                WithAnyItem ->
-                    100
-
-                WithAnyLocation ->
-                    100
-
-                WithAnyCharacter ->
-                    100
-
-                WithAnything ->
-                    0
-
-        weighting =
-            always 0
-                +> numConstrictions
-                +> sceneConstraint
-                +> specificity
+                _ ->
+                    False
     in
-        List.sortBy (Tuple.second >> weighting) matchingRules
-            |> List.reverse
-            |> List.head
+        if List.any hasSceneConstraints rule.conditions then
+            300
+        else
+            0
 
 
-matchesRule :
-    { interactableId : String
-    , currentLocationId : String
-    , currentSceneId : String
-    , manifest : Manifest
-    , history : List ID
-    }
-    -> String
-    -> Rule
-    -> Bool
-matchesRule { interactableId, currentLocationId, currentSceneId, manifest, history } ruleId rule =
-    matchesInteraction manifest rule.interaction interactableId
-        && List.all (matchesCondition history currentLocationId currentSceneId manifest) rule.conditions
+specificityWeight : { a | interaction : InteractionMatcher } -> Int
+specificityWeight rule =
+    case rule.interaction of
+        WithItem _ ->
+            200
+
+        WithLocation _ ->
+            200
+
+        WithCharacter _ ->
+            200
+
+        WithAnyItem ->
+            100
+
+        WithAnyLocation ->
+            100
+
+        WithAnyCharacter ->
+            100
+
+        WithAnything ->
+            0
+
+
+chooseFrom : Story -> List { a | conditions : List Condition } -> Maybe { a | conditions : List Condition }
+chooseFrom ({ currentLocation, currentScene, manifest, history } as story) =
+    List.filter (.conditions >> List.all (matchesCondition story))
+        >> bestMatch (numConstrictionsWeight +> sceneConstraintWeight)
+
+
+matchesRule : Story -> String -> Rule -> Bool
+matchesRule ({ currentLocation, currentScene, manifest, history } as story) interaction rule =
+    matchesInteraction manifest rule.interaction interaction
+        && List.all (matchesCondition story) rule.conditions
 
 
 matchesInteraction :
@@ -145,13 +133,10 @@ matchesInteraction manifest interactionMatcher interactableId =
 
 
 matchesCondition :
-    List ID
-    -> String
-    -> String
-    -> Manifest
+    Story
     -> Condition
     -> Bool
-matchesCondition history currentLocationId currentSceneId manifest condition =
+matchesCondition { history, currentLocation, currentScene, manifest } condition =
     case condition of
         ItemIsInInventory item ->
             itemIsInInventory item manifest
@@ -163,7 +148,7 @@ matchesCondition history currentLocationId currentSceneId manifest condition =
             itemIsInLocation item location manifest
 
         CurrentLocationIs location ->
-            currentLocationId == location
+            currentLocation == location
 
         ItemIsNotInInventory item ->
             not <| itemIsInInventory item manifest
@@ -175,7 +160,7 @@ matchesCondition history currentLocationId currentSceneId manifest condition =
             not <| itemIsInLocation item location manifest
 
         CurrentLocationIsNot location ->
-            not <| currentLocationId == location
+            not <| currentLocation == location
 
         HasPreviouslyInteractedWith id ->
             List.member id history
@@ -184,4 +169,4 @@ matchesCondition history currentLocationId currentSceneId manifest condition =
             not <| List.member id history
 
         CurrentSceneIs id ->
-            currentSceneId == id
+            currentScene == id
