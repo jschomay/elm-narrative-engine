@@ -3,6 +3,7 @@ module Engine
         ( Model
         , init
         , update
+        , changeWorld
         , chooseFrom
         , getCurrentScene
         , getCurrentLocation
@@ -53,7 +54,7 @@ The story engine is designed to be embedded in your own Elm app, allowing for ma
 
 You can base your app on the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git).
 
-@docs Model, init, update, chooseFrom, getCurrentScene, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
+@docs Model, init, update, changeWorld, chooseFrom, getCurrentScene, getCurrentLocation, getItemsInCurrentLocation, getCharactersInCurrentLocation, getItemsInInventory, getLocations, getEnding
 
 # Defining your story world
 
@@ -153,7 +154,7 @@ init { manifest, rules, startingScene, startingLocation, setup } =
         , currentLocation = startingLocation
         , theEnd = Nothing
         }
-        |> update_ setup
+        |> changeWorld setup
 
 
 {-| Get the current sceen to display
@@ -220,6 +221,8 @@ getEnding (Model story) =
 {-| The update function you'll need if embedding the engine in your own app to progress the `Model`.
 
 Returns the updated Engine.Model along with the id of the matching rule (if any).
+
+This will apply any matching rules, or perform some default changes such as adding an item to inventory or moving to a location if no rules match.  It also adds the interaction to the history (which is used for `hasPreviouslyInteractedWith`, save/load, and undo).
 -}
 update :
     String
@@ -250,16 +253,22 @@ update interactableId ((Model story) as model) =
         addHistory (Model story) =
             Model <| { story | history = story.history ++ [ interactableId ] }
     in
-        ( update_ changes model |> addHistory
+        ( changeWorld changes model |> addHistory
         , Maybe.map Tuple.first matchingRule
         )
 
 
-update_ :
+{-| A way to change the story world directly, rather than responding to a player's interaction.
+
+For example, you could change the current location in the story based on browser geolocation events.  This is also used to set up any initial story state.
+
+If you are simply responding to a player's interaction, use `Engine.update` instead to capture the story history (needed for `hasPreviouslyInteractedWith`, save/load, and undo.)
+-}
+changeWorld :
     List ChangeWorldCommand
     -> Model
     -> Model
-update_ changes (Model story) =
+changeWorld changes (Model story) =
     let
         doChange change story =
             case change of
