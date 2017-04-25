@@ -14,9 +14,7 @@ module Engine
         , Rules
         , Rule
         , InteractionMatcher
-        , withItem
-        , withLocation
-        , withCharacter
+        , with
         , withAnything
         , withAnyItem
         , withAnyLocation
@@ -77,7 +75,7 @@ TODO - UPDATE THIS!!!!!!!!!!
 
     scene1 : List Engine.Rule
     scene1 =
-        [ { interaction = withCharacter Harry
+        [ { interaction = with Harry
           , conditions = [ currentLocationIs Garden ]
           , changes = [ moveCharacterToLocation Harry Marsh, addInventory NoteFromHarry ]
           , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
@@ -97,7 +95,7 @@ When a rule matches multiple times (a player clicks the same story element multi
 
 The following interaction matchers can be used in the `interaction` part of the rule record.
 
-@docs InteractionMatcher, withItem, withLocation, withCharacter, withAnything, withAnyItem, withAnyLocation, withAnyCharacter
+@docs InteractionMatcher, with, withAnything, withAnyItem, withAnyLocation, withAnyCharacter
 
 
 ## Conditions
@@ -307,42 +305,28 @@ type alias InteractionMatcher =
     Types.InteractionMatcher
 
 
-{-| Will only match the `interaction` part of a story rule if the player interacted with the specified item.
+{-| Will only match the `interaction` part of a story rule if the player interacted with the specified entity id.
 -}
-withItem : String -> InteractionMatcher
-withItem item =
-    WithItem item
+with : String -> InteractionMatcher
+with item =
+    With item
 
 
-{-| Will only match the `interaction` part of a story rule if the player interacted with the specified location.
--}
-withLocation : String -> InteractionMatcher
-withLocation location =
-    WithLocation location
-
-
-{-| Will only match the `interaction` part of a story rule if the player interacted with the specified character.
--}
-withCharacter : String -> InteractionMatcher
-withCharacter character =
-    WithCharacter character
-
-
-{-| Will match the `interaction` part of a story rule if the player interacted with any item (be careful about the the order and conditions of your rules since this matcher is so broad).
+{-| Will match the `interaction` part of a story rule if the player interacted with any item (be careful about the conditions of your rules since this matcher is so broad).
 -}
 withAnyItem : InteractionMatcher
 withAnyItem =
     WithAnyItem
 
 
-{-| Will match the `interaction` part of a story rule if the player interacted with any location (be careful about the the order and conditions of your rules since this matcher is so broad).
+{-| Will match the `interaction` part of a story rule if the player interacted with any location (be careful about the conditions of your rules since this matcher is so broad).
 -}
 withAnyLocation : InteractionMatcher
 withAnyLocation =
     WithAnyLocation
 
 
-{-| Will match the `interaction` part of a story rule if the player interacted with any character (be careful about the the order and conditions of your rules since this matcher is so broad).
+{-| Will match the `interaction` part of a story rule if the player interacted with any character (be careful about the conditions of your rules since this matcher is so broad).
 -}
 withAnyCharacter : InteractionMatcher
 withAnyCharacter =

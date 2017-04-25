@@ -69,13 +69,7 @@ sceneConstraintWeight rule =
 specificityWeight : { a | interaction : InteractionMatcher } -> Int
 specificityWeight rule =
     case rule.interaction of
-        WithItem _ ->
-            200
-
-        WithLocation _ ->
-            200
-
-        WithCharacter _ ->
+        With _ ->
             200
 
         WithAnyItem ->
@@ -122,14 +116,8 @@ matchesInteraction manifest interactionMatcher interactableId =
         WithAnyCharacter ->
             isCharacter interactableId manifest
 
-        WithItem item ->
-            item == interactableId
-
-        WithLocation location ->
-            location == interactableId
-
-        WithCharacter character ->
-            character == interactableId
+        With id ->
+            id == interactableId
 
 
 matchesCondition :

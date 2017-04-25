@@ -76,7 +76,7 @@ story =
 
 rule1 =
     ( "1"
-    , Rule (WithItem "x")
+    , Rule (With "x")
         [ CurrentLocationIs "x" ]
         []
     )
@@ -85,7 +85,7 @@ rule1 =
 rule2 =
     ( "2"
     , Rule
-        (WithItem "x")
+        (With "x")
         [ CurrentLocationIs "x"
         , ItemIsInInventory "x"
         ]
@@ -96,7 +96,7 @@ rule2 =
 rule3 =
     ( "3"
     , Rule
-        (WithItem "x")
+        (With "x")
         [ CurrentSceneIs "x" ]
         []
     )
@@ -135,7 +135,7 @@ rule6 =
 
 ruleX =
     ( "7"
-    , Rule (WithItem "does not exist")
+    , Rule (With "does not exist")
         []
         []
     )

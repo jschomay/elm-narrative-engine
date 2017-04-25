@@ -73,9 +73,7 @@ type InteractionMatcher
     | WithAnyItem
     | WithAnyLocation
     | WithAnyCharacter
-    | WithItem ID
-    | WithLocation ID
-    | WithCharacter ID
+    | With ID
 
 
 type Condition
