@@ -131,30 +131,24 @@ type Model
     = Model Types.Story
 
 
-{-| Initialize the `Model` for use when embedding in your own app.
+{-| Initialize the `Model` for use when embedding in your own app.  Provide your "manifest" of all of the items, characters, and locations in your story, and the rules that govern the story.  You will most likely want to call `changeWorld` immediately after `init` to setup your initial story state (the current scene, location, and any initial placements of items or characters and known locations)
 -}
 init :
-    { manifest :
-        { items : List String
-        , locations : List String
-        , characters : List String
-        }
-    , rules : Rules
-    , startingScene : String
-    , startingLocation : String
-    , setup : List ChangeWorldCommand
+    { items : List String
+    , locations : List String
+    , characters : List String
     }
+    -> Rules
     -> Model
-init { manifest, rules, startingScene, startingLocation, setup } =
+init manifest rules =
     Model
         { history = []
         , manifest = Engine.Manifest.init manifest
         , rules = rules
-        , currentScene = startingScene
-        , currentLocation = startingLocation
+        , currentScene = ""
+        , currentLocation = ""
         , theEnd = Nothing
         }
-        |> changeWorld setup
 
 
 {-| Get the current sceen to display
