@@ -4,86 +4,20 @@ Follow along with development on the [developement blog](http://blog.elmnarrativ
 
 ## 3.0.0
 
-Many breaking changes this time around breaking the view layer out of the story engine.  Now, instead of loading your "story config" into the engine, you embed the engine in your own app, and provide your own view layer (with the help of many new accessor functions).  See the [interactive story starter repo](https://github.com/jschomay/elm-interactive-story-starter.git) to see how that works.
+This version is a major architectural shift from previous versions, allowing for extreme flexibility.  Some notable changes include:
 
-Also, this release changes the top level module namespace from `Story` to `Engine`.
+- updated to Elm 0.18
+- top-level module namespace changed to `Engine`
+- the view layer has been completely removed from the engine.  The engine solely handles maintaining the story world state by matching interactions against rule sets.
+- exposes many accessor functions for the client to use as needed
+- rules are now matched based on a weighting scale to pick a winner when multiple match
+- some new/different matchers and change world commands
+- replaced `withItem`/`withCharacter`/`withLocation` with simply `with`, as they all have the same signature
+- ids are now Strings instead of types, allowing for dynamic generation and serialization, and also fitting well with the Entity/Component/System pattern
+- `changeWold` function to directly alter the story world
+- `chooseFrom` function to encode conditional choices in data
+- scenes are not just another condition rather than a grouping of rules
 
-This release also upgrades to Elm 0.18 behind the scenes.
-
-### Changes
-
-- removed `load` and added `init` and `update` for use in your own app's model and update functions
-- removed functions and types to do with defining interactables, which now get loaded as a "manifest" via `init`
-  - `world`
-  - `World`
-  - `ItemInfo`
-  - `LocationInfo`
-  - `CharacterInfo`
-  - `itemInfo`
-  - `locationInfo`
-  - `characterInfo`
-- exposed opaque types `Engine.Model` and `Engine.Msg` for the type signatures in your app
-- added functions to generate `Engine.Msg` messages:
-  - `itemMsg`
-  - `locationMsg`
-  - `characterMsg`
-  - `rollbackMsg`
-- added many accessor functions:
-  - `getCurrentLocation`
-  - `getInventory`
-  - `getLocations`
-  - `getNearByCharacters`
-  - `getNearByProps`
-  - `getStoryLine`
-
-
-  - removed RemoveItem and RemoveInventory in favor of MoveItemOffScreen
-  - renamed PlaceItem to MoveItemToLocation
-  - add MoveItemToLocationFixed
-  - renamed AddInventory to MoveItemToInventory
-  - renamed RemoveCharacter to MoveCharacterOffScreen
-  - renamed MoveCharacter to MoveCharacterToLocation
-
-  - rename getInventory to getItemsInInventory
-  - rename getNearByItems to getItemsInLocation
-  - rename getInventory to getItemsInInventory
-  - rename getNearByCharacters to getCharactersInLocation
-
-  - add getCurrentScene
-
-  - rename withInventory to itemIsInInventory
-  - rename nearCharacter to characterIsInLocation
-  - rename nearItem to characterItem
-
-  - remove unless and add itemIsNotInInventory, itemIsNotInLocation, characterIsNotInLocation, and CurrentLocationIsNot
-
-  - rename isLocation to currentLocationIs
-
-  - add hasPreviouslyInteractedWith
-  - add hasNotPreviouslyInteractedWith
-
-  - endStory now takes a string that is associated with the story ending
-
-Really changed everything to let the engine store the story state as stateful manifest and scenes, along with some other story state in the model - no more types, just strings for ids, which you have to define.
-You no longer give a starting narration or starting state or starting location, you just give a list of commands to do.  Be sure to include a loadScene and moveTo command or the story won't work!  If you want a starting narration, just add that yourself in the view.
-
-
-- narration has many values to use in the view, but the initial idea of a narration is now a maybe, which the view can handle as it sees fit (the interactable attributes are availabel as a good default option)
-
-- scenes get a name now
-- each rule gets a name now
-
----
-
-ECS changes
-
-some stuff above will need to change
-
-- Rules module instead of Scenes
-- no more scenes as groups of rules concept - now scenes are just another conditional matcher
-
-
-- weighted rules matching
 
 ## 2.0.0
 

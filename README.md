@@ -1,68 +1,47 @@
 # Elm Narrative Engine
 
-A framework for telling interactive stories, based on specific design principles:
+A unique tool for telling interactive stories.
 
-For the readers/players:
+## Features
 
-* No command line interface (having to type "go north" or "inspect umbrella"), just simple point-and-click
-* More interaction and agency than simply choosing which branch to follow
-* Avoid clunky mechanics such as spacial navigation and object manipulation, and instead focus on the story
-
-For authors:
-
-* Simple to use - focus on the story, not on the code
-* Declarative, data-driven approach - describe your story world and how it changes over time, the framework will take care of rest
-
-## Getting Started
-
-See https://github.com/jschomay/elm-interactive-story-starter.git for everything you need to get started, including an example story you can modify with your own content.
-
-## Basic Usage
-
-Step 1: Define your "story interactables" (items, locations, and characters)
-
-```elm
-type MyItem
-    = Umbrella
-    ...
-
-
-items : MyItem -> ItemInfo
-items item =
-    case item of
-        Umbrella ->
-            itemInfo "Umbrella" "Your trusty umbrella, you bring it everywhere with you."
-    ...
-```
-
-Step 2: Define your declarative "story rules," broken up into "scenes"
-
-```elm
-scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
-scene1 =
-    [ { interaction = withCharacter Harry
-      , conditions = [ inLocation Garden ]
-      , changes = [ moveCharacter Harry Marsh, addInventory NoteFromHarry ]
-      , narration = [ "He gives you a note, then runs off.", "I wonder what he wants?" ]
-      }
-    , { interaction = withInventory NoteFromHarry
-      , conditions = []
-      , changes = [ addLocation Marsh ]
-      , narration = [ "It says, \"*Meet me in the marsh.*\"" ]
-      }
-    ]
-```
-
-Step 3: Load your story interactables and rules into the framework
-
-```elm
-Story.load info world setup
-```
+- Context-based rule-matching system for immersive and responsive stories
+- Extremely flexible and extensible, see the sample stories below for examples!
+- Total separation of logic, presentation, and content
+- Data-driven and declarative
+- Designed to work with the Entity Component System pattern
+- Possible to integrate with other tools including visual editors and other game frameworks
 
 ## Sample Stories
 
-[See sample stories here](http://blog.elmnarrativeengine.com/sample-stories/)
+[Play sample stories made with the Elm Narrative Engine](http://blog.elmnarrativeengine.com/sample-stories/)
+
+## Getting Started
+
+The Elm Narrative Engine is written in the [Elm language](http://elm-lang.org), and is intended to be embedded in an Elm client app.  If you are a developer, this allows for great customization.
+
+You can also get started by cloning https://github.com/jschomay/elm-interactive-story-starter.git as a template that you can modify to get going on your own story.
+
+The main story design happens by designing your rule sets, which look similar to this:
+
+        rules =
+           [ { interaction = with "River"
+             , conditions =
+                  [ currentLocationIs "Cottage"
+                  , itemIsInInventory "Cape"
+                  , itemIsInInventory "Basket of food"
+                  ]
+             , changes =
+                  [ moveTo "River"
+                  , moveCharacterToLocation "Little Red Riding Hood" "River"
+                  ]
+             }
+          -- etc
+          ]
+
+See the [full api and documentation](http://package.elm-lang.org/packages/jschomay/elm-narrative-engine/latest) for more details.
+
+I am also currently working on a visual editor that would allow non-developers to simply pick a theme and build their world and rules in a custom online text editor.
 
 ## Development blog
 
-[Follow along with the development here](http://blog.elmnarrativeengine.com)
+[Follow the development blog](http://blog.elmnarrativeengine.com) for more insights, tutorials, techniques, and information on further development of the engine and tooling.
