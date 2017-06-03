@@ -1,5 +1,5 @@
 {
-    "version": "2.0.0",
+    "version": "3.0.0",
     "summary": "Interactive storytelling framework",
     "repository": "https://github.com/jschomay/elm-narrative-engine.git",
     "license": "BSD3",
