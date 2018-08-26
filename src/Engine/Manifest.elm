@@ -1,24 +1,23 @@
-module Engine.Manifest
-    exposing
-        ( init
-        , character
-        , characterIsInLocation
-        , getCharactersInLocation
-        , getItemsInLocation
-        , getItemsInInventory
-        , getLocations
-        , isCharacter
-        , isItem
-        , isLocation
-        , item
-        , itemIsInInventory
-        , itemIsInLocation
-        , location
-        , update
-        )
+module Engine.Manifest exposing
+    ( character
+    , characterIsInLocation
+    , getCharactersInLocation
+    , getItemsInInventory
+    , getItemsInLocation
+    , getLocations
+    , init
+    , isCharacter
+    , isItem
+    , isLocation
+    , item
+    , itemIsInInventory
+    , itemIsInLocation
+    , location
+    , update
+    )
 
-import Types exposing (..)
 import Dict exposing (Dict)
+import Types exposing (..)
 
 
 init :
@@ -30,15 +29,15 @@ init :
 init { items, locations, characters } =
     let
         insertFn interactableConstructor id acc =
-            Dict.insert id (interactableConstructor) acc
+            Dict.insert id interactableConstructor acc
 
         foldFn interactableConstructor interactableList acc =
             List.foldr (insertFn interactableConstructor) acc interactableList
     in
-        Dict.empty
-            |> foldFn item items
-            |> foldFn location locations
-            |> foldFn character characters
+    Dict.empty
+        |> foldFn item items
+        |> foldFn location locations
+        |> foldFn character characters
 
 
 item : Interactable
@@ -67,8 +66,8 @@ getItemsInInventory manifest =
                 _ ->
                     Nothing
     in
-        Dict.toList manifest
-            |> List.filterMap isInInventory
+    Dict.toList manifest
+        |> List.filterMap isInInventory
 
 
 getLocations : Manifest -> List String
@@ -82,8 +81,8 @@ getLocations manifest =
                 _ ->
                     Nothing
     in
-        Dict.toList manifest
-            |> List.filterMap isShownLocation
+    Dict.toList manifest
+        |> List.filterMap isShownLocation
 
 
 getCharactersInLocation : String -> Manifest -> List String
@@ -91,17 +90,18 @@ getCharactersInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
-                Character (CharacterInLocation location) ->
-                    if location == locationId then
+                Character (CharacterInLocation location_) ->
+                    if location_ == locationId then
                         Just id
+
                     else
                         Nothing
 
                 _ ->
                     Nothing
     in
-        Dict.toList manifest
-            |> List.filterMap isInLocation
+    Dict.toList manifest
+        |> List.filterMap isInLocation
 
 
 getItemsInLocation : String -> Manifest -> List String
@@ -109,53 +109,57 @@ getItemsInLocation locationId manifest =
     let
         isInLocation ( id, interactable ) =
             case interactable of
-                Item _ (ItemInLocation location) ->
-                    if location == locationId then
+                Item _ (ItemInLocation location_) ->
+                    if location_ == locationId then
                         Just id
+
                     else
                         Nothing
 
                 _ ->
                     Nothing
     in
-        Dict.toList manifest
-            |> List.filterMap isInLocation
+    Dict.toList manifest
+        |> List.filterMap isInLocation
 
 
 isItem : String -> Manifest -> Bool
 isItem id manifest =
     Dict.get id manifest
-        |> \interactable ->
-            case interactable of
-                Just (Item _ _) ->
-                    True
+        |> (\interactable ->
+                case interactable of
+                    Just (Item _ _) ->
+                        True
 
-                _ ->
-                    False
+                    _ ->
+                        False
+           )
 
 
 isLocation : String -> Manifest -> Bool
 isLocation id manifest =
     Dict.get id manifest
-        |> \interactable ->
-            case interactable of
-                Just (Location _) ->
-                    True
+        |> (\interactable ->
+                case interactable of
+                    Just (Location _) ->
+                        True
 
-                _ ->
-                    False
+                    _ ->
+                        False
+           )
 
 
 isCharacter : String -> Manifest -> Bool
 isCharacter id manifest =
     Dict.get id manifest
-        |> \interactable ->
-            case interactable of
-                Just (Character _) ->
-                    True
+        |> (\interactable ->
+                case interactable of
+                    Just (Character _) ->
+                        True
 
-                _ ->
-                    False
+                    _ ->
+                        False
+           )
 
 
 update : ChangeWorldCommand -> Manifest -> Manifest
@@ -279,12 +283,12 @@ itemIsInInventory id manifest =
 
 
 characterIsInLocation : String -> String -> Manifest -> Bool
-characterIsInLocation character currentLocation manifest =
+characterIsInLocation character_ currentLocation manifest =
     getCharactersInLocation currentLocation manifest
-        |> List.any ((==) character)
+        |> List.any ((==) character_)
 
 
 itemIsInLocation : String -> String -> Manifest -> Bool
-itemIsInLocation item currentLocation manifest =
+itemIsInLocation item_ currentLocation manifest =
     getItemsInLocation currentLocation manifest
-        |> List.any ((==) item)
+        |> List.any ((==) item_)

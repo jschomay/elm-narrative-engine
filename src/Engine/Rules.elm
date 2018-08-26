@@ -1,45 +1,36 @@
-module Engine.Rules
-    exposing
-        ( findMatchingRule
-        , bestMatch
-        , chooseFrom
-        )
+module Engine.Rules exposing
+    ( bestMatch
+    , chooseFrom
+    , findMatchingRule
+    )
 
-import Types exposing (..)
 import Dict exposing (Dict)
 import Engine.Manifest exposing (..)
+import Types exposing (..)
 
 
 findMatchingRule : Story -> String -> Maybe ( String, Rule )
-findMatchingRule story interaction =
+findMatchingRule story interactableId =
     story.rules
         |> Dict.toList
-        |> List.filter (Tuple.second >> matchesRule story interaction)
-        |> List.map
-            (\( id, { interaction, conditions, changes } ) ->
-                { id = id, interaction = interaction, conditions = conditions, changes = changes }
-            )
+        |> List.filter (Tuple.second >> matchesRule story interactableId)
         |> bestMatch
             (numConstrictionsWeight
-                +> sceneConstraintWeight
-                +> specificityWeight
-            )
-        |> Maybe.map
-            (\{ id, interaction, conditions, changes } ->
-                ( id, { interaction = interaction, conditions = conditions, changes = changes } )
+                |> tallyWith sceneConstraintWeight
+                |> tallyWith specificityWeight
             )
 
 
 {-| Feed two functions the same value and add their results. Like a Reader, but adds the results of the functions instead of composing them.
 -}
-(+>) : (a -> Int) -> (a -> Int) -> (a -> Int)
-(+>) f1 f2 a =
+tallyWith : (a -> Int) -> (a -> Int) -> (a -> Int)
+tallyWith f1 f2 a =
     f1 a + f2 a
 
 
-bestMatch : (a -> Int) -> List a -> Maybe a
+bestMatch : (a -> Int) -> List ( String, a ) -> Maybe ( String, a )
 bestMatch heuristics matchingRules =
-    List.sortBy heuristics matchingRules
+    List.sortBy (Tuple.second >> heuristics) matchingRules
         |> List.reverse
         |> List.head
 
@@ -60,10 +51,11 @@ sceneConstraintWeight rule =
                 _ ->
                     False
     in
-        if List.any hasSceneConstraints rule.conditions then
-            300
-        else
-            0
+    if List.any hasSceneConstraints rule.conditions then
+        300
+
+    else
+        0
 
 
 specificityWeight : { a | interaction : InteractionMatcher } -> Int
@@ -86,9 +78,12 @@ specificityWeight rule =
 
 
 chooseFrom : Story -> List { a | conditions : List Condition } -> Maybe { a | conditions : List Condition }
-chooseFrom ({ currentLocation, currentScene, manifest, history } as story) =
-    List.filter (.conditions >> List.all (matchesCondition story))
-        >> bestMatch (numConstrictionsWeight +> sceneConstraintWeight)
+chooseFrom ({ currentLocation, currentScene, manifest, history } as story) conditions =
+    conditions
+        |> List.filter (.conditions >> List.all (matchesCondition story))
+        |> List.map (Tuple.pair "")
+        |> bestMatch (tallyWith numConstrictionsWeight sceneConstraintWeight)
+        |> Maybe.map Tuple.second
 
 
 matchesRule : Story -> String -> Rule -> Bool

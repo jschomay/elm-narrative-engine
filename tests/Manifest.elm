@@ -1,15 +1,15 @@
-module Tests.Manifest exposing (all)
+module Manifest exposing (all)
 
-import Engine.Manifest
-import Test exposing (..)
-import Expect
 import Dict
+import Engine.Manifest
+import Expect
+import Test exposing (..)
 import Types exposing (..)
 
 
 all : Test
 all =
-    describe "Manifest"
+    describe "Manifest tests"
         [ test "init" <|
             \() ->
                 let
@@ -23,7 +23,7 @@ all =
                             , ( "character2", Engine.Manifest.character )
                             ]
                 in
-                    Expect.equal expected baseManifest
+                Expect.equal expected baseManifest
         , describe "fixed items" <|
             [ test "cannot be moved to inventory" <|
                 \() ->
@@ -33,11 +33,11 @@ all =
                                 |> Engine.Manifest.update (MoveItemToLocationFixed "item1" "location1")
                                 |> Engine.Manifest.update (MoveItemToInventory "item1")
                     in
-                        Expect.equal
-                            ( (Engine.Manifest.getItemsInInventory manifest)
-                            , Engine.Manifest.getItemsInLocation "location1" manifest
-                            )
-                            ( [], [ ("item1") ] )
+                    Expect.equal
+                        ( Engine.Manifest.getItemsInInventory manifest
+                        , Engine.Manifest.getItemsInLocation "location1" manifest
+                        )
+                        ( [], [ "item1" ] )
             ]
         , describe "getters"
             [ test "getInventory" <|
@@ -46,14 +46,14 @@ all =
                         manifest =
                             Engine.Manifest.update (MoveItemToInventory "item2") baseManifest
                     in
-                        Expect.equal (Engine.Manifest.getItemsInInventory manifest) [ ("item2") ]
+                    Expect.equal (Engine.Manifest.getItemsInInventory manifest) [ "item2" ]
             , test "getLocations" <|
                 \() ->
                     let
                         manifest =
                             Engine.Manifest.update (AddLocation "location2") baseManifest
                     in
-                        Expect.equal (Engine.Manifest.getLocations manifest) [ ("location2") ]
+                    Expect.equal (Engine.Manifest.getLocations manifest) [ "location2" ]
             , test "getCharactersInLocation" <|
                 \() ->
                     let
@@ -62,8 +62,8 @@ all =
                                 |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location1")
                                 |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location2")
                     in
-                        Expect.equal (Engine.Manifest.getCharactersInLocation "location2" manifest)
-                            [ ("character1") ]
+                    Expect.equal (Engine.Manifest.getCharactersInLocation "location2" manifest)
+                        [ "character1" ]
             , test "getItemsInCurrentLocation" <|
                 \() ->
                     let
@@ -72,8 +72,8 @@ all =
                                 |> Engine.Manifest.update (MoveItemToLocation "item1" "location1")
                                 |> Engine.Manifest.update (MoveItemToLocation "item2" "location2")
                     in
-                        Expect.equal (Engine.Manifest.getItemsInLocation "location2" manifest)
-                            [ ("item2") ]
+                    Expect.equal (Engine.Manifest.getItemsInLocation "location2" manifest)
+                        [ "item2" ]
             ]
         , describe "matchers"
             [ test "itemIsInInventory" <|
@@ -83,7 +83,7 @@ all =
                             baseManifest
                                 |> Engine.Manifest.update (MoveItemToInventory "item2")
                     in
-                        Expect.equal (Engine.Manifest.itemIsInInventory "item2" manifest) True
+                    Expect.equal (Engine.Manifest.itemIsInInventory "item2" manifest) True
             , test "characterIsInLocation" <|
                 \() ->
                     let
@@ -92,7 +92,7 @@ all =
                                 |> Engine.Manifest.update (MoveCharacterToLocation "character1" "location1")
                                 |> Engine.Manifest.update (MoveTo "location1")
                     in
-                        Expect.equal (Engine.Manifest.characterIsInLocation "character1" "location1" manifest) True
+                    Expect.equal (Engine.Manifest.characterIsInLocation "character1" "location1" manifest) True
             , test "itemIsInLocation" <|
                 \() ->
                     let
@@ -101,26 +101,26 @@ all =
                                 |> Engine.Manifest.update (MoveItemToLocation "item1" "location1")
                                 |> Engine.Manifest.update (MoveTo "location1")
                     in
-                        Expect.equal (Engine.Manifest.itemIsInLocation "item1" "location1" manifest) True
+                    Expect.equal (Engine.Manifest.itemIsInLocation "item1" "location1" manifest) True
             ]
         ]
 
 
 items =
-    [ ("item1")
-    , ("item2")
+    [ "item1"
+    , "item2"
     ]
 
 
 locations =
-    [ ("location1")
-    , ("location2")
+    [ "location1"
+    , "location2"
     ]
 
 
 characters =
-    [ ("character1")
-    , ("character2")
+    [ "character1"
+    , "character2"
     ]
 
 

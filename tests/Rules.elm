@@ -1,15 +1,15 @@
-module Tests.Rules exposing (all)
+module Rules exposing (all)
 
-import Engine.Rules
-import Test exposing (..)
-import Expect
-import Types exposing (..)
 import Dict
+import Engine.Rules
+import Expect
+import Test exposing (..)
+import Types exposing (..)
 
 
 all : Test
 all =
-    describe "Rules"
+    describe "Rule tests"
         [ describe "findMatchingRule"
             [ test "at the same specificity and without scene constraints, rules with more conditions win" <|
                 \() ->
@@ -17,49 +17,50 @@ all =
                         rules =
                             [ rule1, rule2, ruleX ]
                     in
-                        Expect.equal (Just rule2) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just rule2) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "at the same specificity and without scene constraints, rules with more conditions win (sanity check)" <|
                 \() ->
                     let
                         rules =
                             [ rule2, rule1, ruleX ]
                     in
-                        Expect.equal (Just rule2) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-              -- the following would be good fuzz test candidates...
+                    Expect.equal (Just rule2) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+
+            -- the following would be good fuzz test candidates...
             , test "any specific-matching rule always beats any non-specific-matching rule" <|
                 \() ->
                     let
                         rules =
                             [ rule1, rule4, ruleX ]
                     in
-                        Expect.equal (Just rule1) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just rule1) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "any entity-class-matching rule always beats any anything-matching rule" <|
                 \() ->
                     let
                         rules =
                             [ rule6, rule4, ruleX ]
                     in
-                        Expect.equal (Just rule4) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just rule4) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "any scene-specific rule always beats any non-scene-specific rule" <|
                 \() ->
                     let
                         rules =
                             [ rule1, rule3, rule2, ruleX ]
                     in
-                        Expect.equal (Just rule3) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just rule3) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             , test "scene-specific rules trump specific-matching rules" <|
                 \() ->
                     let
                         rules =
                             [ rule5, rule2, ruleX ]
                     in
-                        Expect.equal (Just rule5) <|
-                            Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just rule5) <|
+                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             ]
         ]
 
@@ -105,7 +106,7 @@ rule3 =
 rule4 =
     ( "4"
     , Rule
-        (WithAnyItem)
+        WithAnyItem
         [ CurrentLocationIs "x"
         , ItemIsInInventory "x"
         ]
@@ -115,7 +116,7 @@ rule4 =
 
 rule5 =
     ( "5"
-    , Rule (WithAnyItem)
+    , Rule WithAnyItem
         [ CurrentSceneIs "x" ]
         []
     )
@@ -124,7 +125,7 @@ rule5 =
 rule6 =
     ( "6"
     , Rule
-        (WithAnything)
+        WithAnything
         [ CurrentLocationIs "x"
         , ItemIsInInventory "x"
         , ItemIsInInventory "x"
