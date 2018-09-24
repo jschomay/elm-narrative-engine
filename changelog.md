@@ -2,6 +2,13 @@
 
 Follow along with development on the [developement blog](http://blog.elmnarrativeengine.com/).
 
+## 3.0.1
+
+Update for Elm 0.19!
+
+No api changes
+
+
 ## 3.0.0
 
 This version is a major architectural shift from previous versions, allowing for extreme flexibility.  Some notable changes include:
