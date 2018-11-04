@@ -16,6 +16,7 @@ entities =
         |> addTag "item"
     , entity "character"
         |> setStat "strength" 5
+        |> setLink "holding" "item1"
     , entity "location"
     ]
 
@@ -31,17 +32,46 @@ all =
         , tagsTests
         , propertiesTests
         , statTests
-
-        -- , linkTests
-        -- , queryTests
+        , linkTests
+        , queryTests
         ]
 
 
 storeTests : Test
 storeTests =
-    test "basic store creation" <|
-        \() ->
-            Expect.equal (Dict.size store) (List.length entities)
+    describe "store"
+        [ test "creation" <|
+            \() ->
+                Expect.equal (Dict.size store) (List.length entities)
+        , describe "updating"
+            [ test "basic" <|
+                \() ->
+                    Expect.true "update didn't work"
+                        (update "item1" (addTag "updated") store |> hasTag "item1" "updated")
+            , test "removeTag" <|
+                \() ->
+                    Expect.false "update didn't work"
+                        (update "item1" (removeTag "special") store |> hasTag "item1" "special")
+            , test "incStat" <|
+                \() ->
+                    Expect.equal (Just 7)
+                        (update "character" (incStat "strength" 2) store |> getStat "character" "strength")
+            , test "decStat" <|
+                \() ->
+                    Expect.equal (Just 3)
+                        (update "character" (decStat "strength" 2) store |> getStat "character" "strength")
+            , test "removeTag when tag not present does nothing" <|
+                -- TODO should it do something else?
+                \() ->
+                    Expect.equal store
+                        (update "item1" (removeTag "notPresent") store)
+            , test "removeTag when entity not present does nothing" <|
+                -- TODO should it do something else?
+                \() ->
+                    Expect.equal store
+                        (update "notPresent" (removeTag "special") store)
+            ]
+        ]
 
 
 tagsTests : Test
@@ -85,7 +115,7 @@ statTests =
                 Expect.equal (Just 5) (getStat "character" "strength" store)
         , test "getStat does not exists" <|
             \() ->
-                Expect.equal Nothing (getProperty "location" "strength" store)
+                Expect.equal Nothing (getStat "location" "strength" store)
         , test "hasStat (EQ) true" <|
             \() ->
                 Expect.true "expected stat" (hasStat "character" "strength" EQ 5 store)
@@ -107,12 +137,29 @@ statTests =
 linkTests : Test
 linkTests =
     describe "link"
-        -- TODO
-        []
+        [ test "getLink exists" <|
+            \() ->
+                Expect.equal (Just "item1") (getLink "character" "holding" store)
+        , test "getLink does not exists" <|
+            \() ->
+                Expect.equal Nothing (getLink "character" "knowsAbout" store)
+        , test "getLink does not exist 2" <|
+            \() ->
+                Expect.equal Nothing (getLink "item" "holding" store)
+        , test "hasLink true" <|
+            \() ->
+                Expect.true "expected link" (hasLink "character" "holding" "item1" store)
+        , test "hasLink false" <|
+            \() ->
+                Expect.false "wrong value" (hasLink "character" "holding" "location" store)
+        , test "hasLink false 2" <|
+            \() ->
+                Expect.false "wrong key" (hasLink "character" "knowsAbout" "item1" store)
+        ]
 
 
 queryTests : Test
 queryTests =
-    describe "querying"
-        -- TODO
-        []
+    skip <|
+        describe "querying"
+            []
