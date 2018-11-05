@@ -147,6 +147,7 @@ type Query
     | Property String String
     | Stat String Order Int
     | Link String ID
+    | Not Query
 
 
 queryFn : Query -> (ID -> Store -> Bool)
@@ -163,6 +164,9 @@ queryFn q =
 
         Link key value ->
             \id -> hasLink id key value
+
+        Not nestedQuery ->
+            \id store -> not <| queryFn nestedQuery id store
 
 
 query : List Query -> Store -> List ID

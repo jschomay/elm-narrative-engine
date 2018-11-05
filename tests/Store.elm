@@ -14,6 +14,7 @@ entities =
         |> setProperty "weight" "heavy"
     , entity "item2"
         |> addTag "item"
+        |> setLink "heldBy" "character1"
     , entity "character1"
         |> addTag "character"
         |> setStat "strength" 5
@@ -200,4 +201,12 @@ queryTests =
             \() ->
                 Expect.false "should not be found" <|
                     assert "item99" [ Tag "item" ] store
+        , test "not with assert" <|
+            \() ->
+                Expect.true "should be true" <|
+                    assert "item1" [ Not (Tag "ExtraSpecial") ] store
+        , test "not with query" <|
+            \() ->
+                Expect.equal [ "item1" ] <|
+                    query [ Tag "item", Not (Link "heldBy" "character1") ] store
         ]
