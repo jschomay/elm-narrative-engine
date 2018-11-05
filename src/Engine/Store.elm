@@ -1,27 +1,38 @@
 module Engine.Store exposing
-    ( Store, initStore, update
-    , Entity(..), ID, entity, addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
-    , Query(..), query, hasTag, hasProperty, hasStat, hasLink
+    ( Store, basic, update
+    , Entity(..), ID, entity
+    , addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
+    , Query(..), query, assert
+    , hasTag, hasProperty, hasStat, hasLink
     , getProperty, getStat, getLink
     )
 
 {-| A store to hold all of the entities in the story. Each entity is an id associated with the properites of an Entity, namely, tags, properites, links, and stats, which can be queried against, fetched, and set.
 
-You can use your own store instead of this one if your game already has a store (like a scene graph for example), as long as it provides an interface for the engine to "plug into."
+#TODO - You can use your own store instead of this one if your game already has a store (like a scene graph for example), as long as it provides an interface for the engine to "plug into."
 
 
 ### Creating / Updating
 
-@docs Store, initStore, update
+@docs Store, basic, update
 
-@docs Entity, ID, entity, addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
+@docs Entity, ID, entity
+
+@docs addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
 
 
 ### Querying
 
-Queries are run against the store to return a list of Entities matching that query. This is useful to render a list of characters in a given location for example. The engine also uses these "matchers" to find matching rules.
+Queries are run against the store to assert a condition or select entities. This is useful to render a list of characters in a given location for example. The engine also uses these when checking rules.
 
-@docs Query, query, hasTag, hasProperty, hasStat, hasLink
+@docs Query, query, assert
+
+
+# TODO figuring out what query should be. I need to check an id against a set of queries, and I need filter by queries.
+
+#TODO probably don't need to expose the functions below, since `query` is the interface. Need to figure out which apis are needed in the `configure` record to extract the store
+
+@docs hasTag, hasProperty, hasStat, hasLink
 
 
 ### Accessing
@@ -56,13 +67,6 @@ type alias EntityValues =
 
 type alias Store =
     Dict ID EntityValues
-
-
-type Query
-    = Tag String
-    | Property String String
-    | Stat String Int
-    | Link String ID
 
 
 entity : ID -> Entity
@@ -117,8 +121,10 @@ decStat key delta (Entity id e) =
         |> Entity id
 
 
-initStore : List Entity -> Store
-initStore entities =
+{-| Creates a basic store with the minimal state needed by the engine.
+-}
+basic : List Entity -> Store
+basic entities =
     entities
         |> (List.map <| \(Entity id values) -> ( id, values ))
         |> Dict.fromList
@@ -136,10 +142,45 @@ update id updateFn store =
         store
 
 
-query : List Query -> Store -> List Entity
+type Query
+    = Tag String
+    | Property String String
+    | Stat String Order Int
+    | Link String ID
+
+
+queryFn : Query -> (ID -> Store -> Bool)
+queryFn q =
+    case q of
+        Tag tag ->
+            \id -> hasTag id tag
+
+        Property key value ->
+            \id -> hasProperty id key value
+
+        Stat key comparator value ->
+            \id -> hasStat id key comparator value
+
+        Link key value ->
+            \id -> hasLink id key value
+
+
+query : List Query -> Store -> List ID
 query queries store =
-    -- TODO
-    []
+    let
+        gatherMatches id _ matches =
+            if List.all (queryFn >> (\q -> q id store)) queries then
+                id :: matches
+
+            else
+                matches
+    in
+    Dict.foldl gatherMatches [] store
+
+
+assert : ID -> List Query -> Store -> Bool
+assert id queries store =
+    List.all (queryFn >> (\q -> q id store)) queries
 
 
 getProperty : ID -> String -> Store -> Maybe String
