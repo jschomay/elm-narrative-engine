@@ -1,4 +1,4 @@
-module Engine.Store exposing
+module Narrative.Store exposing
     ( Store, basic, update
     , Entity(..), ID, entity
     , addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
@@ -26,9 +26,6 @@ module Engine.Store exposing
 Queries are run against the store to assert a condition or select entities. This is useful to render a list of characters in a given location for example. The engine also uses these when checking rules.
 
 @docs Query, query, assert
-
-
-# TODO figuring out what query should be. I need to check an id against a set of queries, and I need filter by queries.
 
 #TODO probably don't need to expose the functions below, since `query` is the interface. Need to figure out which apis are needed in the `configure` record to extract the store
 

@@ -1,10 +1,9 @@
 module Store exposing (all)
 
 import Dict
-import Engine.Store exposing (..)
 import Expect
+import Narrative.Store exposing (..)
 import Test exposing (..)
-import Types exposing (..)
 
 
 entities =

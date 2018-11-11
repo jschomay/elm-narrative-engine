@@ -1,66 +1,60 @@
 module Rules exposing (all)
 
 import Dict
-import Engine.Rules
 import Expect
+import Narrative.Rules exposing (..)
+import Narrative.Store exposing (..)
 import Test exposing (..)
-import Types exposing (..)
 
 
 all : Test
 all =
     describe "Rule tests"
-        [ describe "findMatchingRule"
-            [ test "at the same specificity and without scene constraints, rules with more conditions win" <|
+        [ test "findMatchingRule finds the right rule" <|
+            \() ->
+                let
+                    rules =
+                        [ rule1, rule2, ruleX ]
+                in
+                Expect.equal (Just rule2) <|
+                    Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+        , describe "finding the test match"
+            [ test "all else equal, rules with more conditions win" <|
                 \() ->
                     let
                         rules =
                             [ rule1, rule2, ruleX ]
                     in
                     Expect.equal (Just rule2) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "at the same specificity and without scene constraints, rules with more conditions win (sanity check)" <|
+                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+            , test "all else equal, rules with more conditions win (sanity check)" <|
                 \() ->
                     let
                         rules =
                             [ rule2, rule1, ruleX ]
                     in
                     Expect.equal (Just rule2) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
 
             -- the following would be good fuzz test candidates...
-            , test "any specific-matching rule always beats any non-specific-matching rule" <|
+            , test "ID-matching trigger rules beat query-matching trigger rules (regardless of conditions)" <|
+                \() ->
+                    let
+                        rules =
+                            [ rule1, rule4, ruleX ]
+
+                        -- TODO test with ID-matching conditions too
+                    in
+                    Expect.equal (Just rule1) <|
+                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+            , test "all else equal, ID-matching conditions beat query-matching conditions" <|
                 \() ->
                     let
                         rules =
                             [ rule1, rule4, ruleX ]
                     in
                     Expect.equal (Just rule1) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "any entity-class-matching rule always beats any anything-matching rule" <|
-                \() ->
-                    let
-                        rules =
-                            [ rule6, rule4, ruleX ]
-                    in
-                    Expect.equal (Just rule4) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "any scene-specific rule always beats any non-scene-specific rule" <|
-                \() ->
-                    let
-                        rules =
-                            [ rule1, rule3, rule2, ruleX ]
-                    in
-                    Expect.equal (Just rule3) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "scene-specific rules trump specific-matching rules" <|
-                \() ->
-                    let
-                        rules =
-                            [ rule5, rule2, ruleX ]
-                    in
-                    Expect.equal (Just rule5) <|
-                        Engine.Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
             ]
         ]
 
