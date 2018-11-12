@@ -74,6 +74,19 @@ storeTests =
                 \() ->
                     Expect.equal store
                         (update "notPresent" (removeTag "special") store)
+            , test "via applyChanges" <|
+                \() ->
+                    Expect.true "changes did not apply correctly"
+                        (store
+                            |> applyChanges
+                                [ AddTag "item1" "extraSpecial"
+                                , SetLink "item1" "heldBy" "character1"
+                                ]
+                            |> assert "item1"
+                                [ HasTag "extraSpecial"
+                                , HasLink "heldBy" "character1"
+                                ]
+                        )
             ]
         ]
 

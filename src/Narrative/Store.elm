@@ -1,7 +1,7 @@
 module Narrative.Store exposing
-    ( Store, basic, update
+    ( Store, basic, update, applyChanges
     , Entity(..), ID, entity
-    , addTag, removeTag, setStat, incStat, decStat, setLink
+    , ChangeWorld(..), addTag, removeTag, setStat, incStat, decStat, setLink
     , Query(..), find, assert
     , hasTag, hasStat, hasLink
     , getStat, getLink
@@ -14,11 +14,11 @@ module Narrative.Store exposing
 
 ### Creating / Updating
 
-@docs Store, basic, update
+@docs Store, basic, update, applyChanges
 
 @docs Entity, ID, entity
 
-@docs addTag, removeTag, setStat, incStat, decStat, setLink
+@docs ChangeWorld, addTag, removeTag, setStat, incStat, decStat, setLink
 
 
 ### Querying
@@ -117,6 +117,12 @@ basic entities =
         |> Dict.fromList
 
 
+{-| Programatically update the store.
+
+    newStore =
+        update "item1" (addTag "updated") store
+
+-}
 update : ID -> (Entity -> Entity) -> Store -> Store
 update id updateFn store =
     Dict.update id
@@ -127,6 +133,53 @@ update id updateFn store =
             )
         )
         store
+
+
+{-| Declarative descriptions of how the world should change, designed to be used with rules.
+-}
+type ChangeWorld
+    = AddTag ID String
+    | RemoveTag ID String
+    | SetStat ID String Int
+    | IncStat ID String Int
+    | DecStat ID String Int
+    | SetLink ID String ID
+
+
+{-| Update the store based on ChangeWorld declarations.
+
+    newStore =
+        applyChanges
+            [ AddTag "item1" "extraSpecial"
+            , SetLink "item1" "heldBy" "character1"
+            ]
+            store
+
+-}
+applyChanges : List ChangeWorld -> Store -> Store
+applyChanges changes store =
+    let
+        applyChange change acc =
+            case change of
+                AddTag id tag ->
+                    update id (addTag tag) acc
+
+                RemoveTag id tag ->
+                    update id (removeTag tag) acc
+
+                SetStat id key value ->
+                    update id (setStat key value) acc
+
+                IncStat id key amount ->
+                    update id (incStat key amount) acc
+
+                DecStat id key amount ->
+                    update id (decStat key amount) acc
+
+                SetLink id key value ->
+                    update id (setLink key value) acc
+    in
+    List.foldl applyChange store changes
 
 
 type Query
