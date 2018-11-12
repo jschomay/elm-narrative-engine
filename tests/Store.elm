@@ -10,7 +10,6 @@ entities =
     [ entity "item1"
         |> addTag "item"
         |> addTag "special"
-        |> setProperty "weight" "heavy"
     , entity "item2"
         |> addTag "item"
         |> setLink "heldBy" "character1"
@@ -36,7 +35,6 @@ all =
     describe "store tests"
         [ storeTests
         , tagsTests
-        , propertiesTests
         , statTests
         , linkTests
         , queryTests
@@ -89,27 +87,6 @@ tagsTests =
         , test "hasTag false" <|
             \() ->
                 Expect.false "didn't expect tag" (hasTag "item2" "special" store)
-        ]
-
-
-propertiesTests : Test
-propertiesTests =
-    describe "propertie"
-        [ test "getProperty exists" <|
-            \() ->
-                Expect.equal (Just "heavy") (getProperty "item1" "weight" store)
-        , test "getProperty does not exists" <|
-            \() ->
-                Expect.equal Nothing (getProperty "item2" "weight" store)
-        , test "hasProperty true" <|
-            \() ->
-                Expect.true "expected property" (hasProperty "item1" "weight" "heavy" store)
-        , test "hasProperty false no key" <|
-            \() ->
-                Expect.false "didn't expect property" (hasProperty "item1" "weight" "light" store)
-        , test "hasProperty false wrong value" <|
-            \() ->
-                Expect.false "didn't expect property" (hasProperty "item2" "weight" "light" store)
         ]
 
 
@@ -172,10 +149,6 @@ queryTests =
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
                         find [ HasTag "item" ] store
-        , test "query property - heavy items" <|
-            \() ->
-                Expect.equal [ "item1" ] <|
-                    find [ HasTag "item", HasProperty "weight" "heavy" ] store
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|

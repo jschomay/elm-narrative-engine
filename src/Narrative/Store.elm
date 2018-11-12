@@ -1,13 +1,13 @@
 module Narrative.Store exposing
     ( Store, basic, update
     , Entity(..), ID, entity
-    , addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
+    , addTag, removeTag, setStat, incStat, decStat, setLink
     , Query(..), find, assert
-    , hasTag, hasProperty, hasStat, hasLink
-    , getProperty, getStat, getLink
+    , hasTag, hasStat, hasLink
+    , getStat, getLink
     )
 
-{-| A store to hold all of the entities in the story. Each entity is an id associated with the properites of an Entity, namely, tags, properites, links, and stats, which can be queried against, fetched, and set.
+{-| A store to hold all of the entities in the story. Each entity is an id associated with the properites of an Entity, namely, tags, links, and stats, which can be queried against, fetched, and set.
 
 #TODO - You can use your own store instead of this one if your game already has a store (like a scene graph for example), as long as it provides an interface for the engine to "plug into."
 
@@ -18,7 +18,7 @@ module Narrative.Store exposing
 
 @docs Entity, ID, entity
 
-@docs addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
+@docs addTag, removeTag, setStat, incStat, decStat, setLink
 
 
 ### Querying
@@ -27,7 +27,7 @@ Queries are run against the store to assert a condition or select entities. This
 
 @docs Query, find, assert
 
-@docs hasTag, hasProperty, hasStat, hasLink
+@docs hasTag, hasStat, hasLink
 
 
 ### Accessing
@@ -36,7 +36,7 @@ The engine doesn't need these, but they may be useful to the view (to get the cu
 
 Note that these should only be used for properties controlled by tne engine. For example, storing and getting a name and description, or sprite dimentions, etc should be handled in a separate system (consider using the Entity Componsent System pattern for this).
 
-@docs getProperty, getStat, getLink
+@docs getStat, getLink
 
 -}
 
@@ -54,7 +54,6 @@ type Entity
 
 type alias EntityValues =
     { tags : Set String
-    , properties : Dict String String
     , stats : Dict String Int
     , links : Dict String ID
     }
@@ -68,7 +67,6 @@ entity : ID -> Entity
 entity id =
     Entity id
         { tags = Set.empty
-        , properties = Dict.empty
         , stats = Dict.empty
         , links = Dict.empty
         }
@@ -77,12 +75,6 @@ entity id =
 addTag : String -> Entity -> Entity
 addTag tag (Entity id e) =
     { e | tags = Set.insert tag e.tags }
-        |> Entity id
-
-
-setProperty : String -> String -> Entity -> Entity
-setProperty key value (Entity id e) =
-    { e | properties = Dict.insert key value e.properties }
         |> Entity id
 
 
@@ -139,7 +131,6 @@ update id updateFn store =
 
 type Query
     = HasTag String
-    | HasProperty String String
     | HasStat String Order Int
     | HasLink String ID
     | Not Query
@@ -150,9 +141,6 @@ queryFn q =
     case q of
         HasTag tag ->
             \id -> hasTag id tag
-
-        HasProperty key value ->
-            \id -> hasProperty id key value
 
         HasStat key comparator value ->
             \id -> hasStat id key comparator value
@@ -182,12 +170,6 @@ assert id queries store =
     List.all (queryFn >> (\q -> q id store)) queries
 
 
-getProperty : ID -> String -> Store -> Maybe String
-getProperty id key store =
-    Dict.get id store
-        |> Maybe.andThen (.properties >> Dict.get key)
-
-
 getStat : ID -> String -> Store -> Maybe Int
 getStat id key store =
     Dict.get id store
@@ -205,11 +187,6 @@ hasTag id tag store =
     Dict.get id store
         |> Maybe.map (.tags >> Set.member tag)
         |> Maybe.withDefault False
-
-
-hasProperty : ID -> String -> String -> Store -> Bool
-hasProperty id key value store =
-    getProperty id key store == Just value
 
 
 hasStat : ID -> String -> Order -> Int -> Store -> Bool
