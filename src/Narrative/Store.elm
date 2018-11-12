@@ -2,7 +2,7 @@ module Narrative.Store exposing
     ( Store, basic, update
     , Entity(..), ID, entity
     , addTag, removeTag, setProperty, setStat, incStat, decStat, setLink
-    , Query(..), query, assert
+    , Query(..), find, assert
     , hasTag, hasProperty, hasStat, hasLink
     , getProperty, getStat, getLink
     )
@@ -25,9 +25,7 @@ module Narrative.Store exposing
 
 Queries are run against the store to assert a condition or select entities. This is useful to render a list of characters in a given location for example. The engine also uses these when checking rules.
 
-@docs Query, query, assert
-
-#TODO probably don't need to expose the functions below, since `query` is the interface. Need to figure out which apis are needed in the `configure` record to extract the store
+@docs Query, find, assert
 
 @docs hasTag, hasProperty, hasStat, hasLink
 
@@ -140,37 +138,37 @@ update id updateFn store =
 
 
 type Query
-    = Tag String
-    | Property String String
-    | Stat String Order Int
-    | Link String ID
+    = HasTag String
+    | HasProperty String String
+    | HasStat String Order Int
+    | HasLink String ID
     | Not Query
 
 
 queryFn : Query -> (ID -> Store -> Bool)
 queryFn q =
     case q of
-        Tag tag ->
+        HasTag tag ->
             \id -> hasTag id tag
 
-        Property key value ->
+        HasProperty key value ->
             \id -> hasProperty id key value
 
-        Stat key comparator value ->
+        HasStat key comparator value ->
             \id -> hasStat id key comparator value
 
-        Link key value ->
+        HasLink key value ->
             \id -> hasLink id key value
 
         Not nestedQuery ->
             \id store -> not <| queryFn nestedQuery id store
 
 
-query : List Query -> Store -> List ID
-query queries store =
+find : List Query -> Store -> List ID
+find queries store =
     let
         gatherMatches id _ matches =
-            if List.all (queryFn >> (\q -> q id store)) queries then
+            if assert id queries store then
                 id :: matches
 
             else

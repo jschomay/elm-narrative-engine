@@ -171,41 +171,41 @@ queryTests =
             \() ->
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
-                        query [ Tag "item" ] store
+                        find [ HasTag "item" ] store
         , test "query property - heavy items" <|
             \() ->
                 Expect.equal [ "item1" ] <|
-                    query [ Tag "item", Property "weight" "heavy" ] store
+                    find [ HasTag "item", HasProperty "weight" "heavy" ] store
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ Tag "character", Stat "strength" GT 3 ] store
+                    find [ HasTag "character", HasStat "strength" GT 3 ] store
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ Tag "character", Link "locatedIn" "location1" ] store
+                    find [ HasTag "character", HasLink "locatedIn" "location1" ] store
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
-                    query [ Tag "other" ] store
+                    find [ HasTag "other" ] store
         , test "assert positive" <|
             \() ->
                 Expect.true "should be true" <|
-                    assert "item1" [ Tag "special" ] store
+                    assert "item1" [ HasTag "special" ] store
         , test "assert negative" <|
             \() ->
                 Expect.false "should be false" <|
-                    assert "item1" [ Tag "extraSpecial" ] store
+                    assert "item1" [ HasTag "extraSpecial" ] store
         , test "assert negative - not found" <|
             \() ->
                 Expect.false "should not be found" <|
-                    assert "item99" [ Tag "item" ] store
+                    assert "item99" [ HasTag "item" ] store
         , test "not with assert" <|
             \() ->
                 Expect.true "should be true" <|
-                    assert "item1" [ Not (Tag "ExtraSpecial") ] store
+                    assert "item1" [ Not (HasTag "ExtraSpecial") ] store
         , test "not with query" <|
             \() ->
                 Expect.equal [ "item1" ] <|
-                    query [ Tag "item", Not (Link "heldBy" "character1") ] store
+                    find [ HasTag "item", Not (HasLink "heldBy" "character1") ] store
         ]

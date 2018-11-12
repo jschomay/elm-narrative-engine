@@ -1,10 +1,10 @@
-module Narrative.Rules exposing (Condition, EntityID, Rule, RuleID, Rules, findMatchingRule)
+module Narrative.Rules exposing (Condition(..), EntityID, Rule, RuleID, Rules, Trigger(..), findMatchingRule)
 
 {-| Rules are a declarative way of describing meaningful events in your story.
 
 They are made up of two parts: a "trigger", and a set of "conditions". Each time you call `findMatchingRule`, the engine will test all of your rules against the provided trigger and the current state of your story world, and will return the id of a matching rule (if one exists). From there, you can carry out any side-effects specific to that rule id, like changing the state of your story world, or showing a specific narrative, or playing a sound effect, etc.
 
-@doc EntityID, RuleID, Rules, Rule, Condition, findMatchingRule
+@doc EntityID, RuleID, Rules, Rule, Trigger, Condition, findMatchingRule
 
 -}
 
@@ -24,14 +24,18 @@ type alias Rules =
     Dict RuleID Rule
 
 
-type Condition
-    = EntityMatching EntityID (List Store.Query)
-
-
 type alias Rule =
-    { trigger : EntityID
+    { trigger : Trigger
     , conditions : List Condition
     }
+
+
+type Trigger
+    = TriggerMatching EntityID
+
+
+type Condition
+    = EntityMatching EntityID (List Store.Query)
 
 
 {-| Finds the rule that matches against the provided trigger and store. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
@@ -42,148 +46,51 @@ While the trigger should match one of the entity IDs defined in your store, you 
 
 -}
 findMatchingRule : Rules -> EntityID -> Store -> Maybe RuleID
-findMatchingRule story interactableId =
-    story.rules
-        |> Dict.toList
-        |> List.filter (Tuple.second >> matchesRule story interactableId)
-        |> bestMatch
-            (numConstrictionsWeight
-                |> tallyWith sceneConstraintWeight
-                |> tallyWith specificityWeight
+findMatchingRule rules trigger store =
+    rules
+        |> Dict.filter
+            (\ruleId rule ->
+                matchesTrigger trigger rule.trigger
+                    && matchesConditions store rule.conditions
             )
-
-
-
-{- Feed two functions the same value and add their results. Like a Reader, but adds the results of the functions instead of composing them. -}
-
-
-tallyWith : (a -> Int) -> (a -> Int) -> (a -> Int)
-tallyWith f1 f2 a =
-    f1 a + f2 a
-
-
-bestMatch : (a -> Int) -> List ( String, a ) -> Maybe ( String, a )
-bestMatch heuristics matchingRules =
-    List.sortBy (Tuple.second >> heuristics) matchingRules
+        |> Dict.toList
+        |> List.sortBy (Tuple.second >> weight)
         |> List.reverse
         |> List.head
+        |> Maybe.map Tuple.first
 
 
-numConstrictionsWeight : { a | conditions : List Condition } -> Int
-numConstrictionsWeight =
-    .conditions >> List.length
+matchesTrigger : EntityID -> Trigger -> Bool
+matchesTrigger id trigger =
+    case trigger of
+        TriggerMatching triggerID ->
+            id == triggerID
 
 
-sceneConstraintWeight : { a | conditions : List Condition } -> Int
-sceneConstraintWeight rule =
-    let
-        hasSceneConstraints condition =
-            case condition of
-                CurrentSceneIs _ ->
-                    True
-
-                _ ->
-                    False
-    in
-    if List.any hasSceneConstraints rule.conditions then
-        300
-
-    else
-        0
+matchesConditions : Store -> List Condition -> Bool
+matchesConditions store conditions =
+    List.all (matchesCondition store) conditions
 
 
-specificityWeight : { a | interaction : InteractionMatcher } -> Int
-specificityWeight rule =
-    case rule.interaction of
-        With _ ->
-            200
-
-        WithAnyItem ->
-            100
-
-        WithAnyLocation ->
-            100
-
-        WithAnyCharacter ->
-            100
-
-        WithAnything ->
-            0
-
-
-chooseFrom : Story -> List { a | conditions : List Condition } -> Maybe { a | conditions : List Condition }
-chooseFrom ({ currentLocation, currentScene, manifest, history } as story) conditions =
-    conditions
-        |> List.filter (.conditions >> List.all (matchesCondition story))
-        |> List.map (Tuple.pair "")
-        |> bestMatch (tallyWith numConstrictionsWeight sceneConstraintWeight)
-        |> Maybe.map Tuple.second
-
-
-matchesRule : Story -> String -> Rule -> Bool
-matchesRule ({ currentLocation, currentScene, manifest, history } as story) interaction rule =
-    matchesInteraction manifest rule.interaction interaction
-        && List.all (matchesCondition story) rule.conditions
-
-
-matchesInteraction :
-    Manifest
-    -> InteractionMatcher
-    -> String
-    -> Bool
-matchesInteraction manifest interactionMatcher interactableId =
-    case interactionMatcher of
-        WithAnything ->
-            True
-
-        WithAnyItem ->
-            isItem interactableId manifest
-
-        WithAnyLocation ->
-            isLocation interactableId manifest
-
-        WithAnyCharacter ->
-            isCharacter interactableId manifest
-
-        With id ->
-            id == interactableId
-
-
-matchesCondition :
-    Story
-    -> Condition
-    -> Bool
-matchesCondition { history, currentLocation, currentScene, manifest } condition =
+matchesCondition : Store -> Condition -> Bool
+matchesCondition store condition =
     case condition of
-        ItemIsInInventory item ->
-            itemIsInInventory item manifest
+        EntityMatching entityID queries ->
+            Store.assert entityID queries store
 
-        CharacterIsInLocation character location ->
-            characterIsInLocation character location manifest
 
-        ItemIsInLocation item location ->
-            itemIsInLocation item location manifest
+weight : Rule -> Int
+weight rule =
+    conditionsSpecificity rule
 
-        CurrentLocationIs location ->
-            currentLocation == location
 
-        ItemIsNotInInventory item ->
-            not <| itemIsInInventory item manifest
-
-        CharacterIsNotInLocation character location ->
-            not <| characterIsInLocation character location manifest
-
-        ItemIsNotInLocation item location ->
-            not <| itemIsInLocation item location manifest
-
-        CurrentLocationIsNot location ->
-            not <| currentLocation == location
-
-        HasPreviouslyInteractedWith id ->
-            List.member id history
-
-        HasNotPreviouslyInteractedWith id ->
-            not <| List.member id history
-
-        CurrentSceneIs id ->
-            currentScene == id
+{-| 10 points per entity matcher, plus 1 point per query per entity
+-}
+conditionsSpecificity : Rule -> Int
+conditionsSpecificity { conditions } =
+    conditions
+        |> List.foldl
+            (\(EntityMatching _ queries) acc ->
+                acc + 10 + List.length queries
+            )
+            0

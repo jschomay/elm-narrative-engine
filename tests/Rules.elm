@@ -10,127 +10,161 @@ import Test exposing (..)
 all : Test
 all =
     describe "Rule tests"
-        [ test "findMatchingRule finds the right rule" <|
-            \() ->
-                let
-                    rules =
-                        [ rule1, rule2, ruleX ]
-                in
-                Expect.equal (Just rule2) <|
-                    Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-        , describe "finding the test match"
+        [ describe "findMatchingRule finds the right rule"
+            [ test "from triggers" <|
+                \() ->
+                    let
+                        rule1 =
+                            ( "interact with item1"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = []
+                              }
+                            )
+
+                        rule2 =
+                            ( "interact with item2"
+                            , { trigger = TriggerMatching "item2"
+                              , conditions = []
+                              }
+                            )
+
+                        rules =
+                            Dict.fromList [ rule1, rule2 ]
+                    in
+                    Expect.equalLists
+                        [ Just "interact with item1"
+                        , Just "interact with item2"
+                        ]
+                        [ findMatchingRule rules "item1" store
+                        , findMatchingRule rules "item2" store
+                        ]
+            , test "from conditions" <|
+                \() ->
+                    let
+                        rule1 =
+                            ( "does not match"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = [ EntityMatching "character1" [ HasLink "location" "the moon" ] ]
+                              }
+                            )
+
+                        rule2 =
+                            ( "does not match all conditions"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions =
+                                    [ EntityMatching "character1"
+                                        [ HasLink "location" "location1"
+                                        , HasTag "invisible"
+                                        ]
+                                    ]
+                              }
+                            )
+
+                        rule3 =
+                            ( "expected"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              }
+                            )
+
+                        rules =
+                            Dict.fromList [ rule1, rule2, rule3 ]
+                    in
+                    Expect.equal (Just "expected") <|
+                        findMatchingRule rules "item1" store
+            ]
+        , describe "finding the best match"
             [ test "all else equal, rules with more conditions win" <|
                 \() ->
                     let
-                        rules =
-                            [ rule1, rule2, ruleX ]
-                    in
-                    Expect.equal (Just rule2) <|
-                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "all else equal, rules with more conditions win (sanity check)" <|
-                \() ->
-                    let
-                        rules =
-                            [ rule2, rule1, ruleX ]
-                    in
-                    Expect.equal (Just rule2) <|
-                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                        -- Note, without weighting, rules are sorted alphabetically by id, and then reversed
+                        -- So without weighting implemented "less specific" would come before "expected"
+                        rule1 =
+                            ( "less specific"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = []
+                              }
+                            )
 
-            -- the following would be good fuzz test candidates...
-            , test "ID-matching trigger rules beat query-matching trigger rules (regardless of conditions)" <|
-                \() ->
-                    let
-                        rules =
-                            [ rule1, rule4, ruleX ]
+                        rule2 =
+                            ( "expected"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              }
+                            )
 
-                        -- TODO test with ID-matching conditions too
+                        rules =
+                            Dict.fromList [ rule1, rule2 ]
                     in
-                    Expect.equal (Just rule1) <|
-                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
-            , test "all else equal, ID-matching conditions beat query-matching conditions" <|
+                    Expect.equal (Just "expected") <|
+                        findMatchingRule rules "item1" store
+            , test "all else equal, rules with more conditions win (based on condition queries)" <|
                 \() ->
                     let
+                        -- Note, without weighting, rules are sorted alphabetically by id, and then reversed
+                        -- So without weighting implemented "less specific" would come before "expected"
+                        rule1 =
+                            ( "less specific"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              }
+                            )
+
+                        rule2 =
+                            ( "expected"
+                            , { trigger = TriggerMatching "item1"
+                              , conditions =
+                                    [ EntityMatching "character1"
+                                        [ HasLink "location" "location1"
+                                        , HasTag "friend"
+                                        ]
+                                    ]
+                              }
+                            )
+
                         rules =
-                            [ rule1, rule4, ruleX ]
+                            Dict.fromList [ rule1, rule2 ]
                     in
-                    Expect.equal (Just rule1) <|
-                        Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+                    Expect.equal (Just "expected") <|
+                        findMatchingRule rules "item1" store
             ]
         ]
 
 
-story =
-    { currentLocation = "x"
-    , currentScene = "x"
-    , manifest = Dict.fromList [ ( "x", Item False ItemInInventory ) ]
-    , history = []
-    , rules = Dict.empty
-    , theEnd = Nothing
-    }
+
+-- the test below apply to level-2 queries
+--     -- the following would be good fuzz test candidates...
+--     , test "ID-matching trigger rules beat query-matching trigger rules (regardless of conditions)" <|
+--         \() ->
+--             let
+--                 rules =
+--                     [ rule1, rule4, ruleX ]
+--                 -- TODO test with ID-matching conditions too
+--             in
+--             Expect.equal (Just rule1) <|
+--                 Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+--     , test "all else equal, ID-matching conditions beat query-matching conditions" <|
+--         \() ->
+--             let
+--                 rules =
+--                     [ rule1, rule4, ruleX ]
+--             in
+--             Expect.equal (Just rule1) <|
+--                 Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
+--     ]
+-- ]
 
 
-rule1 =
-    ( "1"
-    , Rule (With "x")
-        [ CurrentLocationIs "x" ]
-        []
-    )
-
-
-rule2 =
-    ( "2"
-    , Rule
-        (With "x")
-        [ CurrentLocationIs "x"
-        , ItemIsInInventory "x"
+store =
+    Narrative.Store.basic <|
+        [ entity "item1"
+            |> addTag "item"
+        , entity "item2"
+            |> addTag "item"
+        , entity "character1"
+            |> addTag "character"
+            |> addTag "friend"
+            |> setLink "location" "location1"
+        , entity "location1"
+            |> addTag "location"
         ]
-        []
-    )
-
-
-rule3 =
-    ( "3"
-    , Rule
-        (With "x")
-        [ CurrentSceneIs "x" ]
-        []
-    )
-
-
-rule4 =
-    ( "4"
-    , Rule
-        WithAnyItem
-        [ CurrentLocationIs "x"
-        , ItemIsInInventory "x"
-        ]
-        []
-    )
-
-
-rule5 =
-    ( "5"
-    , Rule WithAnyItem
-        [ CurrentSceneIs "x" ]
-        []
-    )
-
-
-rule6 =
-    ( "6"
-    , Rule
-        WithAnything
-        [ CurrentLocationIs "x"
-        , ItemIsInInventory "x"
-        , ItemIsInInventory "x"
-        ]
-        []
-    )
-
-
-ruleX =
-    ( "7"
-    , Rule (With "does not exist")
-        []
-        []
-    )
