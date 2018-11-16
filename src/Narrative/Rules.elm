@@ -4,12 +4,48 @@ module Narrative.Rules exposing (Condition(..), EntityID, Rule, RuleID, Rules, T
 
 They are made up of two parts: a "trigger", and a set of "conditions". Each time you call `findMatchingRule`, the engine will test all of your rules against the provided trigger and the current state of your story world, and will return the id of a matching rule (if one exists). From there, you can carry out any side-effects specific to that rule id, like changing the state of your story world, or showing a specific narrative, or playing a sound effect, etc.
 
-@doc EntityID, RuleID, Rules, Rule, Trigger, Condition, findMatchingRule
+@doc EntityID, RuleID, Rules, Rule, Trigger(..), Condition(..), findMatchingRule
+
+Example rules using the example store in `Narrative.WorldModel`:
+
+    fightGoblinRules =
+        Dict.fromList
+            [ ( "beatingGoblin"
+              , { trigger = TriggerMatching "goblin"
+                , conditions =
+                    [ EntityMatching "torch" [ HasLink "location" "player" ]
+                    , EntityMatching "player" [ HasStat "strength" GT 3 ]
+                    ]
+                }
+              )
+            , ( "chasedAwayByGoblin"
+              , { trigger = TriggerMatching "goblin"
+                , conditions =
+                    [ EntityMatching "torch" [ HasLink "location" "player" ]
+                    ]
+                }
+              )
+            , ( "tooDarkToFightGoblin"
+              , { trigger = TriggerMatching "goblin"
+                , conditions = []
+                }
+              )
+            ]
+
+In this case, the `tooDarkToFightGoblin` to fight rule will be the only match if the torch is not in the inventory. Because `beatingGoblin` has more specificity than `chasedAwayByGoblin`, it will match if the player's strength is high enough, even though both rules have matching conditions.
+
+When the player interacts with the goblin, you would call:
+
+    # where trigger in this case is "goblin"
+    maybeMatchedRuleId trigger =
+        findMatchingRule fightGoblinRules trigger worldModel
+
+In your game, you would then associate one of the matched rule ids with "side effects," like a narrative to display, and a set of `ChangeWorld` declarations to apply to the store.
 
 -}
 
 import Dict exposing (Dict)
-import Narrative.Store as Store exposing (Store)
+import Narrative.WorldModel as WorldModel exposing (WorldModel)
 
 
 type alias EntityID =
@@ -35,7 +71,7 @@ type Trigger
 
 
 type Condition
-    = EntityMatching EntityID (List Store.Query)
+    = EntityMatching EntityID (List WorldModel.Query)
 
 
 {-| Finds the rule that matches against the provided trigger and store. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
@@ -45,7 +81,7 @@ In general, you would call this any time the user "interacts" with something in 
 While the trigger should match one of the entity IDs defined in your store, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
 
 -}
-findMatchingRule : Rules -> EntityID -> Store -> Maybe RuleID
+findMatchingRule : Rules -> EntityID -> WorldModel -> Maybe RuleID
 findMatchingRule rules trigger store =
     rules
         |> Dict.filter
@@ -67,16 +103,16 @@ matchesTrigger id trigger =
             id == triggerID
 
 
-matchesConditions : Store -> List Condition -> Bool
+matchesConditions : WorldModel -> List Condition -> Bool
 matchesConditions store conditions =
     List.all (matchesCondition store) conditions
 
 
-matchesCondition : Store -> Condition -> Bool
+matchesCondition : WorldModel -> Condition -> Bool
 matchesCondition store condition =
     case condition of
         EntityMatching entityID queries ->
-            Store.assert entityID queries store
+            WorldModel.assert entityID queries store
 
 
 weight : Rule -> Int

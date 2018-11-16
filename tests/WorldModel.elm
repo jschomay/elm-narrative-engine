@@ -1,8 +1,8 @@
-module Store exposing (all)
+module WorldModel exposing (all)
 
 import Dict
 import Expect
-import Narrative.Store exposing (..)
+import Narrative.WorldModel exposing (..)
 import Test exposing (..)
 
 
@@ -27,7 +27,7 @@ entities =
 
 
 store =
-    basic entities
+    startingState entities
 
 
 all : Test
@@ -48,7 +48,7 @@ storeTests =
             \() ->
                 Expect.equal (Dict.size store) (List.length entities)
         , describe "updating"
-            [ test "basic" <|
+            [ test "startingState" <|
                 \() ->
                     Expect.true "update didn't work"
                         (update "item1" (addTag "updated") store |> hasTag "item1" "updated")
@@ -157,23 +157,23 @@ linkTests =
 queryTests : Test
 queryTests =
     describe "querying"
-        [ test "query tag - finding items" <|
+        [ test "query tag - query items" <|
             \() ->
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
-                        find [ HasTag "item" ] store
+                        query [ HasTag "item" ] store
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    find [ HasTag "character", HasStat "strength" GT 3 ] store
+                    query [ HasTag "character", HasStat "strength" GT 3 ] store
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    find [ HasTag "character", HasLink "locatedIn" "location1" ] store
+                    query [ HasTag "character", HasLink "locatedIn" "location1" ] store
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
-                    find [ HasTag "other" ] store
+                    query [ HasTag "other" ] store
         , test "assert positive" <|
             \() ->
                 Expect.true "should be true" <|
@@ -193,5 +193,5 @@ queryTests =
         , test "not with query" <|
             \() ->
                 Expect.equal [ "item1" ] <|
-                    find [ HasTag "item", Not (HasLink "heldBy" "character1") ] store
+                    query [ HasTag "item", Not (HasLink "heldBy" "character1") ] store
         ]

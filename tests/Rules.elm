@@ -3,7 +3,7 @@ module Rules exposing (all)
 import Dict
 import Expect
 import Narrative.Rules exposing (..)
-import Narrative.Store exposing (..)
+import Narrative.WorldModel exposing (..)
 import Test exposing (..)
 
 
@@ -156,7 +156,7 @@ all =
 
 
 store =
-    Narrative.Store.basic <|
+    Narrative.WorldModel.startingState <|
         [ entity "item1"
             |> addTag "item"
         , entity "item2"
