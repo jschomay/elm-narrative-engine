@@ -283,42 +283,48 @@ type Query
     | Not Query
 
 
-queryFn : Query -> (ID -> WorldModel a -> Bool)
+queryFn : Query -> (NarrativeComponent a -> Bool)
 queryFn q =
     case q of
-        HasTag valud ->
-            \id -> hasTag id valud
+        HasTag value ->
+            hasTag value
 
         HasStat key comparator value ->
-            \id -> hasStat id key comparator value
+            hasStat key comparator value
 
         HasLink key value ->
-            \id -> hasLink id key value
+            hasLink key value
 
         Not nestedQuery ->
-            \id store -> not <| queryFn nestedQuery id store
+            not << queryFn nestedQuery
 
 
-{-| A way to retrieve information from the store. Returns a list of entity ids.
+{-| A way to retrieve information from the store.
 -}
-query : List Query -> WorldModel a -> List ID
+query : List Query -> WorldModel a -> List ( ID, NarrativeComponent a )
 query queries store =
     let
-        gatherMatches id _ matches =
-            if assert id queries store then
-                id :: matches
-
-            else
-                matches
+        gatherMatches id entity =
+            List.all (\q -> queryFn q entity) queries
     in
-    Dict.foldl gatherMatches [] store
+    Dict.filter gatherMatches store
+        |> Dict.toList
 
 
 {-| Asserts if the current state of the store matches the given queries. Used by `Narrative.Rules.findMatchingRule`. You can also use it for your own custom logic if needed.
 -}
 assert : ID -> List Query -> WorldModel a -> Bool
 assert id queries store =
-    List.all (queryFn >> (\q -> q id store)) queries
+    let
+        maybeEntity =
+            Dict.get id store
+
+        matchesQueries entity =
+            List.all (\q -> queryFn q entity) queries
+    in
+    maybeEntity
+        |> Maybe.map matchesQueries
+        |> Maybe.withDefault False
 
 
 getStat : ID -> String -> WorldModel a -> Maybe Int
@@ -333,20 +339,21 @@ getLink id key store =
         |> Maybe.andThen (.links >> Dict.get key)
 
 
-hasTag : ID -> String -> WorldModel a -> Bool
-hasTag id value store =
-    Dict.get id store
-        |> Maybe.map (.tags >> Set.member value)
-        |> Maybe.withDefault False
+hasTag : String -> NarrativeComponent a -> Bool
+hasTag value entity =
+    Set.member value entity.tags
 
 
-hasStat : ID -> String -> Order -> Int -> WorldModel a -> Bool
-hasStat id key comparator value store =
-    getStat id key store
+hasStat : String -> Order -> Int -> NarrativeComponent a -> Bool
+hasStat key comparator value entity =
+    entity.stats
+        |> Dict.get key
         |> Maybe.map (\actual -> compare actual value == comparator)
         |> Maybe.withDefault False
 
 
-hasLink : ID -> String -> ID -> WorldModel a -> Bool
-hasLink id key value store =
-    getLink id key store == Just value
+hasLink : String -> ID -> NarrativeComponent a -> Bool
+hasLink key value entity =
+    entity.links
+        |> Dict.get key
+        |> (\actual -> actual == Just value)

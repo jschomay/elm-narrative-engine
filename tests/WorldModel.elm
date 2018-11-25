@@ -196,19 +196,23 @@ queryTests =
             \() ->
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
-                        query [ HasTag "item" ] worldModel
+                        List.map Tuple.first <|
+                            query [ HasTag "item" ] worldModel
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ HasTag "character", HasStat "strength" GT 3 ] worldModel
+                    List.map Tuple.first <|
+                        query [ HasTag "character", HasStat "strength" GT 3 ] worldModel
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ HasTag "character", HasLink "locatedIn" "location1" ] worldModel
+                    List.map Tuple.first <|
+                        query [ HasTag "character", HasLink "locatedIn" "location1" ] worldModel
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
-                    query [ HasTag "other" ] worldModel
+                    List.map Tuple.first <|
+                        query [ HasTag "other" ] worldModel
         , test "assert positive" <|
             \() ->
                 Expect.true "should be true" <|
@@ -228,5 +232,6 @@ queryTests =
         , test "not with query" <|
             \() ->
                 Expect.equal [ "item1" ] <|
-                    query [ HasTag "item", Not (HasLink "heldBy" "character1") ] worldModel
+                    List.map Tuple.first <|
+                        query [ HasTag "item", Not (HasLink "heldBy" "character1") ] worldModel
         ]
