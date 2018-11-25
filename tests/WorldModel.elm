@@ -1,33 +1,58 @@
 module WorldModel exposing (all)
 
-import Dict
+import Dict exposing (Dict)
 import Expect
 import Narrative.WorldModel exposing (..)
 import Test exposing (..)
 
 
-entities =
-    [ entity "item1"
-        |> addTag "item"
-        |> addTag "special"
-    , entity "item2"
-        |> addTag "item"
-        |> setLink "heldBy" "character1"
-    , entity "character1"
-        |> addTag "character"
-        |> setStat "strength" 5
-        |> setLink "holding" "item1"
-        |> setLink "locatedIn" "location1"
-    , entity "character2"
-        |> addTag "character"
-        |> setStat "strength" 2
-    , entity "location1"
-        |> addTag "location"
-    ]
+type alias DescriptionComponent a =
+    { a | name : String, description : String }
 
 
-store =
-    startingState entities
+type alias MyEntity =
+    NarrativeComponent (DescriptionComponent {})
+
+
+type alias MyWorldModel =
+    Dict String MyEntity
+
+
+emptyEntity : MyEntity
+emptyEntity =
+    { name = ""
+    , description = ""
+    , tags = emptyTags
+    , stats = emptyStats
+    , links = emptyLinks
+    }
+
+
+entity : String -> ( String, MyEntity )
+entity id =
+    ( id, emptyEntity )
+
+
+worldModel : MyWorldModel
+worldModel =
+    Dict.fromList
+        [ entity "item1"
+            |> tag "item"
+            |> tag "special"
+        , entity "item2"
+            |> tag "item"
+            |> link "heldBy" "character1"
+        , entity "character1"
+            |> tag "character"
+            |> stat "strength" 5
+            |> link "holding" "item1"
+            |> link "locatedIn" "location1"
+        , entity "character2"
+            |> tag "character"
+            |> stat "strength" 2
+        , entity "location1"
+            |> tag "location"
+        ]
 
 
 all : Test
@@ -44,40 +69,50 @@ all =
 storeTests : Test
 storeTests =
     describe "store"
-        [ test "creation" <|
-            \() ->
-                Expect.equal (Dict.size store) (List.length entities)
-        , describe "updating"
-            [ test "startingState" <|
+        [ describe "applyChanges/assert"
+            [ test "AddTag" <|
                 \() ->
                     Expect.true "update didn't work"
-                        (update "item1" (addTag "updated") store |> hasTag "item1" "updated")
-            , test "removeTag" <|
+                        (applyChanges [ AddTag "item1" "updated" ] worldModel |> assert "item1" [ HasTag "updated" ])
+            , test "RemoveTag" <|
                 \() ->
                     Expect.false "update didn't work"
-                        (update "item1" (removeTag "special") store |> hasTag "item1" "special")
-            , test "incStat" <|
+                        (applyChanges [ RemoveTag "item1" "special" ] worldModel |> assert "item1" [ HasTag "special" ])
+            , test "IncStat" <|
                 \() ->
                     Expect.equal (Just 7)
-                        (update "character1" (incStat "strength" 2) store |> getStat "character1" "strength")
-            , test "decStat" <|
+                        (applyChanges [ IncStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+            , test "DecStat" <|
                 \() ->
                     Expect.equal (Just 3)
-                        (update "character1" (decStat "strength" 2) store |> getStat "character1" "strength")
-            , test "removeTag when tag not present does nothing" <|
+                        (applyChanges [ DecStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+            , test "SetStat" <|
+                \() ->
+                    Expect.equal (Just 9)
+                        (applyChanges [ SetStat "character1" "strength" 9 ] worldModel |> getStat "character1" "strength")
+            , test "SetLink" <|
+                \() ->
+                    Expect.true "update didn't work"
+                        (applyChanges [ SetLink "item2" "heldBy" "character2" ] worldModel
+                            |> assert "item2"
+                                [ HasLink "heldBy" "character2"
+                                , Not (HasLink "heldBy" "character1")
+                                ]
+                        )
+            , test "RemoveTag when tag not present does nothing" <|
                 -- TODO should it do something else?
                 \() ->
-                    Expect.equal store
-                        (update "item1" (removeTag "notPresent") store)
-            , test "removeTag when entity not present does nothing" <|
+                    Expect.equal worldModel
+                        (applyChanges [ RemoveTag "item1" "notPresent" ] worldModel)
+            , test "RemoveTag when entity not present does nothing" <|
                 -- TODO should it do something else?
                 \() ->
-                    Expect.equal store
-                        (update "notPresent" (removeTag "special") store)
-            , test "via applyChanges" <|
+                    Expect.equal worldModel
+                        (applyChanges [ RemoveTag "notPresent" "special" ] worldModel)
+            , test "with multiple changes" <|
                 \() ->
                     Expect.true "changes did not apply correctly"
-                        (store
+                        (worldModel
                             |> applyChanges
                                 [ AddTag "item1" "extraSpecial"
                                 , SetLink "item1" "heldBy" "character1"
@@ -96,10 +131,10 @@ tagsTests =
     describe "tags"
         [ test "hasTag true" <|
             \() ->
-                Expect.true "missing tag" (hasTag "item1" "special" store)
+                Expect.true "missing tag" (assert "item1" [ HasTag "special" ] worldModel)
         , test "hasTag false" <|
             \() ->
-                Expect.false "didn't expect tag" (hasTag "item2" "special" store)
+                Expect.false "didn't expect tag" (assert "item2" [ HasTag "special" ] worldModel)
         ]
 
 
@@ -108,25 +143,25 @@ statTests =
     describe "stat"
         [ test "getStat exists" <|
             \() ->
-                Expect.equal (Just 5) (getStat "character1" "strength" store)
+                Expect.equal (Just 5) (getStat "character1" "strength" worldModel)
         , test "getStat does not exists" <|
             \() ->
-                Expect.equal Nothing (getStat "location" "strength" store)
+                Expect.equal Nothing (getStat "location" "strength" worldModel)
         , test "hasStat (EQ) true" <|
             \() ->
-                Expect.true "expected stat" (hasStat "character1" "strength" EQ 5 store)
+                Expect.true "expected stat" (assert "character1" [ HasStat "strength" EQ 5 ] worldModel)
         , test "hasStat false no key" <|
             \() ->
-                Expect.false "didn't expect stat" (hasStat "location" "strength" EQ 5 store)
+                Expect.false "didn't expect stat" (assert "location" [ HasStat "strength" EQ 5 ] worldModel)
         , test "hasStat false (EQ) wrong value" <|
             \() ->
-                Expect.false "didn't expect stat" (hasStat "character1" "strength" EQ 1 store)
+                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" EQ 1 ] worldModel)
         , test "hasStat (GT) true" <|
             \() ->
-                Expect.true "expected stat" (hasStat "character1" "strength" GT 4 store)
+                Expect.true "expected stat" (assert "character1" [ HasStat "strength" GT 4 ] worldModel)
         , test "hasStat (GT) false" <|
             \() ->
-                Expect.false "didn't expect stat" (hasStat "character1" "strength" GT 6 store)
+                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" GT 6 ] worldModel)
         ]
 
 
@@ -135,22 +170,22 @@ linkTests =
     describe "link"
         [ test "getLink exists" <|
             \() ->
-                Expect.equal (Just "item1") (getLink "character1" "holding" store)
+                Expect.equal (Just "item1") (getLink "character1" "holding" worldModel)
         , test "getLink does not exists" <|
             \() ->
-                Expect.equal Nothing (getLink "character1" "knowsAbout" store)
+                Expect.equal Nothing (getLink "character1" "knowsAbout" worldModel)
         , test "getLink does not exist 2" <|
             \() ->
-                Expect.equal Nothing (getLink "item" "holding" store)
+                Expect.equal Nothing (getLink "item" "holding" worldModel)
         , test "hasLink true" <|
             \() ->
-                Expect.true "expected link" (hasLink "character1" "holding" "item1" store)
+                Expect.true "expected link" (assert "character1" [ HasLink "holding" "item1" ] worldModel)
         , test "hasLink false" <|
             \() ->
-                Expect.false "wrong value" (hasLink "character1" "holding" "location" store)
+                Expect.false "wrong value" (assert "character1" [ HasLink "holding" "location" ] worldModel)
         , test "hasLink false 2" <|
             \() ->
-                Expect.false "wrong key" (hasLink "character1" "knowsAbout" "item1" store)
+                Expect.false "wrong key" (assert "character1" [ HasLink "knowsAbout" "item1" ] worldModel)
         ]
 
 
@@ -161,37 +196,37 @@ queryTests =
             \() ->
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
-                        query [ HasTag "item" ] store
+                        query [ HasTag "item" ] worldModel
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ HasTag "character", HasStat "strength" GT 3 ] store
+                    query [ HasTag "character", HasStat "strength" GT 3 ] worldModel
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1" ] <|
-                    query [ HasTag "character", HasLink "locatedIn" "location1" ] store
+                    query [ HasTag "character", HasLink "locatedIn" "location1" ] worldModel
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
-                    query [ HasTag "other" ] store
+                    query [ HasTag "other" ] worldModel
         , test "assert positive" <|
             \() ->
                 Expect.true "should be true" <|
-                    assert "item1" [ HasTag "special" ] store
+                    assert "item1" [ HasTag "special" ] worldModel
         , test "assert negative" <|
             \() ->
                 Expect.false "should be false" <|
-                    assert "item1" [ HasTag "extraSpecial" ] store
+                    assert "item1" [ HasTag "extraSpecial" ] worldModel
         , test "assert negative - not found" <|
             \() ->
                 Expect.false "should not be found" <|
-                    assert "item99" [ HasTag "item" ] store
+                    assert "item99" [ HasTag "item" ] worldModel
         , test "not with assert" <|
             \() ->
                 Expect.true "should be true" <|
-                    assert "item1" [ Not (HasTag "ExtraSpecial") ] store
+                    assert "item1" [ Not (HasTag "ExtraSpecial") ] worldModel
         , test "not with query" <|
             \() ->
                 Expect.equal [ "item1" ] <|
-                    query [ HasTag "item", Not (HasLink "heldBy" "character1") ] store
+                    query [ HasTag "item", Not (HasLink "heldBy" "character1") ] worldModel
         ]

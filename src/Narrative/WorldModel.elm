@@ -1,55 +1,90 @@
 module Narrative.WorldModel exposing
-    ( WorldModel, startingState
-    , Entity(..), ID, entity
-    , applyChanges
-    , update, addTag, removeTag, setStat, incStat, decStat, setLink
-    , query, assert
-    , hasTag, hasStat, hasLink
+    ( WorldModel, NarrativeComponent, ID, Tags, Stats, Links
+    , emptyTags, emptyStats, emptyLinks, tag, stat, link
+    , ChangeWorld(..), applyChanges
+    , Query(..), query, assert
     , getStat, getLink
-    , ChangeWorld(..), Query(..)
     )
 
-{-| A store that describes the story world. It includes all of the entities in the story world, along with their properties. Properties include `tags`, `stats`, and `links`.
+{-| Your story/game will have a store, or "world model", of all of the entities that live in your world, and the various properties that describe them. The narrative engine uses your store, but doesn't define it or own it. This means that it has to make some assumptions about it.
 
-These entities and properties are used in your rules. Specifically, these work as both "salience" and "quality/stats" based systems (described very well in Emily Shot's blog post <https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/>), which can provide a more flexible story, with higher player agency, and also simplifies the story rules by allowing them to be more generic.
+@docs WorldModel, NarrativeComponent, ID, Tags, Stats, Links
+
+The entity ids and the `tags,`stats`, and`links`properties are used by`Narrative.Rules\`. Specifically, these work as both "salience-based" and "quality/stats-based" systems (described very well in [Emily Shot's blog post](https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/)), which can provide a more flexible story, with higher player agency, and also simplifies the story rules by allowing them to be more generic.
 
 Note that these properties are only meant to track information specific to the narrative engine. Any other properties you need, like a name and description, or sprite dimensions, should be stored and handled in a separate system (consider using the Entity Component System pattern for this).
 
-You need to build your world to start with, and then you can query it, and run your rules against it, and update it over time:
 
+### Example usage:
+
+    -- another component that your entities use
+    type alias DescriptionComponent a =
+        { a | name : String, description : String }
+
+
+    -- your game entity type, defined in terms of the components it uses
+    type alias MyEntity =
+        NarrativeComponent (DescriptionComponent {})
+
+    type alias MyWorldModel =
+        Dict String MyEntity
+
+    emptyEntity : MyEntity
+    emptyEntity =
+        { name = ""
+        , description = ""
+        , tags = emptyTags
+        , stats = emptyStats
+        , links = emptyLinks
+        }
+
+
+    -- a simple helper function for fluently describing your initial world model
+    entity : String -> ( String, MyEntity )
+    entity id =
+        ( id, emptyEntity )
+
+
+    -- describing your world model (this only shows the narrative component properties, but you could add properties for other components in a very similar way)
+    worldModel : MyWorldModel
     worldModel =
-        [ entity "player"
-            |> addTag "character"
-            |> setStat "strength" 5
-            |> setStat "caveExplorationQuestProgress" 1
-            |> setLink "location" "cave"
-        , entity "goblin"
-            |> addTag "character"
-            |> addTag "enemy"
-            |> setStat "strength" 3
-            |> setLink "location" "cave"
-        , entity "torch"
-            |> addTag "item"
-            |> setStat "illumination" 7
-            |> setLink "location" "player"
-        , entity "bagOfGold"
-            |> addTag "item"
-            |> addTag "special"
-            |> setLink "location" "cave"
-        , entity "cave"
-            |> addTag "location"
-            |> addTag "dark"
-        , entity "offscreen"
-            |> addTag "location"
-        ]
-            |> WorldModel.startingState
+        Dict.fromList
+            [ entity "player"
+                |> tag "character"
+                |> stat "strength" 5
+                |> stat "caveExplorationQuestProgress" 1
+                |> link "location" "cave"
+            , entity "goblin"
+                |> tag "character"
+                |> tag "enemy"
+                |> stat "strength" 3
+                |> link "location" "cave"
+            , entity "torch"
+                |> tag "item"
+                |> stat "illumination" 7
+                |> link "location" "player"
+            , entity "bagOfGold"
+                |> tag "item"
+                |> tag "special"
+                |> link "location" "cave"
+            , entity "cave"
+                |> tag "location"
+                |> tag "dark"
+            , entity "offscreen"
+                |> tag "location"
+                |> tag "invisible"
+            ]
 
+
+    -- some example queries:
     currentLocation =
-        getLink "player" "location"
+        getLink "player" "location" worldModel
 
     inventory =
         query [ HasTag "item", HasLink "location" "player" ] worldModel
 
+
+    -- updating the world model
     newWorldModel =
         applyChanges
             [ SetLink "bagOfGold" "location" "player"
@@ -58,36 +93,27 @@ You need to build your world to start with, and then you can query it, and run y
             ]
             worldModel
 
-Note that you are not restricted to the traditional "items/characters/locations" world model. You can define your entities with what ever properties you want to fit any story world.
+Note that you are not restricted to the traditional "items/characters/locations" world model. You can define your entities with what ever properties you want, to fit any story world.
 
 
-### Creating / Updating
+### Full API
 
-@docs WorldModel, startingState
+Setting up the starting state of your entities:
 
-@docs Entity, ID, entity
+@docs emptyTags, emptyStats, emptyLinks, tag, stat, link
 
-Favor using `applyChanges` with `ChangeWorld` declarations over `update` with the direct setters.
+Updating your entities:
 
-@docs ChangeWorld(..), applyChanges
-
-@docs update, addTag, removeTag, setStat, incStat, decStat, setLink
+@docs ChangeWorld, applyChanges
 
 
 ### Querying
 
-Queries are run against the store to assert a condition or select entities. This is useful to render a list of characters in a given location for example. The engine uses `assert` when checking rules.
+Queries are run against the store to assert a condition or select particular entities. This is useful to render a list of characters in a given location for example. The engine uses `assert` when checking rules.
 
-@docs Query(..), query, assert
+@docs Query, query, assert
 
-Favor using `query` over using these direct assertions.
-
-@docs hasTag, hasStat, hasLink
-
-
-### Accessing
-
-The engine doesn't need these, but they may be useful to the view (to get the current location of the player for example `currentLocation = getLink "player" "location" store` and `health = getStat "player" "health"`.)
+You can directly access certain property values, to get the current location, or player's health for example.
 
 @docs getStat, getLink
 
@@ -101,96 +127,113 @@ type alias ID =
     String
 
 
-type Entity
-    = Entity ID EntityValues
+{-| This is what the engine thinks the world model of all of the entities in your store/game looks like. It must be a `Dict` of "entities" with keys representing entity ids as `String`s, and values of `NarrativeComponent a`'s. As long as it looks like this, the engine can operate on it as it needs.
+-}
+type alias WorldModel a =
+    Dict ID (NarrativeComponent a)
 
 
-type alias EntityValues =
-    { tags : Set String
-    , stats : Dict String Int
-    , links : Dict String ID
+{-| This is what the engine thinks your entities look like. As long as they are a record that includes the `tags`, `stats`, and `links` fields, the engine can operate on them. You should avoid using or changing these fields directly, and use the API in this module instead.
+
+Because this is an extensible record, you can have other properties on your entities as well (like "name" and "description" or "sprite" for example), which works well with the "Entity Component System" pattern.
+
+-}
+type alias NarrativeComponent a =
+    { a
+        | tags : Tags
+        , stats : Stats
+        , links : Links
     }
 
 
-type alias WorldModel =
-    Dict ID EntityValues
+type alias Tags =
+    Set String
 
 
-entity : ID -> Entity
-entity id =
-    Entity id
-        { tags = Set.empty
-        , stats = Dict.empty
-        , links = Dict.empty
-        }
+type alias Stats =
+    Dict String Int
 
 
-{-| Add a tag to an entity. Examples: "item", "edible", "poisonous", "SmithFamily", etc.
+type alias Links =
+    Dict String ID
+
+
+{-| A empty starting state for the "tags" property
 -}
-addTag : String -> Entity -> Entity
-addTag tag (Entity id e) =
-    { e | tags = Set.insert tag e.tags }
-        |> Entity id
+emptyTags : Tags
+emptyTags =
+    Set.empty
 
 
-{-| Add a stat to an entity. A stat is a key and a numeric value on any scale you like. Examples: "health", "honor", "plotProgression", "bars of gold", etc.
+{-| A empty starting state for the "stats" property
 -}
-setStat : String -> Int -> Entity -> Entity
-setStat key value (Entity id e) =
-    { e | stats = Dict.insert key value e.stats }
-        |> Entity id
+emptyStats : Stats
+emptyStats =
+    Dict.empty
 
 
-{-| Sets a link, overriding any existing link with the same key. The value is intended to be the id of another entity, which allows queries like getting the inventory, or the current location, or characters in a location, etc.
+{-| A empty starting state for the "links" property
 -}
-setLink : String -> ID -> Entity -> Entity
-setLink key value (Entity id e) =
-    { e | links = Dict.insert key value e.links }
-        |> Entity id
+emptyLinks : Links
+emptyLinks =
+    Dict.empty
 
 
-removeTag : String -> Entity -> Entity
-removeTag tag (Entity id e) =
-    { e | tags = Set.remove tag e.tags }
-        |> Entity id
-
-
-incStat : String -> Int -> Entity -> Entity
-incStat key delta (Entity id e) =
-    { e | stats = Dict.update key (Maybe.map <| (+) delta) e.stats }
-        |> Entity id
-
-
-decStat : String -> Int -> Entity -> Entity
-decStat key delta (Entity id e) =
-    { e | stats = Dict.update key (Maybe.map <| \current -> current - delta) e.stats }
-        |> Entity id
-
-
-{-| The starting state of the world model. You need to store this in your main model.
+{-| A helper function to add a tag to an entity when setting up your world model. Examples: "item", "edible", "poisonous", "SmithFamily", etc.
 -}
-startingState : List Entity -> WorldModel
-startingState entities =
-    entities
-        |> (List.map <| \(Entity id values) -> ( id, values ))
-        |> Dict.fromList
+tag : String -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
+tag value ( id, entity ) =
+    ( id, addTag value entity )
 
 
-{-| Programmatically update the store.
-
-    newWorldModel =
-        update "item1" (addTag "updated") worldModel
-
+{-| A helper function to add a stat to an entity when setting up your world model. A stat is a key and a numeric value on any scale you like. Examples: "health", "honor", "plotProgression", "bars of gold", etc.
 -}
-update : ID -> (Entity -> Entity) -> WorldModel -> WorldModel
+stat : String -> Int -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
+stat key value ( id, entity ) =
+    ( id, setStat key value entity )
+
+
+{-| A helper function to add a link to an entity when setting up your world model. The key is the type of relationship, and the value is intended to be the id of another entity, which allows queries like getting the inventory, or the current location, or characters in a location, etc.
+-}
+link : String -> ID -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
+link key value ( id, entity ) =
+    ( id, setLink key value entity )
+
+
+addTag : String -> NarrativeComponent a -> NarrativeComponent a
+addTag value entity =
+    { entity | tags = Set.insert value entity.tags }
+
+
+setStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
+setStat key value entity =
+    { entity | stats = Dict.insert key value entity.stats }
+
+
+setLink : String -> ID -> NarrativeComponent a -> NarrativeComponent a
+setLink key value entity =
+    { entity | links = Dict.insert key value entity.links }
+
+
+removeTag : String -> NarrativeComponent a -> NarrativeComponent a
+removeTag value entity =
+    { entity | tags = Set.remove value entity.tags }
+
+
+incStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
+incStat key delta entity =
+    { entity | stats = Dict.update key (Maybe.map <| (+) delta) entity.stats }
+
+
+decStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
+decStat key delta entity =
+    { entity | stats = Dict.update key (Maybe.map <| \current -> current - delta) entity.stats }
+
+
+update : ID -> (NarrativeComponent a -> NarrativeComponent a) -> WorldModel a -> WorldModel a
 update id updateFn store =
     Dict.update id
-        (Maybe.map
-            (Entity id
-                >> updateFn
-                >> (\(Entity _ values) -> values)
-            )
-        )
+        (Maybe.map updateFn)
         store
 
 
@@ -206,25 +249,17 @@ type ChangeWorld
 
 
 {-| Update the store based on ChangeWorld declarations.
-
-    newWorldModel =
-        applyChanges
-            [ AddTag "item1" "extraSpecial"
-            , SetLink "item1" "heldBy" "character1"
-            ]
-            worldModel
-
 -}
-applyChanges : List ChangeWorld -> WorldModel -> WorldModel
+applyChanges : List ChangeWorld -> WorldModel a -> WorldModel a
 applyChanges changes store =
     let
         applyChange change acc =
             case change of
-                AddTag id tag ->
-                    update id (addTag tag) acc
+                AddTag id value ->
+                    update id (addTag value) acc
 
-                RemoveTag id tag ->
-                    update id (removeTag tag) acc
+                RemoveTag id value ->
+                    update id (removeTag value) acc
 
                 SetStat id key value ->
                     update id (setStat key value) acc
@@ -248,11 +283,11 @@ type Query
     | Not Query
 
 
-queryFn : Query -> (ID -> WorldModel -> Bool)
+queryFn : Query -> (ID -> WorldModel a -> Bool)
 queryFn q =
     case q of
-        HasTag tag ->
-            \id -> hasTag id tag
+        HasTag valud ->
+            \id -> hasTag id valud
 
         HasStat key comparator value ->
             \id -> hasStat id key comparator value
@@ -264,12 +299,9 @@ queryFn q =
             \id store -> not <| queryFn nestedQuery id store
 
 
-{-| A way to retrieve information from the store, based on queries. Returns a list of entity ids.
-
-itemsInLocation = query [ HasTag "item", HasLink "placement" currentLocation] worldModel
-
+{-| A way to retrieve information from the store. Returns a list of entity ids.
 -}
-query : List Query -> WorldModel -> List ID
+query : List Query -> WorldModel a -> List ID
 query queries store =
     let
         gatherMatches id _ matches =
@@ -284,37 +316,37 @@ query queries store =
 
 {-| Asserts if the current state of the store matches the given queries. Used by `Narrative.Rules.findMatchingRule`. You can also use it for your own custom logic if needed.
 -}
-assert : ID -> List Query -> WorldModel -> Bool
+assert : ID -> List Query -> WorldModel a -> Bool
 assert id queries store =
     List.all (queryFn >> (\q -> q id store)) queries
 
 
-getStat : ID -> String -> WorldModel -> Maybe Int
+getStat : ID -> String -> WorldModel a -> Maybe Int
 getStat id key store =
     Dict.get id store
         |> Maybe.andThen (.stats >> Dict.get key)
 
 
-getLink : ID -> String -> WorldModel -> Maybe ID
+getLink : ID -> String -> WorldModel a -> Maybe ID
 getLink id key store =
     Dict.get id store
         |> Maybe.andThen (.links >> Dict.get key)
 
 
-hasTag : ID -> String -> WorldModel -> Bool
-hasTag id tag store =
+hasTag : ID -> String -> WorldModel a -> Bool
+hasTag id value store =
     Dict.get id store
-        |> Maybe.map (.tags >> Set.member tag)
+        |> Maybe.map (.tags >> Set.member value)
         |> Maybe.withDefault False
 
 
-hasStat : ID -> String -> Order -> Int -> WorldModel -> Bool
+hasStat : ID -> String -> Order -> Int -> WorldModel a -> Bool
 hasStat id key comparator value store =
     getStat id key store
         |> Maybe.map (\actual -> compare actual value == comparator)
         |> Maybe.withDefault False
 
 
-hasLink : ID -> String -> ID -> WorldModel -> Bool
+hasLink : ID -> String -> ID -> WorldModel a -> Bool
 hasLink id key value store =
     getLink id key store == Just value

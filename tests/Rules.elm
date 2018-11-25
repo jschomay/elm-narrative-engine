@@ -155,16 +155,28 @@ all =
 -- ]
 
 
+type alias Entity =
+    { name : String
+    , tags : Tags
+    , stats : Stats
+    , links : Links
+    }
+
+
+entity id =
+    ( id, Entity "" emptyTags emptyStats emptyLinks )
+
+
 store =
-    Narrative.WorldModel.startingState <|
+    Dict.fromList
         [ entity "item1"
-            |> addTag "item"
+            |> tag "item"
         , entity "item2"
-            |> addTag "item"
+            |> tag "item"
         , entity "character1"
-            |> addTag "character"
-            |> addTag "friend"
-            |> setLink "location" "location1"
+            |> tag "character"
+            |> tag "friend"
+            |> link "location" "location1"
         , entity "location1"
-            |> addTag "location"
+            |> tag "location"
         ]

@@ -81,7 +81,7 @@ In general, you would call this any time the user "interacts" with something in 
 While the trigger should match one of the entity IDs defined in your store, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
 
 -}
-findMatchingRule : Rules -> EntityID -> WorldModel -> Maybe RuleID
+findMatchingRule : Rules -> EntityID -> WorldModel a -> Maybe RuleID
 findMatchingRule rules trigger store =
     rules
         |> Dict.filter
@@ -103,12 +103,12 @@ matchesTrigger id trigger =
             id == triggerID
 
 
-matchesConditions : WorldModel -> List Condition -> Bool
+matchesConditions : WorldModel a -> List Condition -> Bool
 matchesConditions store conditions =
     List.all (matchesCondition store) conditions
 
 
-matchesCondition : WorldModel -> Condition -> Bool
+matchesCondition : WorldModel a -> Condition -> Bool
 matchesCondition store condition =
     case condition of
         EntityMatching entityID queries ->
