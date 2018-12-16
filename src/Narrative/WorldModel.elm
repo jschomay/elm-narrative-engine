@@ -70,6 +70,8 @@ Note that these properties are only meant to track information specific to the n
             , entity "cave"
                 |> tag "location"
                 |> tag "dark"
+            , entity "field"
+                |> tag "location"
             , entity "offscreen"
                 |> tag "location"
                 |> tag "invisible"

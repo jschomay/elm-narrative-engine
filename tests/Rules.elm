@@ -7,6 +7,39 @@ import Narrative.WorldModel exposing (..)
 import Test exposing (..)
 
 
+type alias Entity =
+    NarrativeComponent { other : String }
+
+
+emptyEntity : Entity
+emptyEntity =
+    { tags = emptyTags
+    , stats = emptyStats
+    , links = emptyLinks
+    , other = "other"
+    }
+
+
+entity : String -> ( String, Entity )
+entity id =
+    ( id, emptyEntity )
+
+
+store =
+    Dict.fromList
+        [ entity "item1"
+            |> tag "item"
+        , entity "item2"
+            |> tag "item"
+        , entity "character1"
+            |> tag "character"
+            |> tag "friend"
+            |> link "location" "location1"
+        , entity "location1"
+            |> tag "location"
+        ]
+
+
 all : Test
 all =
     describe "Rule tests"
@@ -18,6 +51,7 @@ all =
                             ( "interact with item1"
                             , { trigger = TriggerMatching "item1"
                               , conditions = []
+                              , changes = []
                               }
                             )
 
@@ -25,6 +59,7 @@ all =
                             ( "interact with item2"
                             , { trigger = TriggerMatching "item2"
                               , conditions = []
+                              , changes = []
                               }
                             )
 
@@ -35,8 +70,8 @@ all =
                         [ Just "interact with item1"
                         , Just "interact with item2"
                         ]
-                        [ findMatchingRule rules "item1" store
-                        , findMatchingRule rules "item2" store
+                        [ findMatchingRule "item1" rules store |> Maybe.map Tuple.first
+                        , findMatchingRule "item2" rules store |> Maybe.map Tuple.first
                         ]
             , test "from conditions" <|
                 \() ->
@@ -45,6 +80,7 @@ all =
                             ( "does not match"
                             , { trigger = TriggerMatching "item1"
                               , conditions = [ EntityMatching "character1" [ HasLink "location" "the moon" ] ]
+                              , changes = []
                               }
                             )
 
@@ -57,6 +93,7 @@ all =
                                         , HasTag "invisible"
                                         ]
                                     ]
+                              , changes = []
                               }
                             )
 
@@ -64,6 +101,7 @@ all =
                             ( "expected"
                             , { trigger = TriggerMatching "item1"
                               , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              , changes = []
                               }
                             )
 
@@ -71,7 +109,8 @@ all =
                             Dict.fromList [ rule1, rule2, rule3 ]
                     in
                     Expect.equal (Just "expected") <|
-                        findMatchingRule rules "item1" store
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
             ]
         , describe "finding the best match"
             [ test "all else equal, rules with more conditions win" <|
@@ -83,6 +122,7 @@ all =
                             ( "less specific"
                             , { trigger = TriggerMatching "item1"
                               , conditions = []
+                              , changes = []
                               }
                             )
 
@@ -90,6 +130,7 @@ all =
                             ( "expected"
                             , { trigger = TriggerMatching "item1"
                               , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              , changes = []
                               }
                             )
 
@@ -97,7 +138,8 @@ all =
                             Dict.fromList [ rule1, rule2 ]
                     in
                     Expect.equal (Just "expected") <|
-                        findMatchingRule rules "item1" store
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
             , test "all else equal, rules with more conditions win (based on condition queries)" <|
                 \() ->
                     let
@@ -107,6 +149,7 @@ all =
                             ( "less specific"
                             , { trigger = TriggerMatching "item1"
                               , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
+                              , changes = []
                               }
                             )
 
@@ -119,6 +162,7 @@ all =
                                         , HasTag "friend"
                                         ]
                                     ]
+                              , changes = []
                               }
                             )
 
@@ -126,7 +170,8 @@ all =
                             Dict.fromList [ rule1, rule2 ]
                     in
                     Expect.equal (Just "expected") <|
-                        findMatchingRule rules "item1" store
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
             ]
         ]
 
@@ -153,30 +198,3 @@ all =
 --                 Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
 --     ]
 -- ]
-
-
-type alias Entity =
-    { name : String
-    , tags : Tags
-    , stats : Stats
-    , links : Links
-    }
-
-
-entity id =
-    ( id, Entity "" emptyTags emptyStats emptyLinks )
-
-
-store =
-    Dict.fromList
-        [ entity "item1"
-            |> tag "item"
-        , entity "item2"
-            |> tag "item"
-        , entity "character1"
-            |> tag "character"
-            |> tag "friend"
-            |> link "location" "location1"
-        , entity "location1"
-            |> tag "location"
-        ]
