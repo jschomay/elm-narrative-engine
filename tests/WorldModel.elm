@@ -82,10 +82,18 @@ storeTests =
                 \() ->
                     Expect.equal (Just 7)
                         (applyChanges [ IncStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+            , test "IncStat with unset stats assumes 0" <|
+                \() ->
+                    Expect.equal (Just 1)
+                        (applyChanges [ IncStat "character1" "unsetStat" 1 ] worldModel |> getStat "character1" "unsetStat")
             , test "DecStat" <|
                 \() ->
                     Expect.equal (Just 3)
                         (applyChanges [ DecStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+            , test "DecStat with unset stats assumes 0" <|
+                \() ->
+                    Expect.equal (Just -1)
+                        (applyChanges [ DecStat "character1" "unsetStat" 1 ] worldModel |> getStat "character1" "unsetStat")
             , test "SetStat" <|
                 \() ->
                     Expect.equal (Just 9)
@@ -162,6 +170,9 @@ statTests =
         , test "hasStat (GT) false" <|
             \() ->
                 Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" GT 6 ] worldModel)
+        , test "unknown stat defaults to 0" <|
+            \() ->
+                Expect.true "unknown stat should have been 0" (assert "character1" [ HasStat "unsetStat" LT 1, HasStat "unsetStat" GT -1 ] worldModel)
         ]
 
 

@@ -222,14 +222,26 @@ removeTag value entity =
     { entity | tags = Set.remove value entity.tags }
 
 
+{-| If the specified stat has not been set, this will assume it was 0, and adjust from there.
+-}
 incStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
 incStat key delta entity =
-    { entity | stats = Dict.update key (Maybe.map <| (+) delta) entity.stats }
+    let
+        current =
+            Dict.get key entity.stats |> Maybe.withDefault 0
+    in
+    { entity | stats = Dict.insert key (current + delta) entity.stats }
 
 
+{-| If the specified stat has not been set, this will assume it was 0, and adjust from there.
+-}
 decStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
 decStat key delta entity =
-    { entity | stats = Dict.update key (Maybe.map <| \current -> current - delta) entity.stats }
+    let
+        current =
+            Dict.get key entity.stats |> Maybe.withDefault 0
+    in
+    { entity | stats = Dict.insert key (current - delta) entity.stats }
 
 
 update : ID -> (NarrativeComponent a -> NarrativeComponent a) -> WorldModel a -> WorldModel a
@@ -346,12 +358,14 @@ hasTag value entity =
     Set.member value entity.tags
 
 
+{-| If the provided stat doesn't exist, it defaults to 0 (this makes it easier to query against stats that haven't been set yet, without having to preset every stat in your starting stat).
+-}
 hasStat : String -> Order -> Int -> NarrativeComponent a -> Bool
 hasStat key comparator value entity =
     entity.stats
         |> Dict.get key
-        |> Maybe.map (\actual -> compare actual value == comparator)
-        |> Maybe.withDefault False
+        |> Maybe.withDefault 0
+        |> (\actual -> compare actual value == comparator)
 
 
 hasLink : String -> ID -> NarrativeComponent a -> Bool
