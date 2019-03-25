@@ -1,4 +1,12 @@
-module Narrative.Rules exposing (Condition(..), EntityID, Rule, RuleID, Rules, Trigger(..), findMatchingRule)
+module Narrative.Rules exposing
+    ( EntityID
+    , EntityMatcher(..)
+    , Rule
+    , RuleID
+    , Rules
+    , findMatchingRule
+    , weight
+    )
 
 {-| Rules are a declarative way of describing meaningful events in your story.
 
@@ -6,9 +14,13 @@ They are made up of two parts: a "trigger", and a set of "conditions". Each time
 
 Because `Rule`s are extended records, you can also include other useful data on them, such as how the state of your story world should change, or which specific narrative to show, or which sound effect to play, etc. The engine will ignore these fields, but your client can act on them when a rule matches.
 
-@doc EntityID, RuleID, Rules, Rule, Trigger(..), Condition(..), findMatchingRule
+@doc EntityID, RuleID, Rules, Rule, EntityMatcher(..), Condition(..), findMatchingRule
 
 Example rules using the example store in `Narrative.WorldModel`:
+
+TODO show examples of generic trigger and condition and trigger queries (use locked door examples on trello card)
+TODO document generic conditions
+TODO document weighting
 
     rules =
         Dict.fromList
@@ -67,7 +79,7 @@ When the player interacts with the goblin, you would call `findMatchingRule` and
 -}
 
 import Dict exposing (Dict)
-import Narrative.WorldModel as WorldModel exposing (WorldModel)
+import Narrative.WorldModel as WorldModel exposing (Query, WorldModel)
 
 
 type alias EntityID =
@@ -84,17 +96,14 @@ type alias Rules a =
 
 type alias Rule a =
     { a
-        | trigger : Trigger
-        , conditions : List Condition
+        | trigger : EntityMatcher
+        , conditions : List EntityMatcher
     }
 
 
-type Trigger
-    = TriggerMatching EntityID
-
-
-type Condition
-    = EntityMatching EntityID (List WorldModel.Query)
+type EntityMatcher
+    = Match EntityID (List Query)
+    | MatchAny (List Query)
 
 
 {-| Finds the rule that matches against the provided trigger and store. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
@@ -109,8 +118,8 @@ findMatchingRule trigger rules store =
     rules
         |> Dict.filter
             (\ruleId rule ->
-                matchesTrigger trigger rule.trigger
-                    && matchesConditions store rule.conditions
+                matchTrigger store trigger rule.trigger
+                    && List.all (matchCondition store) rule.conditions
             )
         |> Dict.toList
         |> List.sortBy (Tuple.second >> weight)
@@ -118,37 +127,59 @@ findMatchingRule trigger rules store =
         |> List.head
 
 
-matchesTrigger : EntityID -> Trigger -> Bool
-matchesTrigger id trigger =
-    case trigger of
-        TriggerMatching triggerID ->
-            id == triggerID
+matchTrigger : WorldModel a -> EntityID -> EntityMatcher -> Bool
+matchTrigger store trigger matcher =
+    case matcher of
+        Match id queries ->
+            (id == trigger)
+                && WorldModel.assert trigger queries store
+
+        MatchAny queries ->
+            WorldModel.assert trigger queries store
 
 
-matchesConditions : WorldModel a -> List Condition -> Bool
-matchesConditions store conditions =
-    List.all (matchesCondition store) conditions
+matchCondition : WorldModel a -> EntityMatcher -> Bool
+matchCondition store matcher =
+    case matcher of
+        Match id queries ->
+            WorldModel.assert id queries store
 
-
-matchesCondition : WorldModel a -> Condition -> Bool
-matchesCondition store condition =
-    case condition of
-        EntityMatching entityID queries ->
-            WorldModel.assert entityID queries store
+        MatchAny queries ->
+            WorldModel.query queries store
+                |> List.isEmpty
+                |> not
 
 
 weight : Rule a -> Int
-weight rule =
-    conditionsSpecificity rule
+weight { trigger, conditions } =
+    let
+        queryScore matcher =
+            case matcher of
+                Match id queries ->
+                    List.length queries
 
+                MatchAny queries ->
+                    List.length queries
 
-{-| 10 points per entity matcher, plus 1 point per query per entity
--}
-conditionsSpecificity : Rule a -> Int
-conditionsSpecificity { conditions } =
-    conditions
-        |> List.foldl
-            (\(EntityMatching _ queries) acc ->
-                acc + 10 + List.length queries
-            )
-            0
+        conditionsScore =
+            conditions
+                |> List.foldl
+                    (\matcher acc ->
+                        case matcher of
+                            Match _ _ ->
+                                10 + queryScore matcher + acc
+
+                            MatchAny _ ->
+                                0 + queryScore matcher + acc
+                    )
+                    0
+
+        triggerScore =
+            case trigger of
+                Match _ _ ->
+                    100 + queryScore trigger
+
+                MatchAny _ ->
+                    0 + queryScore trigger
+    in
+    conditionsScore + triggerScore

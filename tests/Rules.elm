@@ -43,158 +43,316 @@ store =
 all : Test
 all =
     describe "Rule tests"
-        [ describe "findMatchingRule finds the right rule"
-            [ test "from triggers" <|
+        [ describe "findMatchingRule (triggers)" <|
+            let
+                rules =
+                    [ ( "specific for item1"
+                      , { trigger = Match "item1" []
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "specific for item2"
+                      , { trigger = Match "item2" []
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "specific with query"
+                      , { trigger = Match "character1" [ HasTag "friend" ]
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "generic"
+                      , { trigger = MatchAny [ HasTag "location" ]
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "won't match (specific)"
+                      , { trigger = Match "character1" [ HasTag "enemy" ]
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "won't match (generic)"
+                      , { trigger = MatchAny [ HasTag "location", HasTag "locked" ]
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    , ( "won't match (non-entity)"
+                      , { trigger = Match "storyEvent" []
+                        , conditions = []
+                        , changes = []
+                        }
+                      )
+                    ]
+                        |> Dict.fromList
+            in
+            [ test "matching by id (tested twice to show match is not order dependent)" <|
                 \() ->
-                    let
-                        rule1 =
-                            ( "interact with item1"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = []
-                              , changes = []
-                              }
-                            )
-
-                        rule2 =
-                            ( "interact with item2"
-                            , { trigger = TriggerMatching "item2"
-                              , conditions = []
-                              , changes = []
-                              }
-                            )
-
-                        rules =
-                            Dict.fromList [ rule1, rule2 ]
-                    in
                     Expect.equalLists
-                        [ Just "interact with item1"
-                        , Just "interact with item2"
+                        [ Just "specific for item1"
+                        , Just "specific for item2"
                         ]
                         [ findMatchingRule "item1" rules store |> Maybe.map Tuple.first
                         , findMatchingRule "item2" rules store |> Maybe.map Tuple.first
                         ]
-            , test "from conditions" <|
+            , test "matching by id plus query" <|
                 \() ->
-                    let
-                        rule1 =
-                            ( "does not match"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = [ EntityMatching "character1" [ HasLink "location" "the moon" ] ]
-                              , changes = []
-                              }
-                            )
-
-                        rule2 =
-                            ( "does not match all conditions"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions =
-                                    [ EntityMatching "character1"
-                                        [ HasLink "location" "location1"
-                                        , HasTag "invisible"
-                                        ]
-                                    ]
-                              , changes = []
-                              }
-                            )
-
-                        rule3 =
-                            ( "expected"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
-                              , changes = []
-                              }
-                            )
-
-                        rules =
-                            Dict.fromList [ rule1, rule2, rule3 ]
-                    in
+                    Expect.equal
+                        (Just "specific with query")
+                        (findMatchingRule "character1" rules store |> Maybe.map Tuple.first)
+            , test "generic (MatchAny)" <|
+                \() ->
+                    Expect.equal
+                        (Just "generic")
+                        (findMatchingRule "location1" rules store |> Maybe.map Tuple.first)
+            , test "non-entity triggers" <|
+                \() ->
+                    Expect.equal
+                        Nothing
+                        (findMatchingRule "storyEvent" rules store |> Maybe.map Tuple.first)
+            ]
+        , describe "findMatchingRule (conditions)" <|
+            let
+                rules =
+                    [ ( "does not match"
+                      , { trigger = Match "item1" []
+                        , conditions = [ Match "character1" [ HasLink "location" "the moon" ] ]
+                        , changes = []
+                        }
+                      )
+                    , ( "does not match all conditions"
+                      , { trigger = Match "item1" []
+                        , conditions =
+                            [ Match "character1"
+                                [ HasLink "location" "location1"
+                                , HasTag "invisible"
+                                ]
+                            ]
+                        , changes = []
+                        }
+                      )
+                    , ( "expected"
+                      , { trigger = Match "item1" []
+                        , conditions = [ Match "character1" [ HasLink "location" "location1" ] ]
+                        , changes = []
+                        }
+                      )
+                    , ( "generic"
+                      , { trigger = Match "location1" []
+                        , conditions = [ MatchAny [ HasTag "friend" ] ]
+                        , changes = []
+                        }
+                      )
+                    , ( "generic does not match"
+                      , { trigger = Match "location1" []
+                        , conditions = [ MatchAny [ HasTag "enemy" ] ]
+                        , changes = []
+                        }
+                      )
+                    ]
+                        |> Dict.fromList
+            in
+            [ test "from specific conditions" <|
+                \() ->
                     Expect.equal (Just "expected") <|
                         Maybe.map Tuple.first <|
                             findMatchingRule "item1" rules store
+            , test "from generic conditions" <|
+                \() ->
+                    Expect.equal Nothing <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "character" rules store
+            , test "never matches if trigger doesn't match" <|
+                \() ->
+                    Expect.equal (Just "generic") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "location1" rules store
             ]
         , describe "finding the best match"
-            [ test "all else equal, rules with more conditions win" <|
+            [ test "with no weighting, rule in reverse alphabetical order wins" <|
                 \() ->
                     let
-                        -- Note, without weighting, rules are sorted alphabetically by id, and then reversed
-                        -- So without weighting implemented "less specific" would come before "expected"
-                        rule1 =
-                            ( "less specific"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = []
-                              , changes = []
-                              }
-                            )
-
-                        rule2 =
-                            ( "expected"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
-                              , changes = []
-                              }
-                            )
-
                         rules =
-                            Dict.fromList [ rule1, rule2 ]
+                            [ ( "a"
+                              , { trigger = Match "item1" []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            , ( "z"
+                              , { trigger = Match "item1" []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
+                    in
+                    Expect.equal (Just "z") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
+            , test "all else equal, rules with more conditions win" <|
+                \() ->
+                    let
+                        rules =
+                            [ ( "z less specific"
+                              , { trigger = Match "item1" []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = Match "item1" []
+                                , conditions = [ Match "character1" [ HasLink "location" "location1" ] ]
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
                     in
                     Expect.equal (Just "expected") <|
                         Maybe.map Tuple.first <|
                             findMatchingRule "item1" rules store
-            , test "all else equal, rules with more conditions win (based on condition queries)" <|
+            , test "all else equal, rules with more queries win" <|
                 \() ->
                     let
-                        -- Note, without weighting, rules are sorted alphabetically by id, and then reversed
-                        -- So without weighting implemented "less specific" would come before "expected"
-                        rule1 =
-                            ( "less specific"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions = [ EntityMatching "character1" [ HasLink "location" "location1" ] ]
-                              , changes = []
-                              }
-                            )
-
-                        rule2 =
-                            ( "expected"
-                            , { trigger = TriggerMatching "item1"
-                              , conditions =
-                                    [ EntityMatching "character1"
+                        rules =
+                            [ ( "z less specific"
+                              , { trigger = Match "item1" []
+                                , conditions =
+                                    [ Match "character1"
+                                        [ HasLink "location" "location1"
+                                        ]
+                                    ]
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = Match "item1" []
+                                , conditions =
+                                    [ Match "character1"
                                         [ HasLink "location" "location1"
                                         , HasTag "friend"
                                         ]
                                     ]
-                              , changes = []
-                              }
-                            )
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
 
+                        -- x =
+                        --     Debug.log "" <| List.map weight <| Dict.values rules
+                    in
+                    Expect.equal (Just "expected") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
+            , test "all else equal, specific trigger matches with the most queries win" <|
+                \() ->
+                    let
                         rules =
-                            Dict.fromList [ rule1, rule2 ]
+                            [ ( "z less specific"
+                              , { trigger = Match "item1" []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = Match "item1" [ HasTag "item" ]
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
+                    in
+                    Expect.equal (Just "expected") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
+            , test "all else equal, generic trigger matches with the most queries win" <|
+                \() ->
+                    let
+                        rules =
+                            [ ( "z less specific"
+                              , { trigger = MatchAny []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = MatchAny [ HasTag "item" ]
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
+                    in
+                    Expect.equal (Just "expected") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
+            , test "all else equal, specific condition matches beat generic condition matches" <|
+                \() ->
+                    let
+                        rules =
+                            [ ( "z less specific"
+                              , { trigger = Match "item1" []
+                                , conditions =
+                                    [ MatchAny [ HasTag "item" ]
+                                    ]
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = Match "item1" []
+                                , conditions =
+                                    [ Match "item2" [ HasTag "item" ]
+                                    ]
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
+                    in
+                    Expect.equal (Just "expected") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "item1" rules store
+            , test "specific trigger matches always beat generic trigger matches (regardless of number of queries or conditions)" <|
+                \() ->
+                    let
+                        rules =
+                            [ ( "z less specific"
+                              , { trigger = MatchAny [ HasTag "item" ]
+                                , conditions =
+                                    [ Match "character1"
+                                        [ HasLink "location" "location1"
+                                        , HasTag "friend"
+                                        ]
+                                    , Match "item2" [ HasTag "item" ]
+                                    , Match "location1" [ HasTag "location" ]
+                                    ]
+                                , changes = []
+                                }
+                              )
+                            , ( "expected"
+                              , { trigger = Match "item1" []
+                                , conditions = []
+                                , changes = []
+                                }
+                              )
+                            ]
+                                |> Dict.fromList
+
+                        -- x =
+                        --     Debug.log "" <| List.map weight <| Dict.values rules
                     in
                     Expect.equal (Just "expected") <|
                         Maybe.map Tuple.first <|
                             findMatchingRule "item1" rules store
             ]
         ]
-
-
-
--- the test below apply to level-2 queries
---     -- the following would be good fuzz test candidates...
---     , test "ID-matching trigger rules beat query-matching trigger rules (regardless of conditions)" <|
---         \() ->
---             let
---                 rules =
---                     [ rule1, rule4, ruleX ]
---                 -- TODO test with ID-matching conditions too
---             in
---             Expect.equal (Just rule1) <|
---                 Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
---     , test "all else equal, ID-matching conditions beat query-matching conditions" <|
---         \() ->
---             let
---                 rules =
---                     [ rule1, rule4, ruleX ]
---             in
---             Expect.equal (Just rule1) <|
---                 Rules.findMatchingRule { story | rules = Dict.fromList rules } "x"
---     ]
--- ]
