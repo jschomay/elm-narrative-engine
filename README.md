@@ -1,10 +1,20 @@
 # Elm Narrative Engine
 
-A unique tool for telling interactive stories.
+A powerful and flexible tool for building interactive story games.
+
+Provides 2 features:
+
+- Create a dynamic "World model" by adding custom, semantic data to entities in your existing game state
+- Trigger meaningful story events by declaratively describing specific interactions and conditions
+
+TODO simple example code
+TODO update content below
 
 ## Features
 
-- Context-based rule-matching system for immersive and responsive stories
+Flexible - works as a component to add story content and events to a game.
+
+- Context-based rule-matching system (salience and quality-based systems) for immersive and responsive stories
 - Extremely flexible and extensible, see the sample stories below for examples!
 - Total separation of logic, presentation, and content
 - Data-driven and declarative

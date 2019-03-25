@@ -2,6 +2,22 @@
 
 Follow along with development on the [developement blog](http://blog.elmnarrativeengine.com/).
 
+## next
+
+100% breaking changes!  Huge shifts in both api and concepts:
+
+- shift to full salience and property based systems!
+- shift to moving most functionality external to engine
+- removed everything specific to "items", "locations", "characters", "scenes", "ending", "history"
+- replaced with "tags", "stats", "links" for clients to build up their own semantic requirements
+- no more internal model, just functions that need a `WorldModel` and `Rules` passed through
+
+Exported modules change:
+
+- No more `Engine`
+- Added `Narrative.WorldModel`
+- Added `Narrative.Rules`
+
 ## 3.0.1
 
 Update for Elm 0.19!
