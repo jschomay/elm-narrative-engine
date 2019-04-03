@@ -21,6 +21,7 @@ Example rules using the example store in `Narrative.WorldModel`:
 TODO show examples of generic trigger and condition and trigger queries (use locked door examples on trello card)
 TODO document generic conditions
 TODO document weighting
+TODO document trigger matching with "@"
 
     rules =
         Dict.fromList
@@ -119,7 +120,7 @@ findMatchingRule trigger rules store =
         |> Dict.filter
             (\ruleId rule ->
                 matchTrigger store trigger rule.trigger
-                    && List.all (matchCondition store) rule.conditions
+                    && List.all (matchCondition trigger store) rule.conditions
             )
         |> Dict.toList
         |> List.sortBy (Tuple.second >> weight)
@@ -138,16 +139,32 @@ matchTrigger store trigger matcher =
             WorldModel.assert trigger queries store
 
 
-matchCondition : WorldModel a -> EntityMatcher -> Bool
-matchCondition store matcher =
+matchCondition : EntityID -> WorldModel a -> EntityMatcher -> Bool
+matchCondition trigger store matcher =
     case matcher of
         Match id queries ->
-            WorldModel.assert id queries store
+            queries
+                |> List.map (parse trigger)
+                |> (\qs ->
+                        WorldModel.assert id qs store
+                   )
 
         MatchAny queries ->
-            WorldModel.query queries store
+            queries
+                |> List.map (parse trigger)
+                |> (\qs -> WorldModel.query qs store)
                 |> List.isEmpty
                 |> not
+
+
+parse : EntityID -> Query -> Query
+parse trigger query =
+    case query of
+        WorldModel.HasLink key "$" ->
+            WorldModel.HasLink key trigger
+
+        _ ->
+            query
 
 
 weight : Rule a -> Int

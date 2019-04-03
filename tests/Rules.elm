@@ -31,11 +31,14 @@ store =
             |> tag "item"
         , entity "item2"
             |> tag "item"
+            |> link "location" "location2"
         , entity "character1"
             |> tag "character"
             |> tag "friend"
             |> link "location" "location1"
         , entity "location1"
+            |> tag "location"
+        , entity "location2"
             |> tag "location"
         ]
 
@@ -142,6 +145,12 @@ all =
                         , changes = []
                         }
                       )
+                    , ( "trigger won't match"
+                      , { trigger = Match "character1" [ HasTag "non-existant" ]
+                        , conditions = [ Match "item1" [ HasTag "item" ] ]
+                        , changes = []
+                        }
+                      )
                     , ( "generic"
                       , { trigger = Match "location1" []
                         , conditions = [ MatchAny [ HasTag "friend" ] ]
@@ -154,6 +163,15 @@ all =
                         , changes = []
                         }
                       )
+                    , ( "match trigger"
+                      , { trigger = Match "location2" []
+                        , conditions =
+                            [ MatchAny [ HasLink "location" "$" ]
+                            , Match "item2" [ HasLink "location" "$" ]
+                            ]
+                        , changes = []
+                        }
+                      )
                     ]
                         |> Dict.fromList
             in
@@ -162,12 +180,17 @@ all =
                     Expect.equal (Just "expected") <|
                         Maybe.map Tuple.first <|
                             findMatchingRule "item1" rules store
-            , test "from generic conditions" <|
+            , test "using '$' to reference trigger" <|
+                \() ->
+                    Expect.equal (Just "match trigger") <|
+                        Maybe.map Tuple.first <|
+                            findMatchingRule "location2" rules store
+            , test "never matches if trigger doesn't match" <|
                 \() ->
                     Expect.equal Nothing <|
                         Maybe.map Tuple.first <|
-                            findMatchingRule "character" rules store
-            , test "never matches if trigger doesn't match" <|
+                            findMatchingRule "character1" rules store
+            , test "from generic conditions" <|
                 \() ->
                     Expect.equal (Just "generic") <|
                         Maybe.map Tuple.first <|
