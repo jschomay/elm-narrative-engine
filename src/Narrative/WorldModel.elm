@@ -269,18 +269,26 @@ type ChangeEntity
     | SetLink String ID
 
 
-{-| Update the store based on a rule's list of changes.
+{-| Update the store based on a rule's list of changes. Also takes the id of the interactable that triggered the rule to allow changes to use trigger matching (with `$`).
 -}
-applyChanges : List ChangeWorld -> WorldModel a -> WorldModel a
-applyChanges entityUpdates store =
+applyChanges : List ChangeWorld -> ID -> WorldModel a -> WorldModel a
+applyChanges entityUpdates trigger store =
     let
+        parseID id =
+            case id of
+                "$" ->
+                    trigger
+
+                _ ->
+                    id
+
         updateEntity id =
             List.foldl (applyChange id)
 
         applyUpdate entityUpdate updated_store =
             case entityUpdate of
                 Update id changes ->
-                    updateEntity id updated_store changes
+                    updateEntity (parseID id) updated_store changes
 
                 UpdateAll queries changes ->
                     query queries updated_store
@@ -289,14 +297,14 @@ applyChanges entityUpdates store =
 
         applyChange id change updated_store =
             case change of
-                AddTag value ->
-                    update id (addTag value) updated_store
+                AddTag tag_ ->
+                    update id (addTag tag_) updated_store
 
-                RemoveTag value ->
-                    update id (removeTag value) updated_store
+                RemoveTag tag_ ->
+                    update id (removeTag tag_) updated_store
 
-                SetStat key value ->
-                    update id (setStat key value) updated_store
+                SetStat key stat_ ->
+                    update id (setStat key stat_) updated_store
 
                 IncStat key amount ->
                     update id (incStat key amount) updated_store
@@ -304,8 +312,8 @@ applyChanges entityUpdates store =
                 DecStat key amount ->
                     update id (decStat key amount) updated_store
 
-                SetLink key value ->
-                    update id (setLink key value) updated_store
+                SetLink key linkID ->
+                    update id (setLink key (parseID linkID)) updated_store
     in
     List.foldl applyUpdate store entityUpdates
 
