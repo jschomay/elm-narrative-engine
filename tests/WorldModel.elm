@@ -73,35 +73,35 @@ storeTests =
             [ test "AddTag" <|
                 \() ->
                     Expect.true "update didn't work"
-                        (applyChanges [ AddTag "item1" "updated" ] worldModel |> assert "item1" [ HasTag "updated" ])
+                        (applyChanges [ Update "item1" [ AddTag "updated" ] ] worldModel |> assert "item1" [ HasTag "updated" ])
             , test "RemoveTag" <|
                 \() ->
                     Expect.false "update didn't work"
-                        (applyChanges [ RemoveTag "item1" "special" ] worldModel |> assert "item1" [ HasTag "special" ])
+                        (applyChanges [ Update "item1" [ RemoveTag "special" ] ] worldModel |> assert "item1" [ HasTag "special" ])
             , test "IncStat" <|
                 \() ->
                     Expect.equal (Just 7)
-                        (applyChanges [ IncStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+                        (applyChanges [ Update "character1" [ IncStat "strength" 2 ] ] worldModel |> getStat "character1" "strength")
             , test "IncStat with unset stats assumes 0" <|
                 \() ->
                     Expect.equal (Just 1)
-                        (applyChanges [ IncStat "character1" "unsetStat" 1 ] worldModel |> getStat "character1" "unsetStat")
+                        (applyChanges [ Update "character1" [ IncStat "unsetStat" 1 ] ] worldModel |> getStat "character1" "unsetStat")
             , test "DecStat" <|
                 \() ->
                     Expect.equal (Just 3)
-                        (applyChanges [ DecStat "character1" "strength" 2 ] worldModel |> getStat "character1" "strength")
+                        (applyChanges [ Update "character1" [ DecStat "strength" 2 ] ] worldModel |> getStat "character1" "strength")
             , test "DecStat with unset stats assumes 0" <|
                 \() ->
                     Expect.equal (Just -1)
-                        (applyChanges [ DecStat "character1" "unsetStat" 1 ] worldModel |> getStat "character1" "unsetStat")
+                        (applyChanges [ Update "character1" [ DecStat "unsetStat" 1 ] ] worldModel |> getStat "character1" "unsetStat")
             , test "SetStat" <|
                 \() ->
                     Expect.equal (Just 9)
-                        (applyChanges [ SetStat "character1" "strength" 9 ] worldModel |> getStat "character1" "strength")
+                        (applyChanges [ Update "character1" [ SetStat "strength" 9 ] ] worldModel |> getStat "character1" "strength")
             , test "SetLink" <|
                 \() ->
                     Expect.true "update didn't work"
-                        (applyChanges [ SetLink "item2" "heldBy" "character2" ] worldModel
+                        (applyChanges [ Update "item2" [ SetLink "heldBy" "character2" ] ] worldModel
                             |> assert "item2"
                                 [ HasLink "heldBy" "character2"
                                 , Not (HasLink "heldBy" "character1")
@@ -111,25 +111,52 @@ storeTests =
                 -- TODO should it do something else?
                 \() ->
                     Expect.equal worldModel
-                        (applyChanges [ RemoveTag "item1" "notPresent" ] worldModel)
+                        (applyChanges [ Update "item1" [ RemoveTag "notPresent" ] ] worldModel)
             , test "RemoveTag when entity not present does nothing" <|
                 -- TODO should it do something else?
                 \() ->
                     Expect.equal worldModel
-                        (applyChanges [ RemoveTag "notPresent" "special" ] worldModel)
+                        (applyChanges [ Update "notPresent" [ RemoveTag "special" ] ] worldModel)
             , test "with multiple changes" <|
                 \() ->
                     Expect.true "changes did not apply correctly"
                         (worldModel
                             |> applyChanges
-                                [ AddTag "item1" "extraSpecial"
-                                , SetLink "item1" "heldBy" "character1"
+                                [ Update "item1"
+                                    [ AddTag "extraSpecial"
+                                    , SetLink "heldBy" "character1"
+                                    ]
                                 ]
                             |> assert "item1"
                                 [ HasTag "extraSpecial"
                                 , HasLink "heldBy" "character1"
                                 ]
                         )
+            , test "on multiple entities" <|
+                \() ->
+                    Expect.all
+                        [ assert "item1" [ HasTag "updated" ] >> Expect.true "update didn't work"
+                        , assert "item2" [ HasTag "updated" ] >> Expect.true "update didn't work"
+                        ]
+                        (worldModel
+                            |> applyChanges
+                                [ Update "item1" [ AddTag "updated" ]
+                                , Update "item2" [ AddTag "updated" ]
+                                ]
+                        )
+            , test "UpdateAll" <|
+                \() ->
+                    Expect.all
+                        [ assert "item1" [ HasTag "updated", HasTag "again" ] >> Expect.true "update didn't work"
+                        , assert "item2" [ HasTag "updated", HasTag "again" ] >> Expect.true "update didn't work"
+                        ]
+                        (worldModel
+                            |> applyChanges
+                                [ UpdateAll [ HasTag "item" ] [ AddTag "updated", AddTag "again" ]
+                                ]
+                        )
+            , todo "update trigger (as subject)"
+            , todo "update trigger (in link)"
             ]
         ]
 

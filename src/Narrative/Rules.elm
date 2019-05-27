@@ -22,6 +22,7 @@ TODO show examples of generic trigger and condition and trigger queries (use loc
 TODO document generic conditions
 TODO document weighting
 TODO document trigger matching with "@"
+TODO all of this syntax needs to be updated (matchers and updaters)
 
     rules =
         Dict.fromList

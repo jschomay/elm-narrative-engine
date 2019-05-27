@@ -1,7 +1,7 @@
 module Narrative.WorldModel exposing
     ( WorldModel, NarrativeComponent, ID, Tags, Stats, Links
     , emptyTags, emptyStats, emptyLinks, tag, stat, link
-    , ChangeWorld(..), applyChanges
+    , ChangeWorld(..), ChangeEntity(..), applyChanges
     , Query(..), query, assert
     , getStat, getLink
     )
@@ -106,7 +106,7 @@ Setting up the starting state of your entities:
 
 Updating your entities:
 
-@docs ChangeWorld, applyChanges
+@docs ChangeWorld, ChangeEntity, applyChanges
 
 
 ### Querying
@@ -251,43 +251,63 @@ update id updateFn store =
         store
 
 
-{-| Declarative descriptions of how the world should change, designed to be used with rules.
+{-| Declarative statements of how an entity should change, designed to be used with rules.
 -}
 type ChangeWorld
-    = AddTag ID String
-    | RemoveTag ID String
-    | SetStat ID String Int
-    | IncStat ID String Int
-    | DecStat ID String Int
-    | SetLink ID String ID
+    = Update ID (List ChangeEntity)
+    | UpdateAll (List Query) (List ChangeEntity)
 
 
-{-| Update the store based on ChangeWorld declarations.
+{-| Declarative statements for changing a property on an entity.
+-}
+type ChangeEntity
+    = AddTag String
+    | RemoveTag String
+    | SetStat String Int
+    | IncStat String Int
+    | DecStat String Int
+    | SetLink String ID
+
+
+{-| Update the store based on a rule's list of changes.
 -}
 applyChanges : List ChangeWorld -> WorldModel a -> WorldModel a
-applyChanges changes store =
+applyChanges entityUpdates store =
     let
-        applyChange change acc =
+        updateEntity id =
+            List.foldl (applyChange id)
+
+        applyUpdate entityUpdate updated_store =
+            case entityUpdate of
+                Update id changes ->
+                    updateEntity id updated_store changes
+
+                UpdateAll queries changes ->
+                    query queries updated_store
+                        -- apply all changes to all queried entities
+                        |> List.foldl (\( id, _ ) acc -> updateEntity id acc changes) updated_store
+
+        applyChange id change updated_store =
             case change of
-                AddTag id value ->
-                    update id (addTag value) acc
+                AddTag value ->
+                    update id (addTag value) updated_store
 
-                RemoveTag id value ->
-                    update id (removeTag value) acc
+                RemoveTag value ->
+                    update id (removeTag value) updated_store
 
-                SetStat id key value ->
-                    update id (setStat key value) acc
+                SetStat key value ->
+                    update id (setStat key value) updated_store
 
-                IncStat id key amount ->
-                    update id (incStat key amount) acc
+                IncStat key amount ->
+                    update id (incStat key amount) updated_store
 
-                DecStat id key amount ->
-                    update id (decStat key amount) acc
+                DecStat key amount ->
+                    update id (decStat key amount) updated_store
 
-                SetLink id key value ->
-                    update id (setLink key value) acc
+                SetLink key value ->
+                    update id (setLink key value) updated_store
     in
-    List.foldl applyChange store changes
+    List.foldl applyUpdate store entityUpdates
 
 
 type Query
