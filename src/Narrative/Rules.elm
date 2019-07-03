@@ -94,6 +94,7 @@ type alias Rule a =
     { a
         | trigger : EntityMatcher
         , conditions : List EntityMatcher
+        , changes : List ChangeWorld
     }
 
 
