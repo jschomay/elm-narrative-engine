@@ -39,6 +39,7 @@ worldModel =
         [ entity "item1"
             |> tag "item"
             |> tag "special"
+            |> link "belongsTo" "character2"
         , entity "item2"
             |> tag "item"
             |> link "heldBy" "character1"
@@ -50,6 +51,7 @@ worldModel =
         , entity "character2"
             |> tag "character"
             |> stat "strength" 2
+            |> link "locatedIn" "location1"
         , entity "location1"
             |> tag "location"
         , entity "location2"
@@ -105,8 +107,8 @@ storeTests =
                     Expect.true "update didn't work"
                         (applyChanges [ Update "item2" [ SetLink "heldBy" "character2" ] ] "trigger" worldModel
                             |> assert "item2"
-                                [ HasLink "heldBy" "character2"
-                                , Not (HasLink "heldBy" "character1")
+                                [ HasLink "heldBy" <| Match "character2" []
+                                , Not (HasLink "heldBy" <| Match "character1" [])
                                 ]
                         )
             , test "RemoveTag when tag not present does nothing" <|
@@ -132,7 +134,7 @@ storeTests =
                             worldModel
                             |> assert "item1"
                                 [ HasTag "extraSpecial"
-                                , HasLink "heldBy" "character1"
+                                , HasLink "heldBy" <| Match "character1" []
                                 ]
                         )
             , test "on multiple entities" <|
@@ -175,13 +177,13 @@ storeTests =
                             [ Update "character1" [ SetLink "locatedIn" "$" ] ]
                             "location2"
                             worldModel
-                            |> assert "character1" [ HasLink "locatedIn" "location2" ]
+                            |> assert "character1" [ HasLink "locatedIn" <| Match "location2" [] ]
                         )
             , test "update trigger (in link with UpdateAll)" <|
                 \() ->
                     Expect.all
-                        [ assert "item1" [ HasLink "heldBy" "character2" ] >> Expect.true "update didn't work"
-                        , assert "item2" [ HasLink "heldBy" "character2" ] >> Expect.true "update didn't work"
+                        [ assert "item1" [ HasLink "heldBy" <| Match "character2" [] ] >> Expect.true "update didn't work"
+                        , assert "item2" [ HasLink "heldBy" <| Match "character2" [] ] >> Expect.true "update didn't work"
                         ]
                         (applyChanges
                             [ UpdateAll [ HasTag "item" ] [ SetLink "heldBy" "$" ] ]
@@ -248,13 +250,53 @@ linkTests =
                 Expect.equal Nothing (getLink "item" "holding" worldModel)
         , test "hasLink true" <|
             \() ->
-                Expect.true "expected link" (assert "character1" [ HasLink "holding" "item1" ] worldModel)
+                Expect.true "expected link" (assert "character1" [ HasLink "holding" <| Match "item1" [] ] worldModel)
         , test "hasLink false" <|
             \() ->
-                Expect.false "wrong value" (assert "character1" [ HasLink "holding" "location" ] worldModel)
+                Expect.false "wrong value" (assert "character1" [ HasLink "holding" <| Match "location1" [] ] worldModel)
         , test "hasLink false 2" <|
             \() ->
-                Expect.false "wrong key" (assert "character1" [ HasLink "knowsAbout" "item1" ] worldModel)
+                Expect.false "wrong key" (assert "character1" [ HasLink "knowsAbout" <| Match "item1" [] ] worldModel)
+        , test "hasLink with queries true" <|
+            \() ->
+                Expect.true "queries match" <|
+                    assert "character1" [ HasLink "holding" (Match "item1" [ HasTag "item" ]) ] worldModel
+        , test "hasLink with queries false" <|
+            \() ->
+                Expect.false "queries don't match" <|
+                    assert "character1" [ HasLink "holding" (Match "item1" [ HasTag "location" ]) ] worldModel
+        , test "hasLink generic true" <|
+            \() ->
+                Expect.true "existing relation" <|
+                    assert "character1" [ HasLink "holding" (MatchAny [ HasTag "item" ]) ] worldModel
+        , test "hasLink generic false" <|
+            \() ->
+                Expect.false "no relation" <|
+                    assert "character1" [ HasLink "holding" (MatchAny [ HasTag "location" ]) ] worldModel
+        , test "hasLink chained true" <|
+            \() ->
+                Expect.true "valid chain" <|
+                    assert "character1"
+                        [ HasLink "holding"
+                            (Match "item1"
+                                [ HasLink "belongsTo"
+                                    (Match "character2" [])
+                                ]
+                            )
+                        ]
+                        worldModel
+        , test "hasLink chained false" <|
+            \() ->
+                Expect.false "not valid chain" <|
+                    assert "character1"
+                        [ HasLink "holding"
+                            (Match "item1"
+                                [ HasLink "belongsTo"
+                                    (Match "character1" [])
+                                ]
+                            )
+                        ]
+                        worldModel
         ]
 
 
@@ -274,9 +316,9 @@ queryTests =
                         query [ HasTag "character", HasStat "strength" GT 3 ] worldModel
         , test "query link - characters in location" <|
             \() ->
-                Expect.equal [ "character1" ] <|
+                Expect.equal [ "character1", "character2" ] <|
                     List.map Tuple.first <|
-                        query [ HasTag "character", HasLink "locatedIn" "location1" ] worldModel
+                        query [ HasTag "character", HasLink "locatedIn" <| Match "location1" [] ] worldModel
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
@@ -302,5 +344,5 @@ queryTests =
             \() ->
                 Expect.equal [ "item1" ] <|
                     List.map Tuple.first <|
-                        query [ HasTag "item", Not (HasLink "heldBy" "character1") ] worldModel
+                        query [ HasTag "item", Not (HasLink "heldBy" <| Match "character1" []) ] worldModel
         ]

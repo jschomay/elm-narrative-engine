@@ -2,7 +2,7 @@ module Narrative.WorldModel exposing
     ( WorldModel, NarrativeComponent, ID, Tags, Stats, Links
     , emptyTags, emptyStats, emptyLinks, tag, stat, link
     , ChangeWorld(..), ChangeEntity(..), applyChanges
-    , Query(..), query, assert
+    , EntityMatcher(..), Query(..), query, assert, assertMatch
     , getStat, getLink
     )
 
@@ -113,7 +113,7 @@ Updating your entities:
 
 Queries are run against the store to assert a condition or select particular entities. This is useful to render a list of characters in a given location for example. The engine uses `assert` when checking rules.
 
-@docs Query, query, assert
+@docs EntityMatcher, Query, query, assert, assertMatch
 
 You can directly access certain property values, to get the current location, or player's health for example.
 
@@ -127,6 +127,11 @@ import Set exposing (Set)
 
 type alias ID =
     String
+
+
+type EntityMatcher
+    = Match ID (List Query)
+    | MatchAny (List Query)
 
 
 {-| This is what the engine thinks the world model of all of the entities in your store/game looks like. It must be a `Dict` of "entities" with keys representing entity ids as `String`s, and values of `NarrativeComponent a`'s. As long as it looks like this, the engine can operate on it as it needs.
@@ -321,12 +326,12 @@ applyChanges entityUpdates trigger store =
 type Query
     = HasTag String
     | HasStat String Order Int
-    | HasLink String ID
+    | HasLink String EntityMatcher
     | Not Query
 
 
-queryFn : Query -> (NarrativeComponent a -> Bool)
-queryFn q =
+queryFn : Query -> WorldModel a -> (NarrativeComponent a -> Bool)
+queryFn q store =
     case q of
         HasTag value ->
             hasTag value
@@ -335,10 +340,10 @@ queryFn q =
             hasStat key comparator value
 
         HasLink key value ->
-            hasLink key value
+            hasLink key value store
 
         Not nestedQuery ->
-            not << queryFn nestedQuery
+            not << queryFn nestedQuery store
 
 
 {-| A way to retrieve information from the store.
@@ -347,7 +352,7 @@ query : List Query -> WorldModel a -> List ( ID, NarrativeComponent a )
 query queries store =
     let
         gatherMatches id entity =
-            List.all (\q -> queryFn q entity) queries
+            List.all (\q -> queryFn q store entity) queries
     in
     Dict.filter gatherMatches store
         |> Dict.toList
@@ -362,7 +367,7 @@ assert id queries store =
             Dict.get id store
 
         matchesQueries entity =
-            List.all (\q -> queryFn q entity) queries
+            List.all (\q -> queryFn q store entity) queries
     in
     maybeEntity
         |> Maybe.map matchesQueries
@@ -396,8 +401,22 @@ hasStat key comparator value entity =
         |> (\actual -> compare actual value == comparator)
 
 
-hasLink : String -> ID -> NarrativeComponent a -> Bool
-hasLink key value entity =
+hasLink : String -> EntityMatcher -> WorldModel a -> NarrativeComponent a -> Bool
+hasLink key matcher store entity =
     entity.links
         |> Dict.get key
-        |> (\actual -> actual == Just value)
+        |> Maybe.map (assertMatch matcher store)
+        |> Maybe.withDefault False
+
+
+{-| A utility to test an `EntityMatcher` matcher against a specific entity `ID`.
+-}
+assertMatch : EntityMatcher -> WorldModel a -> ID -> Bool
+assertMatch matcher store expectedID =
+    case matcher of
+        Match id qs ->
+            (id == expectedID)
+                && assert id qs store
+
+        MatchAny qs ->
+            assert expectedID qs store

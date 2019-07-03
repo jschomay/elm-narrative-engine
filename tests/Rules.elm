@@ -124,7 +124,7 @@ all =
                 rules =
                     [ ( "does not match"
                       , { trigger = Match "item1" []
-                        , conditions = [ Match "character1" [ HasLink "location" "the moon" ] ]
+                        , conditions = [ Match "character1" [ HasLink "location" <| Match "the moon" [] ] ]
                         , changes = []
                         }
                       )
@@ -132,7 +132,7 @@ all =
                       , { trigger = Match "item1" []
                         , conditions =
                             [ Match "character1"
-                                [ HasLink "location" "location1"
+                                [ HasLink "location" <| Match "location1" []
                                 , HasTag "invisible"
                                 ]
                             ]
@@ -141,7 +141,7 @@ all =
                       )
                     , ( "expected"
                       , { trigger = Match "item1" []
-                        , conditions = [ Match "character1" [ HasLink "location" "location1" ] ]
+                        , conditions = [ Match "character1" [ HasLink "location" <| Match "location1" [] ] ]
                         , changes = []
                         }
                       )
@@ -164,10 +164,10 @@ all =
                         }
                       )
                     , ( "match trigger"
-                      , { trigger = Match "location2" []
+                      , { trigger = MatchAny [ HasTag "location" ]
                         , conditions =
-                            [ MatchAny [ HasLink "location" "$" ]
-                            , Match "item2" [ HasLink "location" "$" ]
+                            [ MatchAny [ HasLink "location" <| Match "$" [] ]
+                            , Match "item2" [ HasLink "location" <| Match "$" [] ]
                             ]
                         , changes = []
                         }
@@ -231,7 +231,7 @@ all =
                               )
                             , ( "expected"
                               , { trigger = Match "item1" []
-                                , conditions = [ Match "character1" [ HasLink "location" "location1" ] ]
+                                , conditions = [ Match "character1" [ HasLink "location" <| Match "location1" [] ] ]
                                 , changes = []
                                 }
                               )
@@ -249,7 +249,7 @@ all =
                               , { trigger = Match "item1" []
                                 , conditions =
                                     [ Match "character1"
-                                        [ HasLink "location" "location1"
+                                        [ HasLink "location" <| Match "location1" []
                                         ]
                                     ]
                                 , changes = []
@@ -259,7 +259,7 @@ all =
                               , { trigger = Match "item1" []
                                 , conditions =
                                     [ Match "character1"
-                                        [ HasLink "location" "location1"
+                                        [ HasLink "location" <| Match "location1" []
                                         , HasTag "friend"
                                         ]
                                     ]
@@ -353,7 +353,7 @@ all =
                               , { trigger = MatchAny [ HasTag "item" ]
                                 , conditions =
                                     [ Match "character1"
-                                        [ HasLink "location" "location1"
+                                        [ HasLink "location" <| Match "location1" []
                                         , HasTag "friend"
                                         ]
                                     , Match "item2" [ HasTag "item" ]

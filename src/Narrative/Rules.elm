@@ -1,7 +1,5 @@
 module Narrative.Rules exposing
-    ( EntityID
-    , EntityMatcher(..)
-    , Rule
+    ( Rule
     , RuleID
     , Rules
     , findMatchingRule
@@ -14,7 +12,7 @@ They are made up of two parts: a "trigger", and a set of "conditions". Each time
 
 Because `Rule`s are extended records, you can also include other useful data on them, such as how the state of your story world should change, or which specific narrative to show, or which sound effect to play, etc. The engine will ignore these fields, but your client can act on them when a rule matches.
 
-@doc EntityID, RuleID, Rules, Rule, EntityMatcher(..), Condition(..), findMatchingRule
+@doc RuleID, Rules, Rule, Condition(..), findMatchingRule
 
 Example rules using the example store in `Narrative.WorldModel`:
 
@@ -81,11 +79,7 @@ When the player interacts with the goblin, you would call `findMatchingRule` and
 -}
 
 import Dict exposing (Dict)
-import Narrative.WorldModel as WorldModel exposing (Query, WorldModel)
-
-
-type alias EntityID =
-    String
+import Narrative.WorldModel as WorldModel exposing (EntityMatcher(..), Query, WorldModel)
 
 
 type alias RuleID =
@@ -103,11 +97,6 @@ type alias Rule a =
     }
 
 
-type EntityMatcher
-    = Match EntityID (List Query)
-    | MatchAny (List Query)
-
-
 {-| Finds the rule that matches against the provided trigger and store. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
 
 In general, you would call this any time the user "interacts" with something in your game, supplying the ID of the entity that was interacted with.
@@ -115,7 +104,7 @@ In general, you would call this any time the user "interacts" with something in 
 While the trigger should match one of the entity IDs defined in your store, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
 
 -}
-findMatchingRule : EntityID -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
+findMatchingRule : WorldModel.ID -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
 findMatchingRule trigger rules store =
     rules
         |> Dict.filter
@@ -129,18 +118,12 @@ findMatchingRule trigger rules store =
         |> List.head
 
 
-matchTrigger : WorldModel a -> EntityID -> EntityMatcher -> Bool
+matchTrigger : WorldModel a -> WorldModel.ID -> EntityMatcher -> Bool
 matchTrigger store trigger matcher =
-    case matcher of
-        Match id queries ->
-            (id == trigger)
-                && WorldModel.assert trigger queries store
-
-        MatchAny queries ->
-            WorldModel.assert trigger queries store
+    WorldModel.assertMatch matcher store trigger
 
 
-matchCondition : EntityID -> WorldModel a -> EntityMatcher -> Bool
+matchCondition : WorldModel.ID -> WorldModel a -> EntityMatcher -> Bool
 matchCondition trigger store matcher =
     case matcher of
         Match id queries ->
@@ -158,11 +141,11 @@ matchCondition trigger store matcher =
                 |> not
 
 
-parse : EntityID -> Query -> Query
+parse : WorldModel.ID -> Query -> Query
 parse trigger query =
     case query of
-        WorldModel.HasLink key "$" ->
-            WorldModel.HasLink key trigger
+        WorldModel.HasLink key (Match "$" queries) ->
+            WorldModel.HasLink key (Match trigger queries)
 
         _ ->
             query
