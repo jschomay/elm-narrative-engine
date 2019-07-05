@@ -1,95 +1,40 @@
-module Narrative.Rules exposing
-    ( Rule
-    , RuleID
-    , Rules
-    , findMatchingRule
-    , weight
-    )
+module Narrative.Rules exposing (Rule, RuleID, Rules, findMatchingRule, weight)
 
 {-| Rules are a declarative way of describing meaningful events in your story.
 
-They are made up of two parts: a "trigger", and a set of "conditions". Each time you call `findMatchingRule`, the engine will test all of your rules against the provided trigger and the current state of your story world, and will find the best matching rule (if one exists).
+They are made up of 3 parts: a "trigger", a set of "conditions", and a set of "changes" to apply if the rule matches. Each time you call `findMatchingRule`, the engine will test all of your rules against the provided trigger and the current state of your story world, and will find the best matching rule (if one exists).
 
-Because `Rule`s are extended records, you can also include other useful data on them, such as how the state of your story world should change, or which specific narrative to show, or which sound effect to play, etc. The engine will ignore these fields, but your client can act on them when a rule matches.
+Rules are weighted based on how specific they are, so you can "override" a more generic rule by making a more specific rule that will also match.
 
-@doc RuleID, Rules, Rule, Condition(..), findMatchingRule
+It is possible to create generic rules (using `MatchAny`) to control basic story logic, and more specific rules to flesh out the story.
 
-Example rules using the example store in `Narrative.WorldModel`:
+See how the rules are defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
 
-TODO show examples of generic trigger and condition and trigger queries (use locked door examples on trello card)
-TODO document generic conditions
-TODO document weighting
-TODO document trigger matching with "@"
-TODO all of this syntax needs to be updated (matchers and updaters)
-
-    rules =
-        Dict.fromList
-            [ ( "beatingGoblin"
-              , { trigger = TriggerMatching "goblin"
-                , conditions =
-                    [ EntityMatching "torch" [ HasLink "location" "player" ]
-                    , EntityMatching "player" [ HasStat "strength" GT 3 ]
-                    ]
-                }
-                , changes:
-                    [
-                    , SetLink "goblin" "location" "offscreen"
-                    , SetLink "bagOfGold" "location" "player"
-                    , IncStat "player" "strength" 1
-                    ]
-                , narrative: "You beat the goblin and take his gold!"
-              )
-            , ( "chasedAwayByGoblin"
-              , { trigger = TriggerMatching "goblin"
-                , conditions =
-                    [ EntityMatching "torch" [ HasLink "location" "player" ]
-                    ]
-                }
-                , changes:
-                    [ SetLink "player" "location" "field"
-                    ]
-                , narrative: "The goblin is stronger than you, and chases you away."
-              )
-            , ( "tooDarkToFightGoblin"
-              , { trigger = TriggerMatching "goblin"
-                , conditions = []
-                }
-              )
-              , changes: []
-              , narrative: "You try to fight the goblin, but is too dark to see."
-            , etc...
-            ]
-
-In this case, the `tooDarkToFightGoblin` to fight rule will be the only match if the torch is not in the inventory. Because `beatingGoblin` has more specificity than `chasedAwayByGoblin`, it will match if the player's strength is high enough, even though both rules have matching conditions.
-
-When the player interacts with the goblin, you would call `findMatchingRule` and update your model accordingly:
-
-    newModel =
-        -- where trigger is "goblin" in this case
-        findMatchingRule rules trigger model.worldModel
-            |> Maybe.map
-                (\( ruleID, { changes, narrative } ) ->
-                    { model
-                        | worldModel = WorldModel.applyChanges changes model.worldModel
-                        , story = narrative
-                    }
-                )
-            |> Maybe.withDefault model
+@docs Rule, RuleID, Rules, findMatchingRule, weight
 
 -}
 
 import Dict exposing (Dict)
-import Narrative.WorldModel as WorldModel exposing (EntityMatcher(..), Query, WorldModel)
+import Narrative.WorldModel as WorldModel exposing (ChangeWorld, EntityMatcher(..), Query, WorldModel)
 
 
+{-| Unique ID for a rule. These ids will be returned when a matching rule is found.
+-}
 type alias RuleID =
     String
 
 
+{-| All of the rules in your "rule book" that define your game logic.
+-}
 type alias Rules a =
     Dict RuleID (Rule a)
 
 
+{-| A declarative rule describing the conditions in which it should apply. Specifically, it defines a trigger and a list of other conditions that must be present. All of these are described by `EntityMatcher`s. All rules are tested on each player interaction, and the highest weighted matching rule will be returned. You can then apply the specified changes.
+
+Note that `Rule`s are extensible records, meaning that you can add other fields to them in your game. For example, you could add a `narrative` field to add a story text to use when the rule matches, or a `sound` to play, etc. All of these "side effects" would be handled in your game code. Alternatively, you could use the returned `RuleID` to lookup side effects in a separate data structure. This design follows the Entity Component System (ECS) design pattern.
+
+-}
 type alias Rule a =
     { a
         | trigger : EntityMatcher
@@ -98,11 +43,11 @@ type alias Rule a =
     }
 
 
-{-| Finds the rule that matches against the provided trigger and store. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
+{-| Finds the rule that best matches against the provided trigger (entity ID) and current world model. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
 
-In general, you would call this any time the user "interacts" with something in your game, supplying the ID of the entity that was interacted with.
+Call this any time the player "interacts" with an entity in your game, supplying the ID of the entity that was interacted with.
 
-While the trigger should match one of the entity IDs defined in your store, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
+While the trigger is intended to match one of the entity IDs defined in your world model, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
 
 -}
 findMatchingRule : WorldModel.ID -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
@@ -152,6 +97,8 @@ parse trigger query =
             query
 
 
+{-| Assigns a "weighting" to a rule. Used internally.
+-}
 weight : Rule a -> Int
 weight { trigger, conditions } =
     let

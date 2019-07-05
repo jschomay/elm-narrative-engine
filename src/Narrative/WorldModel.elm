@@ -1,123 +1,33 @@
 module Narrative.WorldModel exposing
-    ( WorldModel, NarrativeComponent, ID, Tags, Stats, Links
+    ( ID, WorldModel, NarrativeComponent, Tags, Stats, Links
     , emptyTags, emptyStats, emptyLinks, tag, stat, link
     , ChangeWorld(..), ChangeEntity(..), applyChanges
-    , EntityMatcher(..), Query(..), query, assert, assertMatch
-    , getStat, getLink
+    , EntityMatcher(..), Query(..), query, assert, assertMatch, getStat, getLink
     )
 
-{-| Your story/game will have a store, or "world model", of all of the entities that live in your world, and the various properties that describe them. The narrative engine uses your store, but doesn't define it or own it. This means that it has to make some assumptions about it.
-
-@docs WorldModel, NarrativeComponent, ID, Tags, Stats, Links
-
-The entity ids and the `tags,`stats`, and`links`properties are used by`Narrative.Rules\`. Specifically, these work as both "salience-based" and "quality/stats-based" systems (described very well in [Emily Shot's blog post](https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/)), which can provide a more flexible story, with higher player agency, and also simplifies the story rules by allowing them to be more generic.
-
-Note that these properties are only meant to track information specific to the narrative engine. Any other properties you need, like a name and description, or sprite dimensions, should be stored and handled in a separate system (consider using the Entity Component System pattern for this).
+{-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
 
 
-### Example usage:
+## Types
 
-    -- another component that your entities use
-    type alias DescriptionComponent a =
-        { a | name : String, description : String }
+@docs ID, WorldModel, NarrativeComponent, Tags, Stats, Links
 
 
-    -- your game entity type, defined in terms of the components it uses
-    type alias MyEntity =
-        NarrativeComponent (DescriptionComponent {})
-
-    type alias MyWorldModel =
-        Dict String MyEntity
-
-    emptyEntity : MyEntity
-    emptyEntity =
-        { name = ""
-        , description = ""
-        , tags = emptyTags
-        , stats = emptyStats
-        , links = emptyLinks
-        }
-
-
-    -- a simple helper function for fluently describing your initial world model
-    entity : String -> ( String, MyEntity )
-    entity id =
-        ( id, emptyEntity )
-
-
-    -- describing your world model (this only shows the narrative component properties, but you could add properties for other components in a very similar way)
-    worldModel : MyWorldModel
-    worldModel =
-        Dict.fromList
-            [ entity "player"
-                |> tag "character"
-                |> stat "strength" 5
-                |> stat "caveExplorationQuestProgress" 1
-                |> link "location" "cave"
-            , entity "goblin"
-                |> tag "character"
-                |> tag "enemy"
-                |> stat "strength" 3
-                |> link "location" "cave"
-            , entity "torch"
-                |> tag "item"
-                |> stat "illumination" 7
-                |> link "location" "player"
-            , entity "bagOfGold"
-                |> tag "item"
-                |> tag "special"
-                |> link "location" "cave"
-            , entity "cave"
-                |> tag "location"
-                |> tag "dark"
-            , entity "field"
-                |> tag "location"
-            , entity "offscreen"
-                |> tag "location"
-                |> tag "invisible"
-            ]
-
-
-    -- some example queries:
-    currentLocation =
-        getLink "player" "location" worldModel
-
-    inventory =
-        query [ HasTag "item", HasLink "location" "player" ] worldModel
-
-
-    -- updating the world model
-    newWorldModel =
-        applyChanges
-            [ SetLink "bagOfGold" "location" "player"
-            , incStat "player" "caveExplorationQuestProgress" 1
-            , SetLink "goblin" "location" "offscreen"
-            ]
-            worldModel
-
-Note that you are not restricted to the traditional "items/characters/locations" world model. You can define your entities with what ever properties you want, to fit any story world.
-
-
-### Full API
-
-Setting up the starting state of your entities:
+## Creating entities
 
 @docs emptyTags, emptyStats, emptyLinks, tag, stat, link
 
-Updating your entities:
+
+## Updating entities
 
 @docs ChangeWorld, ChangeEntity, applyChanges
 
 
-### Querying
+## Querying the world model
 
-Queries are run against the store to assert a condition or select particular entities. This is useful to render a list of characters in a given location for example. The engine uses `assert` when checking rules.
+Queries are run against the world model to assert a condition or select particular entities. This is useful to render a list of characters in a given location for example. The engine uses these when checking rules.
 
-@docs EntityMatcher, Query, query, assert, assertMatch
-
-You can directly access certain property values, to get the current location, or player's health for example.
-
-@docs getStat, getLink
+@docs EntityMatcher, Query, query, assert, assertMatch, getStat, getLink
 
 -}
 
@@ -125,24 +35,25 @@ import Dict exposing (Dict)
 import Set exposing (Set)
 
 
+{-| A unique identifier for each entity.
+-}
 type alias ID =
     String
 
 
-type EntityMatcher
-    = Match ID (List Query)
-    | MatchAny (List Query)
-
-
-{-| This is what the engine thinks the world model of all of the entities in your store/game looks like. It must be a `Dict` of "entities" with keys representing entity ids as `String`s, and values of `NarrativeComponent a`'s. As long as it looks like this, the engine can operate on it as it needs.
+{-| Your story/game will have a store, or "world model", of all of the entities that live in your world, and the various properties that describe them. The narrative engine expects your world model to have this shape.
 -}
 type alias WorldModel a =
     Dict ID (NarrativeComponent a)
 
 
-{-| This is what the engine thinks your entities look like. As long as they are a record that includes the `tags`, `stats`, and `links` fields, the engine can operate on them. You should avoid using or changing these fields directly, and use the API in this module instead.
+{-| Entities are just IDs coupled with various fields of information. The engine requires that your entities have `tags`, `stats`, and `links` fields.
 
-Because this is an extensible record, you can have other properties on your entities as well (like "name" and "description" or "sprite" for example), which works well with the "Entity Component System" pattern.
+It uses these fields to track "salience-based" and "quality/stats-based" narratives (described very well in [Emily Shot's blog post](https://emshort.blog/2016/04/12/beyond-branching-quality-based-and-salience-based-narrative-structures/)), which can provide a more flexible and robust story.
+
+Because this is an extensible record, you can have other properties on your entities as well (like "name" and "description" or "sprite" for example), which works well with the "Entity Component System" design pattern.
+
+Note that you are not restricted to the traditional "items/characters/locations" world model. You can define your entities with what ever properties you want, to fit any story world.
 
 -}
 type alias NarrativeComponent a =
@@ -153,14 +64,29 @@ type alias NarrativeComponent a =
     }
 
 
+{-| "Tags" on an entity.
+
+Examples: "item", "edible", "poisonous", "SmithFamily", etc.
+
+-}
 type alias Tags =
     Set String
 
 
+{-| "Stats" on an entity.
+
+Examples: "health", "honor", "plotProgression", "bars of gold", etc.
+
+-}
 type alias Stats =
     Dict String Int
 
 
+{-| "Links" on an entity.
+
+Examples: "locatedIn", "knows", "suspects", etc.
+
+-}
 type alias Links =
     Dict String ID
 
@@ -186,21 +112,21 @@ emptyLinks =
     Dict.empty
 
 
-{-| A helper function to add a tag to an entity when setting up your world model. Examples: "item", "edible", "poisonous", "SmithFamily", etc.
+{-| A helper function to add a tag to an entity when setting up your world model.
 -}
 tag : String -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
 tag value ( id, entity ) =
     ( id, addTag value entity )
 
 
-{-| A helper function to add a stat to an entity when setting up your world model. A stat is a key and a numeric value on any scale you like. Examples: "health", "honor", "plotProgression", "bars of gold", etc.
+{-| A helper function to add a stat to an entity when setting up your world model. A stat is a key and a numeric value on any scale you like.
 -}
 stat : String -> Int -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
 stat key value ( id, entity ) =
     ( id, setStat key value entity )
 
 
-{-| A helper function to add a link to an entity when setting up your world model. The key is the type of relationship, and the value is intended to be the id of another entity, which allows queries like getting the inventory, or the current location, or characters in a location, etc.
+{-| A helper function to add a link to an entity when setting up your world model. The key is the type of relationship, and the value is intended to be the id of another entity.
 -}
 link : String -> ID -> ( ID, NarrativeComponent a ) -> ( ID, NarrativeComponent a )
 link key value ( id, entity ) =
@@ -257,6 +183,9 @@ update id updateFn store =
 
 
 {-| Declarative statements of how an entity should change, designed to be used with rules.
+
+Note that you can use `$` as the `ID` to reference the entity ID that triggered the rule (useful for generic rules).
+
 -}
 type ChangeWorld
     = Update ID (List ChangeEntity)
@@ -264,6 +193,9 @@ type ChangeWorld
 
 
 {-| Declarative statements for changing a property on an entity.
+
+Note that you can use `$` as the `ID` in `SetLink` to reference the entity ID that triggered the rule (useful for generic rules).
+
 -}
 type ChangeEntity
     = AddTag String
@@ -274,7 +206,7 @@ type ChangeEntity
     | SetLink String ID
 
 
-{-| Update the store based on a rule's list of changes. Also takes the id of the interactable that triggered the rule to allow changes to use trigger matching (with `$`).
+{-| Update the world model based on a list of changes. Also takes the id of the entity that triggered the rule to allow changes to use trigger matching (with `$`).
 -}
 applyChanges : List ChangeWorld -> ID -> WorldModel a -> WorldModel a
 applyChanges entityUpdates trigger store =
@@ -323,6 +255,18 @@ applyChanges entityUpdates trigger store =
     List.foldl applyUpdate store entityUpdates
 
 
+{-| Semantic means for matching entities. Specifies an optional entity ID and a list of queries to match against.
+
+Note that you can use `$` as the `ID` to reference the entity ID that triggered the rule (useful for generic rules).
+
+-}
+type EntityMatcher
+    = Match ID (List Query)
+    | MatchAny (List Query)
+
+
+{-| Semantic queries for checking properties of an entity.
+-}
 type Query
     = HasTag String
     | HasStat String Order Int
@@ -358,7 +302,7 @@ query queries store =
         |> Dict.toList
 
 
-{-| Asserts if the current state of the store matches the given queries. Used by `Narrative.Rules.findMatchingRule`. You can also use it for your own custom logic if needed.
+{-| Asserts if the current state of the world model matches the given queries.
 -}
 assert : ID -> List Query -> WorldModel a -> Bool
 assert id queries store =
@@ -374,18 +318,24 @@ assert id queries store =
         |> Maybe.withDefault False
 
 
+{-| Get a specific stat from a specific entity.
+-}
 getStat : ID -> String -> WorldModel a -> Maybe Int
 getStat id key store =
     Dict.get id store
         |> Maybe.andThen (.stats >> Dict.get key)
 
 
+{-| Get a specific link from a specific entity.
+-}
 getLink : ID -> String -> WorldModel a -> Maybe ID
 getLink id key store =
     Dict.get id store
         |> Maybe.andThen (.links >> Dict.get key)
 
 
+{-| Check if a specific entity has a specific tag.
+-}
 hasTag : String -> NarrativeComponent a -> Bool
 hasTag value entity =
     Set.member value entity.tags

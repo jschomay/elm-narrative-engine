@@ -1,8 +1,8 @@
 # Changelog
 
-Follow along with development on the [developement blog](http://blog.elmnarrativeengine.com/).
+Follow along with development on the [development blog](http://blog.elmnarrativeengine.com/).
 
-## next
+## 4.0.0
 
 100% breaking changes!  Huge shifts in both api and concepts:
 
@@ -10,13 +10,18 @@ Follow along with development on the [developement blog](http://blog.elmnarrativ
 - shift to moving most functionality external to engine
 - removed everything specific to "items", "locations", "characters", "scenes", "ending", "history"
 - replaced with "tags", "stats", "links" for clients to build up their own semantic requirements
-- no more internal model, just functions that need a `WorldModel` and `Rules` passed through
+- only controls `WorldModel` and `Rules` data, instead of controlling the whole model
 
 Exported modules change:
 
 - No more `Engine`
 - Added `Narrative.WorldModel`
 - Added `Narrative.Rules`
+
+Other
+
+- added example
+- removed dep on `elm/html` since it isn't used
 
 ## 3.0.1
 
