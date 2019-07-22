@@ -96,12 +96,17 @@ initialWorldModel =
             |> WorldModel.tag "item"
             |> WorldModel.stat "illumination" 2
             |> WorldModel.link "location" "PLAYER"
+        , entity "TORCH"
+            "Unlighted torch"
+            "This is maybe the go-to illumination solution for adventurers."
+            |> WorldModel.tag "item"
+            |> WorldModel.stat "illumination" 0
+            |> WorldModel.link "location" "CAVE_ENTRANCE"
         , entity "BURNING_TORCH"
             "Burning torch"
             "The go-to illumination solution for adventurers."
             |> WorldModel.tag "item"
             |> WorldModel.stat "illumination" 7
-            |> WorldModel.link "location" "CAVE_ENTRANCE"
         , entity "BAG_OF_GOLD"
             "Bag of gold"
             "This is what makes it all worthwhile."
@@ -192,6 +197,19 @@ rules =
                 , WorldModel.Update "BAG_OF_GOLD" [ WorldModel.SetLink "location" "PLAYER" ]
                 ]
             , narrative = "You nimbly sneak around the sleeping goblin and snatch the bag of gold!"
+            }
+
+        -- This one lights the torch when lighter and unlighed torch are both in inventory and you clicks on lighter
+        , rule "light the torch"
+            { trigger = WorldModel.Match "LIGHTER" [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ]
+            , conditions = [ WorldModel.Match "TORCH" [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] ]
+            , changes =
+                [ WorldModel.Update "BURNING_TORCH"
+                    [ WorldModel.SetLink "location" "PLAYER" ]
+                , WorldModel.Update "LIGHTER" [ WorldModel.AddTag "consumed" ]
+                , WorldModel.Update "TORCH" [ WorldModel.AddTag "consumed" ]
+                ]
+            , narrative = "Brilliant! You have a bright torch now, fear no more!"
             }
 
         -- Now for some general rules.  Note that these will only be selected if a
@@ -341,7 +359,7 @@ view model =
 
         -- we can query the world model as needed
         inventory =
-            WorldModel.query [ WorldModel.HasTag "item", WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] model.worldModel
+            WorldModel.query [ WorldModel.HasTag "item", WorldModel.Not <| WorldModel.HasTag "consumed", WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] model.worldModel
 
         locations =
             WorldModel.query [ WorldModel.HasTag "location" ] model.worldModel
