@@ -378,7 +378,7 @@ view model =
 
         -- we can query the world model as needed
         inventory =
-            WorldModel.query [ WorldModel.HasTag "item", WorldModel.Not <| WorldModel.HasTag "consumed", WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] model.worldModel
+            WorldModel.query [ WorldModel.HasTag "item", WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] model.worldModel
 
         locations =
             WorldModel.query [ WorldModel.HasTag "location" ] model.worldModel
