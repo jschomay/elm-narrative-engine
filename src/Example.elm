@@ -95,18 +95,14 @@ initialWorldModel =
             "You don't smoke, but it's useful to have a lighter on hand, though it's not much of a light source."
             |> WorldModel.tag "item"
             |> WorldModel.stat "illumination" 2
+            |> WorldModel.stat "fuel" 10
             |> WorldModel.link "location" "PLAYER"
         , entity "TORCH"
-            "Unlighted torch"
-            "This is maybe the go-to illumination solution for adventurers."
+            "Torch"
+            "This is the go-to illumination solution for adventurers."
             |> WorldModel.tag "item"
             |> WorldModel.stat "illumination" 0
             |> WorldModel.link "location" "CAVE_ENTRANCE"
-        , entity "BURNING_TORCH"
-            "Burning torch"
-            "The go-to illumination solution for adventurers."
-            |> WorldModel.tag "item"
-            |> WorldModel.stat "illumination" 7
         , entity "BAG_OF_GOLD"
             "Bag of gold"
             "This is what makes it all worthwhile."
@@ -174,6 +170,42 @@ rules =
             , narrative = "You can see a short way into the cave, and bravely enter.  You hear an awful snoring sound..."
             }
 
+        -- This one give you hint when you check the unlit torch in inventory
+        , rule "observe unlit torch"
+            { trigger =
+                WorldModel.Match "TORCH"
+                    [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" [])
+                    , WorldModel.HasStat "illumination" EQ 0
+                    ]
+            , conditions = []
+            , changes =
+                []
+            , narrative = "A perfectly useful torch, except for the fact that is unlit."
+            }
+
+        -- This one lights the torch when unlit torch is in inventory and the fuel of lighter is not ran out.
+        , rule "light the torch"
+            { trigger =
+                WorldModel.Match "LIGHTER"
+                    [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" [])
+                    , WorldModel.HasStat "fuel" GT 0
+                    ]
+            , conditions =
+                [ WorldModel.Match "TORCH"
+                    [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" [])
+                    , WorldModel.HasStat "illumination" EQ 0
+                    ]
+                ]
+            , changes =
+                [ WorldModel.Update "TORCH"
+                    [ WorldModel.SetStat "illumination" 7 ]
+                , WorldModel.Update "LIGHTER"
+                    [ WorldModel.DecStat "fuel" 1 ]
+                , WorldModel.Update "PLAYER" [ WorldModel.DecStat "fear" 1 ]
+                ]
+            , narrative = "Brilliant! You have a bright torch now, fear no more!"
+            }
+
         -- This one puts you back outside if you mess with the goblin while he is
         -- sleeping
         , rule "waking the goblin"
@@ -197,19 +229,6 @@ rules =
                 , WorldModel.Update "BAG_OF_GOLD" [ WorldModel.SetLink "location" "PLAYER" ]
                 ]
             , narrative = "You nimbly sneak around the sleeping goblin and snatch the bag of gold!"
-            }
-
-        -- This one lights the torch when lighter and unlighed torch are both in inventory and you clicks on lighter
-        , rule "light the torch"
-            { trigger = WorldModel.Match "LIGHTER" [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ]
-            , conditions = [ WorldModel.Match "TORCH" [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ] ]
-            , changes =
-                [ WorldModel.Update "BURNING_TORCH"
-                    [ WorldModel.SetLink "location" "PLAYER" ]
-                , WorldModel.Update "LIGHTER" [ WorldModel.AddTag "consumed" ]
-                , WorldModel.Update "TORCH" [ WorldModel.AddTag "consumed" ]
-                ]
-            , narrative = "Brilliant! You have a bright torch now, fear no more!"
             }
 
         -- Now for some general rules.  Note that these will only be selected if a
