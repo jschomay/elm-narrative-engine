@@ -157,7 +157,10 @@ rules =
           rule "entering the cave"
             { trigger = WorldModel.Match "CAVE" []
             , conditions =
-                [ WorldModel.Match "BURNING_TORCH" [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" []) ]
+                [ WorldModel.Match "TORCH"
+                    [ WorldModel.HasLink "location" (WorldModel.Match "PLAYER" [])
+                    , WorldModel.HasStat "illumination" GT 5
+                    ]
                 , WorldModel.Match "CAVE" [ WorldModel.Not (WorldModel.HasTag "explored") ]
                 ]
             , changes =
