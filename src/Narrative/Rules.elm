@@ -47,8 +47,6 @@ type alias Rule a =
 
 Call this any time the player "interacts" with an entity in your game, supplying the ID of the entity that was interacted with.
 
-While the trigger is intended to match one of the entity IDs defined in your world model, you could also programmatically call this at any time with any string, as long as there is a rule with a matching trigger. This can be useful for "abstract" events that you want to respond to, like "wait" or "next day".
-
 -}
 findMatchingRule : WorldModel.ID -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
 findMatchingRule trigger rules store =
@@ -66,35 +64,27 @@ findMatchingRule trigger rules store =
 
 matchTrigger : WorldModel a -> WorldModel.ID -> EntityMatcher -> Bool
 matchTrigger store trigger matcher =
-    WorldModel.assertMatch matcher store trigger
+    WorldModel.replaceTrigger trigger matcher
+        |> (\m ->
+                case m of
+                    Match id qs ->
+                        (id == trigger)
+                            && (WorldModel.query m store
+                                    |> List.isEmpty
+                                    |> not
+                               )
+
+                    MatchAny qs ->
+                        WorldModel.query (Match trigger qs) store |> List.isEmpty |> not
+           )
 
 
 matchCondition : WorldModel.ID -> WorldModel a -> EntityMatcher -> Bool
 matchCondition trigger store matcher =
-    case matcher of
-        Match id queries ->
-            queries
-                |> List.map (parse trigger)
-                |> (\qs ->
-                        WorldModel.assert id qs store
-                   )
-
-        MatchAny queries ->
-            queries
-                |> List.map (parse trigger)
-                |> (\qs -> WorldModel.query qs store)
-                |> List.isEmpty
-                |> not
-
-
-parse : WorldModel.ID -> Query -> Query
-parse trigger query =
-    case query of
-        WorldModel.HasLink key (Match "$" queries) ->
-            WorldModel.HasLink key (Match trigger queries)
-
-        _ ->
-            query
+    WorldModel.replaceTrigger trigger matcher
+        |> (\m -> WorldModel.query m store)
+        |> List.isEmpty
+        |> not
 
 
 {-| Assigns a "weighting" to a rule. Used internally.

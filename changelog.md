@@ -1,6 +1,14 @@
-# Changelog
-
 Follow along with development on the [development blog](http://blog.elmnarrativeengine.com/).
+
+## ?
+
+Minor changes to support of the new query syntax and simplify the API.
+
+TODO - confirm all this!
+
+- Added Matcher/Query/Changes parsers
+- Added Narrative parsers
+- Removed assert, assertMatch, and query - replaced wtih a new version of query that handles all
 
 ## 4.0.0
 

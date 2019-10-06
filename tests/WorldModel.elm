@@ -70,6 +70,12 @@ all =
         ]
 
 
+{-| helper function for "assert" syntax"
+-}
+assert id queries store =
+    query (Match id queries) store |> List.isEmpty |> not
+
+
 storeTests : Test
 storeTests =
     describe "store"
@@ -308,22 +314,22 @@ queryTests =
                 Expect.equal [ "item1", "item2" ] <|
                     List.sort <|
                         List.map Tuple.first <|
-                            query [ HasTag "item" ] worldModel
+                            query (MatchAny [ HasTag "item" ]) worldModel
         , test "query stat - strong characters" <|
             \() ->
                 Expect.equal [ "character1" ] <|
                     List.map Tuple.first <|
-                        query [ HasTag "character", HasStat "strength" GT 3 ] worldModel
+                        query (MatchAny [ HasTag "character", HasStat "strength" GT 3 ]) worldModel
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1", "character2" ] <|
                     List.map Tuple.first <|
-                        query [ HasTag "character", HasLink "locatedIn" <| Match "location1" [] ] worldModel
+                        query (MatchAny [ HasTag "character", HasLink "locatedIn" <| Match "location1" [] ]) worldModel
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|
                     List.map Tuple.first <|
-                        query [ HasTag "other" ] worldModel
+                        query (MatchAny [ HasTag "other" ]) worldModel
         , test "assert positive" <|
             \() ->
                 Expect.true "should be true" <|
@@ -344,5 +350,10 @@ queryTests =
             \() ->
                 Expect.equal [ "item1" ] <|
                     List.map Tuple.first <|
-                        query [ HasTag "item", Not (HasLink "heldBy" <| Match "character1" []) ] worldModel
+                        query (MatchAny [ HasTag "item", Not (HasLink "heldBy" <| Match "character1" []) ]) worldModel
+        , test "replacing $" <|
+            \() ->
+                Match "$" [ HasLink "link" (Match "$" []) ]
+                    |> replaceTrigger "myId"
+                    |> Expect.equal (Match "myId" [ HasLink "link" (Match "myId" []) ])
         ]

@@ -118,6 +118,11 @@ all =
                     Expect.equal
                         Nothing
                         (findMatchingRule "storyEvent" rules store |> Maybe.map Tuple.first)
+            , test "trigger with no rule" <|
+                \() ->
+                    Expect.equal
+                        Nothing
+                        (findMatchingRule "xx" rules store |> Maybe.map Tuple.first)
             ]
         , describe "findMatchingRule (conditions)" <|
             let

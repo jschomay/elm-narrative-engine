@@ -1,8 +1,11 @@
 module Narrative.WorldModel exposing
     ( ID, WorldModel, NarrativeComponent, Tags, Stats, Links
-    , emptyTags, emptyStats, emptyLinks, tag, stat, link
+    , emptyTags, emptyStats, emptyLinks
+    , addTag, setStat, setLink
+    , tag, stat, link
     , ChangeWorld(..), ChangeEntity(..), applyChanges
-    , EntityMatcher(..), Query(..), query, assert, assertMatch, getStat, getLink
+    , EntityMatcher(..), Query(..), query, replaceTrigger
+    , getStat, getLink
     )
 
 {-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
@@ -15,7 +18,15 @@ module Narrative.WorldModel exposing
 
 ## Creating entities
 
-@docs emptyTags, emptyStats, emptyLinks, tag, stat, link
+@docs emptyTags, emptyStats, emptyLinks
+
+These let you add tags directly to an entity.
+
+@docs addTag, setStat, setLink
+
+These are useful for an "entity buider pattern".
+
+@docs tag, stat, link
 
 
 ## Updating entities
@@ -25,9 +36,13 @@ module Narrative.WorldModel exposing
 
 ## Querying the world model
 
-Queries are run against the world model to assert a condition or select particular entities. This is useful to render a list of characters in a given location for example. The engine uses these when checking rules.
+Queries are run against the world model to search for matching entities, or to assert that an entity has specific properties. This is useful to render a list of characters in a given location for example. The engine uses this when checking rules.
 
-@docs EntityMatcher, Query, query, assert, assertMatch, getStat, getLink
+@docs EntityMatcher, Query, query, replaceTrigger
+
+You can get specific stats or links from an entity too.
+
+@docs getStat, getLink
 
 -}
 
@@ -133,16 +148,22 @@ link key value ( id, entity ) =
     ( id, setLink key value entity )
 
 
+{-| Add a tag to a narrative component.
+-}
 addTag : String -> NarrativeComponent a -> NarrativeComponent a
 addTag value entity =
     { entity | tags = Set.insert value entity.tags }
 
 
+{-| Add a stat to a narrative component. A stat is a key and a numeric value on any scale you like.
+-}
 setStat : String -> Int -> NarrativeComponent a -> NarrativeComponent a
 setStat key value entity =
     { entity | stats = Dict.insert key value entity.stats }
 
 
+{-| Add a link to a narrative component. The key is the type of relationship, and the value is intended to be the id of another entity.
+-}
 setLink : String -> ID -> NarrativeComponent a -> NarrativeComponent a
 setLink key value entity =
     { entity | links = Dict.insert key value entity.links }
@@ -228,7 +249,7 @@ applyChanges entityUpdates trigger store =
                     updateEntity (parseID id) updated_store changes
 
                 UpdateAll queries changes ->
-                    query queries updated_store
+                    query (MatchAny queries) updated_store
                         -- apply all changes to all queried entities
                         |> List.foldl (\( id, _ ) acc -> updateEntity id acc changes) updated_store
 
@@ -291,9 +312,30 @@ queryFn q store =
 
 
 {-| A way to retrieve information from the store.
+
+Provide an entity matcher to get back a list of matching entities. This is most useful for "match any" style queries, but works with specifc queries as well, just keep in mind the result is always a list.
+
+    query (MatchAny [ HasTag "item" ]) worldModel -- [items...]
+
+    query (Match "PLAYER" [ HasStat "brave" GT 5 ]) worldModel |> List.isEmpty -- True/False
+
+Note that you should run `replaceTrigger` first if you have "$"'s in your matcher.
+
 -}
-query : List Query -> WorldModel a -> List ( ID, NarrativeComponent a )
-query queries store =
+query : EntityMatcher -> WorldModel a -> List ( ID, NarrativeComponent a )
+query matcher store =
+    case matcher of
+        Match id queries ->
+            findSpecific id queries store
+
+        MatchAny queries ->
+            findGeneral queries store
+
+
+{-| Filters the store for entites matching the queries.
+-}
+findGeneral : List Query -> WorldModel a -> List ( ID, NarrativeComponent a )
+findGeneral queries store =
     let
         gatherMatches id entity =
             List.all (\q -> queryFn q store entity) queries
@@ -302,20 +344,52 @@ query queries store =
         |> Dict.toList
 
 
-{-| Asserts if the current state of the world model matches the given queries.
--}
-assert : ID -> List Query -> WorldModel a -> Bool
-assert id queries store =
-    let
-        maybeEntity =
-            Dict.get id store
+{-| Looks up the entity and returns it if it matches the supplied queries.
 
+Same return value as findGeneral, but better performant than filtering when you already have a specific ID.
+
+-}
+findSpecific : ID -> List Query -> WorldModel a -> List ( ID, NarrativeComponent a )
+findSpecific id queries store =
+    let
         matchesQueries entity =
-            List.all (\q -> queryFn q store entity) queries
+            if List.all (\q -> queryFn q store entity) queries then
+                [ ( id, entity ) ]
+
+            else
+                []
     in
-    maybeEntity
+    Dict.get id store
         |> Maybe.map matchesQueries
-        |> Maybe.withDefault False
+        |> Maybe.withDefault []
+
+
+{-| Replaces "$" in a matcher with the supplied ID. Useful when you have a generic query and don't know the ID ahead of time.
+-}
+replaceTrigger : ID -> EntityMatcher -> EntityMatcher
+replaceTrigger trigger matcher =
+    let
+        replaceInQuery q =
+            case q of
+                HasLink key (Match "$" queries) ->
+                    HasLink key (Match trigger queries)
+
+                _ ->
+                    q
+
+        replaceInSelector id =
+            if id == "$" then
+                trigger
+
+            else
+                id
+    in
+    case matcher of
+        MatchAny queries ->
+            MatchAny <| List.map replaceInQuery queries
+
+        Match id queries ->
+            Match (replaceInSelector id) <| List.map replaceInQuery queries
 
 
 {-| Get a specific stat from a specific entity.
@@ -351,22 +425,21 @@ hasStat key comparator value entity =
         |> (\actual -> compare actual value == comparator)
 
 
+{-| Note, if the linked-to id doesn't exist in the wrold model, this will fail
+-}
 hasLink : String -> EntityMatcher -> WorldModel a -> NarrativeComponent a -> Bool
 hasLink key matcher store entity =
+    let
+        assertMatch actualID =
+            case matcher of
+                Match expectedID qs ->
+                    (expectedID == actualID)
+                        && (findSpecific actualID qs store |> List.isEmpty |> not)
+
+                MatchAny qs ->
+                    findSpecific actualID qs store |> List.isEmpty |> not
+    in
     entity.links
         |> Dict.get key
-        |> Maybe.map (assertMatch matcher store)
+        |> Maybe.map assertMatch
         |> Maybe.withDefault False
-
-
-{-| A utility to test an `EntityMatcher` matcher against a specific entity `ID`.
--}
-assertMatch : EntityMatcher -> WorldModel a -> ID -> Bool
-assertMatch matcher store expectedID =
-    case matcher of
-        Match id qs ->
-            (id == expectedID)
-                && assert id qs store
-
-        MatchAny qs ->
-            assert expectedID qs store
