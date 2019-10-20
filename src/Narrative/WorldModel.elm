@@ -401,11 +401,22 @@ getStat id key store =
 
 
 {-| Get a specific link from a specific entity.
+
+Note, if the linked-to value doesn't exist in the world model, this will return `Nothing`.
+
 -}
 getLink : ID -> String -> WorldModel a -> Maybe ID
 getLink id key store =
     Dict.get id store
         |> Maybe.andThen (.links >> Dict.get key)
+        |> Maybe.andThen
+            (\linkedID ->
+                if Dict.member linkedID store then
+                    Just linkedID
+
+                else
+                    Nothing
+            )
 
 
 {-| Check if a specific entity has a specific tag.
@@ -425,7 +436,7 @@ hasStat key comparator value entity =
         |> (\actual -> compare actual value == comparator)
 
 
-{-| Note, if the linked-to id doesn't exist in the wrold model, this will fail
+{-| Note, if the linked-to id doesn't exist in the world model, this will fail
 -}
 hasLink : String -> EntityMatcher -> WorldModel a -> NarrativeComponent a -> Bool
 hasLink key matcher store entity =

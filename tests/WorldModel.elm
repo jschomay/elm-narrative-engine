@@ -48,6 +48,7 @@ worldModel =
             |> stat "strength" 5
             |> link "holding" "item1"
             |> link "locatedIn" "location1"
+            |> link "badLink" "unknownID"
         , entity "character2"
             |> tag "character"
             |> stat "strength" 2
@@ -248,21 +249,27 @@ linkTests =
         [ test "getLink exists" <|
             \() ->
                 Expect.equal (Just "item1") (getLink "character1" "holding" worldModel)
-        , test "getLink does not exists" <|
+        , test "getLink key does not exists" <|
             \() ->
-                Expect.equal Nothing (getLink "character1" "knowsAbout" worldModel)
-        , test "getLink does not exist 2" <|
+                Expect.equal Nothing (getLink "character1" "unknownKey" worldModel)
+        , test "getLink value does not exist" <|
             \() ->
-                Expect.equal Nothing (getLink "item" "holding" worldModel)
+                Expect.equal Nothing (getLink "character1" "badLink" worldModel)
+        , test "getLink entity does not exist" <|
+            \() ->
+                Expect.equal Nothing (getLink "unknownEntity" "holding" worldModel)
         , test "hasLink true" <|
             \() ->
                 Expect.true "expected link" (assert "character1" [ HasLink "holding" <| Match "item1" [] ] worldModel)
         , test "hasLink false" <|
             \() ->
                 Expect.false "wrong value" (assert "character1" [ HasLink "holding" <| Match "location1" [] ] worldModel)
-        , test "hasLink false 2" <|
+        , test "hasLink false (bad key)" <|
             \() ->
-                Expect.false "wrong key" (assert "character1" [ HasLink "knowsAbout" <| Match "item1" [] ] worldModel)
+                Expect.false "wrong key" (assert "character1" [ HasLink "badKey" <| Match "item1" [] ] worldModel)
+        , test "hasLink false (bad value)" <|
+            \() ->
+                Expect.false "wrong key" (assert "character1" [ HasLink "badLink" <| Match "unknownID" [] ] worldModel)
         , test "hasLink with queries true" <|
             \() ->
                 Expect.true "queries match" <|

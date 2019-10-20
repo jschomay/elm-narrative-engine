@@ -2,13 +2,14 @@ Follow along with development on the [development blog](http://blog.elmnarrative
 
 ## ?
 
-Minor changes to support of the new query syntax and simplify the API.
+Minor (but breaking) changes to support of the new query syntax and simplify the API.
 
 TODO - confirm all this!
 
 - Added Matcher/Query/Changes parsers
 - Added Narrative parsers
 - Removed assert, assertMatch, and query - replaced wtih a new version of query that handles all
+- `getLink` fixed to return Nothing if linked ID doesn't existin in store
 
 ## 4.0.0
 
