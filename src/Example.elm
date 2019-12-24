@@ -8,8 +8,8 @@ import Dict exposing (Dict)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick)
-import Narrative.Rules as Rules
-import Narrative.WorldModel as WorldModel
+import NarrativeEngine.Core.Rules as Rules
+import NarrativeEngine.Core.WorldModel as WorldModel
 
 
 

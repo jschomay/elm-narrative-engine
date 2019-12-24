@@ -1,9 +1,9 @@
-module Rules exposing (all)
+module Core.RulesTest exposing (all)
 
 import Dict
 import Expect
-import Narrative.Rules exposing (..)
-import Narrative.WorldModel exposing (..)
+import NarrativeEngine.Core.Rules exposing (..)
+import NarrativeEngine.Core.WorldModel exposing (..)
 import Test exposing (..)
 
 

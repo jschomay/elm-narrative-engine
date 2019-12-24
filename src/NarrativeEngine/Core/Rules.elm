@@ -1,4 +1,4 @@
-module Narrative.Rules exposing (Rule, RuleID, Rules, findMatchingRule, weight)
+module NarrativeEngine.Core.Rules exposing (Rule, RuleID, Rules, findMatchingRule, weight)
 
 {-| Rules are a declarative way of describing meaningful events in your story.
 
@@ -15,7 +15,7 @@ See how the rules are defined in the [full working example](https://github.com/j
 -}
 
 import Dict exposing (Dict)
-import Narrative.WorldModel as WorldModel exposing (ChangeWorld, EntityMatcher(..), Query, WorldModel)
+import NarrativeEngine.Core.WorldModel as WorldModel exposing (ChangeWorld, EntityMatcher(..), Query, WorldModel)
 
 
 {-| Unique ID for a rule. These ids will be returned when a matching rule is found.

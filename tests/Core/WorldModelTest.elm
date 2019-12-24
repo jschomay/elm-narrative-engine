@@ -1,8 +1,8 @@
-module WorldModel exposing (all)
+module Core.WorldModelTest exposing (all)
 
 import Dict exposing (Dict)
 import Expect
-import Narrative.WorldModel exposing (..)
+import NarrativeEngine.Core.WorldModel exposing (..)
 import Test exposing (..)
 
 

@@ -1,4 +1,4 @@
-module Narrative.WorldModel exposing
+module NarrativeEngine.Core.WorldModel exposing
     ( ID, WorldModel, NarrativeComponent, Tags, Stats, Links
     , emptyTags, emptyStats, emptyLinks
     , addTag, setStat, setLink
