@@ -2,11 +2,7 @@ module Utils.RuleParserTest exposing (all)
 
 import Expect
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers
-    exposing
-        ( deadEndsToString
-        , parseMultiple
-        )
+import NarrativeEngine.Utils.Helpers exposing (parseMultiple)
 import NarrativeEngine.Utils.RuleParser
     exposing
         ( parseChanges
@@ -418,7 +414,6 @@ multiple =
                         [ "CAVE.dark"
                         , "*zzz.light.location=PLAYER"
                         ]
-                        |> Result.mapError deadEndsToString
                     )
         ]
 

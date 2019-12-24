@@ -3,7 +3,7 @@ module NarrativeEngine.Utils.NarrativeParser exposing (Narrative, parse, parsibl
 import Array
 import Dict exposing (Dict)
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers exposing (ParseError, notEmpty, parseMultiple)
+import NarrativeEngine.Utils.Helpers as Helpers exposing (notEmpty, parseMultiple)
 import NarrativeEngine.Utils.RuleParser exposing (parseMatcher)
 import Parser exposing (..)
 import Result
@@ -61,7 +61,7 @@ parse config text =
 {-| Call this as soon as possible and deal with errors appropriately to ensure you
 will have no parsing errors later.
 -}
-parsible : Config a -> String -> Result ParseError ()
+parsible : Config a -> String -> Result String ()
 parsible config text =
     let
         parser =
@@ -71,6 +71,7 @@ parsible config text =
     in
     run parser text
         |> Result.map (always ())
+        |> Result.mapError Helpers.deadEndsToString
 
 
 notReserved char =
@@ -187,7 +188,7 @@ conditionalText config =
                                 commit elseText
 
                             Err e ->
-                                problem (deadEndsToString e)
+                                problem e
                    )
     in
     succeed (\a b c -> ( a, b, c ))

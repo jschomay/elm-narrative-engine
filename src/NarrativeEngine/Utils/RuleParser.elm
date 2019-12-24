@@ -1,35 +1,38 @@
 module NarrativeEngine.Utils.RuleParser exposing (ParsedChanges, ParsedEntity, ParsedMatcher, parseChanges, parseEntity, parseMatcher)
 
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers exposing (..)
+import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
 type alias ParsedEntity =
-    Result ParseError ( ID, NarrativeComponent {} )
+    Result String ( ID, NarrativeComponent {} )
 
 
 type alias ParsedMatcher =
-    Result ParseError EntityMatcher
+    Result String EntityMatcher
 
 
 type alias ParsedChanges =
-    Result ParseError ChangeWorld
+    Result String ChangeWorld
 
 
 parseEntity : String -> ParsedEntity
 parseEntity text =
     run entityParser text
+        |> Result.mapError Helpers.deadEndsToString
 
 
 parseMatcher : String -> ParsedMatcher
 parseMatcher text =
     run (matcherParser |. end) text
+        |> Result.mapError Helpers.deadEndsToString
 
 
 parseChanges : String -> ParsedChanges
 parseChanges text =
     run (changesParser |. end) text
+        |> Result.mapError Helpers.deadEndsToString
 
 
 entityParser =
