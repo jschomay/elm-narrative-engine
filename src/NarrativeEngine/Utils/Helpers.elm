@@ -1,8 +1,12 @@
-module NarrativeEngine.Utils.Helpers exposing (deadEndsToString, notEmpty, parseErrorsView, parseMultiple)
+module NarrativeEngine.Utils.Helpers exposing (ParseErrors, deadEndsToString, notEmpty, parseErrorsView, parseMultiple)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Parser exposing (..)
+
+
+type alias ParseErrors =
+    List ( String, String )
 
 
 {-| Generic helper to parse a list against a supplied parse function. Will be `Err`
@@ -27,7 +31,7 @@ notEmpty s =
 The tuple is a string identifying the source of the error, and the atual error string iteself.
 
 -}
-parseErrorsView : List ( String, String ) -> Html msg
+parseErrorsView : ParseErrors -> Html msg
 parseErrorsView errors =
     div
         [ style "background" "black"
@@ -45,8 +49,7 @@ parseErrorsView errors =
                     li
                         [ style "margin-bottom" "2em"
                         ]
-                        [ text error
-                        , pre
+                        [ pre
                             [ style "background" "white"
                             , style "padding" "1em"
                             , style "color" "black"
@@ -54,6 +57,7 @@ parseErrorsView errors =
                             , style "width" "100%"
                             ]
                             [ code [] [ text source ] ]
+                        , text error
                         ]
                 )
                 errors

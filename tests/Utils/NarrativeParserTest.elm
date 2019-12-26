@@ -3,7 +3,7 @@ module Utils.NarrativeParserTest exposing (all)
 import Dict
 import Expect
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.NarrativeParser exposing (parse)
+import NarrativeEngine.Utils.NarrativeParser exposing (parse, parseMany)
 import Result
 import Test exposing (..)
 
@@ -16,6 +16,7 @@ all =
         , mixed
         , withContinues
         , conditional
+        , parseManyTest
         ]
 
 
@@ -24,6 +25,7 @@ config =
     , propKeywords = Dict.empty
     , worldModel = Dict.empty
     , trigger = ""
+    , randomIndex = 0
     }
 
 
@@ -365,6 +367,35 @@ allTogether =
                                     ]
                         }
                         text
+        ]
+
+
+parseManyTest =
+    describe "parseMany"
+        [ test "ok" <|
+            \() ->
+                Expect.equal (Ok ()) <|
+                    parseMany <|
+                        Dict.fromList [ ( "first", "This {is| is just} fine." ) ]
+        , test "errors" <|
+            \() ->
+                Expect.equal
+                    (Err
+                        [ ( "Narrative content: bad\n{{no good} "
+                          , "expecting '?' at row 1, col 11; problem cannot be empty at row 1, col 2; expecting symbol '|' at row 1, col 11; expecting symbol '}' at row 1, col 11"
+                          )
+                        , ( "Narrative content: also bad\n{{also no good} "
+                          , "expecting '?' at row 1, col 16; problem cannot be empty at row 1, col 2; expecting symbol '|' at row 1, col 16; expecting symbol '}' at row 1, col 16"
+                          )
+                        ]
+                    )
+                <|
+                    parseMany <|
+                        Dict.fromList
+                            [ ( "ok", "This {is| is just} fine." )
+                            , ( "bad", "{{no good}" )
+                            , ( "also bad", "{{also no good}" )
+                            ]
         ]
 
 

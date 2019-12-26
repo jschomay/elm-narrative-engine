@@ -1,13 +1,11 @@
 module Utils.RuleParserTest exposing (all)
 
+import Dict
 import Expect
+import NarrativeEngine.Core.Rules exposing (..)
 import NarrativeEngine.Core.WorldModel exposing (..)
 import NarrativeEngine.Utils.Helpers exposing (parseMultiple)
-import NarrativeEngine.Utils.RuleParser
-    exposing
-        ( parseChanges
-        , parseMatcher
-        )
+import NarrativeEngine.Utils.RuleParser exposing (parseChanges, parseMatcher, parseRule, parseRules)
 import Result
 import Test exposing (..)
 
@@ -17,6 +15,8 @@ all =
         [ matchers
         , changes
         , multiple
+        , parseRuleTest
+        , parseRulesTest
         ]
 
 
@@ -255,6 +255,62 @@ multiple =
                         ]
                     )
         ]
+
+
+parseRuleTest =
+    test "parseRule" <|
+        \() ->
+            Expect.equal
+                ({ trigger = Match "CAVE" []
+                 , conditions = []
+                 , changes = []
+                 }
+                    |> Ok
+                )
+                (parseRule (always identity)
+                    { trigger = "CAVE"
+                    , conditions = []
+                    , changes = []
+                    }
+                )
+
+
+parseRulesTest =
+    test "parseRules" <|
+        \() ->
+            Expect.equal
+                (Ok <|
+                    Dict.fromList
+                        [ ( "one"
+                          , { trigger = Match "PLAYER" []
+                            , conditions = []
+                            , changes = []
+                            }
+                          )
+                        , ( "two"
+                          , { trigger = Match "CAVE" []
+                            , conditions = []
+                            , changes = []
+                            }
+                          )
+                        ]
+                )
+                (parseRules (always identity) <|
+                    Dict.fromList
+                        [ ( "one"
+                          , { trigger = "PLAYER"
+                            , conditions = []
+                            , changes = []
+                            }
+                          )
+                        , ( "two"
+                          , { trigger = "CAVE"
+                            , conditions = []
+                            , changes = []
+                            }
+                          )
+                        ]
+                )
 
 
 shouldFail message res =

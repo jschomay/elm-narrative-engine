@@ -1,8 +1,9 @@
 module Utils.EntityParserTest exposing (all)
 
+import Dict
 import Expect
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.EntityParser exposing (parseEntity)
+import NarrativeEngine.Utils.EntityParser as EntityParser
 import NarrativeEngine.Utils.Helpers exposing (parseMultiple)
 import Result
 import Test exposing (..)
@@ -10,7 +11,9 @@ import Test exposing (..)
 
 all =
     describe "parsing entitties"
-        [ worldDefinition ]
+        [ worldDefinition
+        , parseManyTest
+        ]
 
 
 makeEntity id =
@@ -20,6 +23,12 @@ makeEntity id =
       , links = emptyLinks
       }
     )
+
+
+{-| no tests have extra fields, so this is a helper for no extra fields
+-}
+parseEntity string =
+    EntityParser.parseEntity (always identity) ( string, {} )
 
 
 worldDefinition =
@@ -180,6 +189,23 @@ worldDefinition =
                     (makeEntity "A" |> Ok)
                     (parseEntity "A")
         ]
+
+
+parseManyTest =
+    test "just id" <|
+        \() ->
+            Expect.equal
+                ([ makeEntity "CAVE_ENTRANCE" |> tag "location"
+                 , makeEntity "PLAYER"
+                 ]
+                    |> Dict.fromList
+                    |> Ok
+                )
+                (EntityParser.parseMany (always identity)
+                    [ ( "CAVE_ENTRANCE.location", {} )
+                    , ( "PLAYER", {} )
+                    ]
+                )
 
 
 shouldFail message res =

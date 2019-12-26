@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.RuleParser exposing (ParsedChanges, ParsedMatcher, parseChanges, parseMatcher)
+module NarrativeEngine.Utils.RuleParser exposing (ParsedChanges, ParsedMatcher, ParsedRule, ParsedRules, parseChanges, parseMatcher, parseRule, parseRules)
 
 {-| A helper module for parsing queries and rules.
 
@@ -6,10 +6,20 @@ Example ... TODO
 
 -}
 
+import Dict exposing (Dict)
+import NarrativeEngine.Core.Rules exposing (..)
 import NarrativeEngine.Core.WorldModel exposing (..)
 import NarrativeEngine.Utils.EntityParser exposing (idParser, numberParser, propertyNameParser)
 import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
+
+
+type alias ParsedRules a =
+    Result ParseErrors (Rules a)
+
+
+type alias ParsedRule a =
+    Result String (Rule a)
 
 
 type alias ParsedMatcher =
@@ -18,6 +28,78 @@ type alias ParsedMatcher =
 
 type alias ParsedChanges =
     Result String ChangeWorld
+
+
+{-| The rule shape, but with Strings of matcher and changes syntax.
+-}
+type alias StringRule a =
+    { a
+        | trigger : String
+        , conditions : List String
+        , changes : List String
+    }
+
+
+{-| A function that receives a potentially extended `StringRule a` and a record with the main rule fields, to build a `Rule a`. This is how you "bring over" any extra fields when parsing a rule.
+-}
+type alias ExtendFn a =
+    StringRule a -> Rule {} -> Rule a
+
+
+{-| Takes a dictionary of rules defined with matcher and changes syntax and parses into complete rules.
+
+You must include a function for extended fields (see `parseRule` for more details), which will be called with each rule that gets parsed.
+
+-}
+parseRules : ExtendFn a -> Dict RuleID (StringRule a) -> ParsedRules a
+parseRules extendFn rules =
+    let
+        printRule { trigger, conditions, changes } =
+            "Trigger: "
+                ++ trigger
+                ++ "\nConditions: "
+                ++ String.join ", " conditions
+                ++ "\nChanges: "
+                ++ String.join ", " changes
+
+        displayError k v e =
+            ( "Rule: " ++ k ++ "\n" ++ printRule v ++ " ", e )
+
+        addParsedRule id stringRule acc =
+            case parseRule extendFn stringRule of
+                Ok parsedRule ->
+                    Result.map (Dict.insert id parsedRule) acc
+
+                Err err ->
+                    case acc of
+                        Ok _ ->
+                            Err [ displayError id stringRule err ]
+
+                        Err errors ->
+                            Err <| displayError id stringRule err :: errors
+    in
+    Dict.foldl addParsedRule (Ok Dict.empty) rules
+
+
+{-| Parses a rule defined with "matcher" and "changes" syntax into a complete rule.
+
+Since rules are extensible records, you must supply a function that extends the base rule. For example, if you include a "soundEffect" field on your rule, you can build a new rule record from the parsed rule and your original rule. If you do not use extra fields, just pass `always identity`.
+
+-}
+parseRule : ExtendFn a -> StringRule a -> ParsedRule a
+parseRule extendFn ({ trigger, conditions, changes } as initialRule) =
+    let
+        toRule trigger_ conditions_ changes_ =
+            { trigger = trigger_
+            , conditions = conditions_
+            , changes = changes_
+            }
+                |> extendFn initialRule
+    in
+    Result.map3 toRule
+        (parseMatcher trigger)
+        (parseMultiple parseMatcher conditions)
+        (parseMultiple parseChanges changes)
 
 
 parseMatcher : String -> ParsedMatcher

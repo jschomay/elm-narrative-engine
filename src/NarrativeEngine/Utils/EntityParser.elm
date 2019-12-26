@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.EntityParser exposing (ParsedEntity, idParser, numberParser, parseEntity, propertyNameParser)
+module NarrativeEngine.Utils.EntityParser exposing (ParsedEntity, idParser, numberParser, parseEntity, parseMany, propertyNameParser)
 
 {-| A helper module for easily creating entities.
 
@@ -20,21 +20,61 @@ Note that `RuleParser` relies on some of the parsers in this module.
 
 -}
 
+import Dict
 import NarrativeEngine.Core.WorldModel exposing (..)
 import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
-type alias ParsedEntity =
-    Result String ( ID, NarrativeComponent {} )
+type alias ParsedEntity a =
+    Result String ( ID, NarrativeComponent a )
 
 
-parseEntity : String -> ParsedEntity
-parseEntity text =
+type alias ParsedWorldModel a =
+    Result ParseErrors (WorldModel a)
+
+
+{-| A function for "merging" extra fields into a `NarrativeComponent {}`.
+-}
+type alias ExtendFn a =
+    a -> NarrativeComponent {} -> NarrativeComponent a
+
+
+{-| Parses a list of entities into a world model. The list of entities are tuples of the entity syntax for parsing, and the extra fields for that entity. You also need to provide an "extend function" to "merge" extra fields with the standard entity fields.
+-}
+parseMany : ExtendFn a -> List ( String, a ) -> ParsedWorldModel a
+parseMany extendFn entities =
+    let
+        displayError source e =
+            ( "Entity def: " ++ source, e )
+
+        addParsedEntity (( source, extraFields ) as entity) acc =
+            case parseEntity extendFn entity of
+                Ok ( id, parsedEntity ) ->
+                    Result.map (Dict.insert id parsedEntity) acc
+
+                Err err ->
+                    case acc of
+                        Ok _ ->
+                            Err [ displayError source err ]
+
+                        Err errors ->
+                            Err <| displayError source err :: errors
+    in
+    List.foldl addParsedEntity (Ok Dict.empty) entities
+
+
+{-| Parses a single entity, represented as a string of entity syntax and a record of
+additional fields. The extend function is used to "merge" the additional fields into the standard entity record. (You can use `always identity` if you don't have any extra fields).
+-}
+parseEntity : ExtendFn a -> ( String, a ) -> ParsedEntity a
+parseEntity extendFn ( text, extraFields ) =
     run entityParser text
+        |> Result.map (Tuple.mapSecond <| extendFn extraFields)
         |> Result.mapError Helpers.deadEndsToString
 
 
+entityParser : Parser ( ID, NarrativeComponent {} )
 entityParser =
     let
         toEntity id narrativeComponent =
