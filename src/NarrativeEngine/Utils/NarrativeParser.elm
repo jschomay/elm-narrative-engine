@@ -12,6 +12,7 @@ import NarrativeEngine.Core.WorldModel exposing (..)
 import NarrativeEngine.Utils.Helpers as Helpers exposing (ParseErrors, notEmpty, parseMultiple)
 import NarrativeEngine.Utils.RuleParser exposing (parseMatcher)
 import Parser exposing (..)
+import Random
 import Result
 
 
@@ -28,6 +29,8 @@ Includes the following keys:
 `cycleIndex` - an integer starting at 0 indicating which index of cycle text should be used. Applies to all cycle texts and sticks on the last one. Ex: "{one|two}{| and three}" with a cycleIndex of 0 would produce "one" while an cycleIndex of 1 would produce "two and three" (note that empty segments are allowed).
 
 You can indicate a looping cycle like `{~Mon|Tue|Wednes|Thurs|Fri|Satur|Sun}day` which would loop through all the days in the week repeatedly.
+
+You can return a random index in the cycle with `{?Heads|Tails}`. The random index is based on the `cycleIndex` and the length of the trigger word and is only quasi random.
 
 `propKeywords` - a dictionary of valid keywords to match against, and the corresponding functions that will take an entity ID and return a property as a Result. For example "{stranger.description}" could be matched with a keyword of "description" and a corresponding function that takes "stranger" and returns a description. If it returns and Err, the match will fail. You can use this in creative ways, for example, to print a list of items in a room.
 
@@ -122,9 +125,15 @@ staticText =
         |> andThen notEmpty
 
 
+type CycleType
+    = Sticking
+    | Looping
+    | Randomly
+
+
 {-| Parses text that looks like "{a|b|c}".
 
-Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option by default, or repeats with `{~a|b|c}` syntax.
+Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option by default, or repeats with `{~a|b|c}` syntax or chooses a random index with `{?|a|b|c}` syntax..
 
 Note that empty options are valid, like "{|a||}" which has 3 empty segments.
 
@@ -132,17 +141,27 @@ Note that empty options are valid, like "{|a||}" which has 3 empty segments.
 cyclingText : Config a -> Parser String
 cyclingText config =
     let
-        findCurrent : Bool -> List String -> String
-        findCurrent cycle l =
-            if cycle then
-                Array.fromList l
-                    |> Array.get (modBy (List.length l) config.cycleIndex)
-                    |> Maybe.withDefault "ERROR finding correct cycling text"
+        findCurrent : CycleType -> List String -> String
+        findCurrent cycleType l =
+            case cycleType of
+                Randomly ->
+                    (config.cycleIndex * String.length config.trigger)
+                        |> Random.initialSeed
+                        |> Random.step (Random.int 0 200)
+                        |> Tuple.first
+                        |> modBy (List.length l)
+                        |> (\i -> Array.get i (Array.fromList l))
+                        |> Maybe.withDefault "ERROR finding correct cycling text"
 
-            else
-                Array.fromList l
-                    |> Array.get (min (List.length l - 1) config.cycleIndex)
-                    |> Maybe.withDefault "ERROR finding correct cycling text"
+                Looping ->
+                    Array.fromList l
+                        |> Array.get (modBy (List.length l) config.cycleIndex)
+                        |> Maybe.withDefault "ERROR finding correct cycling text"
+
+                Sticking ->
+                    Array.fromList l
+                        |> Array.get (min (List.length l - 1) config.cycleIndex)
+                        |> Maybe.withDefault "ERROR finding correct cycling text"
 
         helper acc =
             oneOf
@@ -163,8 +182,9 @@ cyclingText config =
     in
     succeed findCurrent
         |= oneOf
-            [ symbol "~" |> map (always True)
-            , succeed False
+            [ symbol "~" |> map (always Looping)
+            , symbol "?" |> map (always Randomly)
+            , succeed Sticking
             ]
         |= loop [] helper
 

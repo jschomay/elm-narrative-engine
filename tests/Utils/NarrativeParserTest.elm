@@ -163,6 +163,11 @@ cycle =
                 Expect.equal [ [ "Heads" ], [ "Tails" ], [ "Heads" ], [ "Tails" ] ] <|
                     List.map (\i -> parse { config | cycleIndex = i } "{~Heads|Tails}") <|
                         List.range 0 3
+        , test "random cycles" <|
+            \() ->
+                Expect.equal [ [ "Heads" ], [ "Heads" ], [ "Tails" ], [ "Tails" ] ] <|
+                    List.map (\i -> parse { config | trigger = "COIN", cycleIndex = i } "{?Heads|Tails}") <|
+                        List.range 0 3
         ]
 
 
