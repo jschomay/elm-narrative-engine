@@ -25,7 +25,6 @@ config =
     , propKeywords = Dict.empty
     , worldModel = Dict.empty
     , trigger = ""
-    , randomIndex = 0
     }
 
 
@@ -159,6 +158,11 @@ cycle =
             \() ->
                 shouldError "{abc}xyz} should error" <|
                     parse { config | cycleIndex = 0 } "{abc}xyz}"
+        , test "looping cycles" <|
+            \() ->
+                Expect.equal [ [ "Heads" ], [ "Tails" ], [ "Heads" ], [ "Tails" ] ] <|
+                    List.map (\i -> parse { config | cycleIndex = i } "{~Heads|Tails}") <|
+                        List.range 0 3
         ]
 
 

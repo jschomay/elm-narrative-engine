@@ -27,15 +27,13 @@ Includes the following keys:
 
 `cycleIndex` - an integer starting at 0 indicating which index of cycle text should be used. Applies to all cycle texts and sticks on the last one. Ex: "{one|two}{| and three}" with a cycleIndex of 0 would produce "one" while an cycleIndex of 1 would produce "two and three" (note that empty segments are allowed).
 
+You can indicate a looping cycle like `{~Mon|Tue|Wednes|Thurs|Fri|Satur|Sun}day` which would loop through all the days in the week repeatedly.
+
 `propKeywords` - a dictionary of valid keywords to match against, and the corresponding functions that will take an entity ID and return a property as a Result. For example "{stranger.description}" could be matched with a keyword of "description" and a corresponding function that takes "stranger" and returns a description. If it returns and Err, the match will fail. You can use this in creative ways, for example, to print a list of items in a room.
 
 `worldModel` - the full world model. Used to query against for conditional text.
 
 `trigger` - an entity ID used to replace "$" in conditional text.
-
-`randomIndex` - not used currently, but may be used later for randomized text (randomization must be handled by the client)
-
-(NOTE, random cycle indexes and repeating cycles may be added later).
 
 -}
 type alias Config a =
@@ -43,7 +41,6 @@ type alias Config a =
     , propKeywords : Dict String (String -> Result String String)
     , worldModel : WorldModel a
     , trigger : ID
-    , randomIndex : Int
     }
 
 
@@ -82,7 +79,6 @@ parseMany content =
             , propKeywords = Dict.empty
             , trigger = ""
             , worldModel = Dict.empty
-            , randomIndex = 0
             }
 
         displayError k v e =
@@ -128,21 +124,25 @@ staticText =
 
 {-| Parses text that looks like "{a|b|c}".
 
-Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option.
+Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option by default, or repeats with `{~a|b|c}` syntax.
 
 Note that empty options are valid, like "{|a||}" which has 3 empty segments.
-
--- TODO option for loop and maybe random
 
 -}
 cyclingText : Config a -> Parser String
 cyclingText config =
     let
-        findCurrent : List String -> String
-        findCurrent l =
-            Array.fromList l
-                |> Array.get (min (List.length l - 1) config.cycleIndex)
-                |> Maybe.withDefault "ERROR finding correct cycling text"
+        findCurrent : Bool -> List String -> String
+        findCurrent cycle l =
+            if cycle then
+                Array.fromList l
+                    |> Array.get (modBy (List.length l) config.cycleIndex)
+                    |> Maybe.withDefault "ERROR finding correct cycling text"
+
+            else
+                Array.fromList l
+                    |> Array.get (min (List.length l - 1) config.cycleIndex)
+                    |> Maybe.withDefault "ERROR finding correct cycling text"
 
         helper acc =
             oneOf
@@ -161,8 +161,12 @@ cyclingText config =
                         ]
                 ]
     in
-    loop [] helper
-        |> map findCurrent
+    succeed findCurrent
+        |= oneOf
+            [ symbol "~" |> map (always True)
+            , succeed False
+            ]
+        |= loop [] helper
 
 
 {-| Parses text that looks like "{myEntity.name}".
