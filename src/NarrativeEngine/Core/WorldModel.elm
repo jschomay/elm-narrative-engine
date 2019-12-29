@@ -4,7 +4,7 @@ module NarrativeEngine.Core.WorldModel exposing
     , addTag, setStat, setLink
     , tag, stat, link
     , ChangeWorld(..), ChangeEntity(..), applyChanges
-    , EntityMatcher(..), Query(..), query, replaceTrigger
+    , EntityMatcher(..), StatMatcher(..), Query(..), query, replaceTrigger
     , getStat, getLink
     )
 
@@ -38,7 +38,7 @@ These are useful for an "entity buider pattern".
 
 Queries are run against the world model to search for matching entities, or to assert that an entity has specific properties. This is useful to render a list of characters in a given location for example. The engine uses this when checking rules.
 
-@docs EntityMatcher, Query, query, replaceTrigger
+@docs EntityMatcher, StatMatcher, Query, query, replaceTrigger
 
 You can get specific stats or links from an entity too.
 
@@ -286,11 +286,19 @@ type EntityMatcher
     | MatchAny (List Query)
 
 
+{-| Stats can either be a specific integer, or you can supply an entity ID and a stat
+key to do a comparison.
+-}
+type StatMatcher
+    = SpecificStat Int
+    | CompareStat ID String
+
+
 {-| Semantic queries for checking properties of an entity.
 -}
 type Query
     = HasTag String
-    | HasStat String Order Int
+    | HasStat String Order StatMatcher
     | HasLink String EntityMatcher
     | Not Query
 
@@ -302,7 +310,7 @@ queryFn q store =
             hasTag value
 
         HasStat key comparator value ->
-            hasStat key comparator value
+            hasStat key comparator value store
 
         HasLink key value ->
             hasLink key value store
@@ -428,12 +436,21 @@ hasTag value entity =
 
 {-| If the provided stat doesn't exist, it defaults to 0 (this makes it easier to query against stats that haven't been set yet, without having to preset every stat in your starting stat).
 -}
-hasStat : String -> Order -> Int -> NarrativeComponent a -> Bool
-hasStat key comparator value entity =
-    entity.stats
-        |> Dict.get key
-        |> Maybe.withDefault 0
-        |> (\actual -> compare actual value == comparator)
+hasStat : String -> Order -> StatMatcher -> WorldModel a -> NarrativeComponent a -> Bool
+hasStat key comparator statMatcher store entity =
+    case statMatcher of
+        SpecificStat value ->
+            entity.stats
+                |> Dict.get key
+                |> Maybe.withDefault 0
+                |> (\actual -> compare actual value == comparator)
+
+        CompareStat compareID compareKey ->
+            Dict.get compareID store
+                |> Maybe.andThen (.stats >> Dict.get compareKey)
+                |> Maybe.map2 compare (Dict.get key entity.stats)
+                |> Maybe.map ((==) comparator)
+                |> Maybe.withDefault False
 
 
 {-| Note, if the linked-to id doesn't exist in the world model, this will fail

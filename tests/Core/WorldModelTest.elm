@@ -40,6 +40,7 @@ worldModel =
             |> tag "item"
             |> tag "special"
             |> link "belongsTo" "character2"
+            |> link "origin" "location1"
         , entity "item2"
             |> tag "item"
             |> link "heldBy" "character1"
@@ -52,6 +53,7 @@ worldModel =
         , entity "character2"
             |> tag "character"
             |> stat "strength" 2
+            |> stat "armor" 5
             |> link "locatedIn" "location1"
         , entity "location1"
             |> tag "location"
@@ -224,22 +226,34 @@ statTests =
                 Expect.equal Nothing (getStat "location" "strength" worldModel)
         , test "hasStat (EQ) true" <|
             \() ->
-                Expect.true "expected stat" (assert "character1" [ HasStat "strength" EQ 5 ] worldModel)
+                Expect.true "expected stat" (assert "character1" [ HasStat "strength" EQ <| SpecificStat 5 ] worldModel)
         , test "hasStat false no key" <|
             \() ->
-                Expect.false "didn't expect stat" (assert "location" [ HasStat "strength" EQ 5 ] worldModel)
+                Expect.false "didn't expect stat" (assert "location" [ HasStat "strength" EQ <| SpecificStat 5 ] worldModel)
         , test "hasStat false (EQ) wrong value" <|
             \() ->
-                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" EQ 1 ] worldModel)
+                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" EQ <| SpecificStat 1 ] worldModel)
         , test "hasStat (GT) true" <|
             \() ->
-                Expect.true "expected stat" (assert "character1" [ HasStat "strength" GT 4 ] worldModel)
+                Expect.true "expected stat" (assert "character1" [ HasStat "strength" GT <| SpecificStat 4 ] worldModel)
         , test "hasStat (GT) false" <|
             \() ->
-                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" GT 6 ] worldModel)
+                Expect.false "didn't expect stat" (assert "character1" [ HasStat "strength" GT <| SpecificStat 6 ] worldModel)
         , test "unknown stat defaults to 0" <|
             \() ->
-                Expect.true "unknown stat should have been 0" (assert "character1" [ HasStat "unsetStat" LT 1, HasStat "unsetStat" GT -1 ] worldModel)
+                Expect.true "unknown stat should have been 0"
+                    (assert "character1"
+                        [ HasStat "unsetStat" LT <| SpecificStat 1
+                        , HasStat "unsetStat" GT <| SpecificStat -1
+                        ]
+                        worldModel
+                    )
+        , test "hasStat compare true" <|
+            \() ->
+                Expect.true "character1 strength should equal character2 armor" (assert "character1" [ HasStat "strength" EQ <| CompareStat "character2" "armor" ] worldModel)
+        , test "hasStat compare false" <|
+            \() ->
+                Expect.false "character1 strength should equal character2 armor" (assert "character1" [ HasStat "strength" GT <| CompareStat "character2" "armor" ] worldModel)
         ]
 
 
@@ -310,6 +324,10 @@ linkTests =
                             )
                         ]
                         worldModel
+        , skip <|
+            test "hasLink compare" <|
+                \() ->
+                    Expect.true "character1 and 2 should have same location" (assert "character1" [] worldModel)
         ]
 
 
@@ -326,12 +344,18 @@ queryTests =
             \() ->
                 Expect.equal [ "character1" ] <|
                     List.map Tuple.first <|
-                        query (MatchAny [ HasTag "character", HasStat "strength" GT 3 ]) worldModel
+                        query (MatchAny [ HasTag "character", HasStat "strength" GT <| SpecificStat 3 ]) worldModel
+        , test "query stat compare - characters stronger than character2" <|
+            \() ->
+                Expect.equal [ "character1" ] <|
+                    List.map Tuple.first <|
+                        query (MatchAny [ HasTag "character", HasStat "strength" GT <| CompareStat "character2" "strength" ]) worldModel
         , test "query link - characters in location" <|
             \() ->
                 Expect.equal [ "character1", "character2" ] <|
                     List.map Tuple.first <|
                         query (MatchAny [ HasTag "character", HasLink "locatedIn" <| Match "location1" [] ]) worldModel
+        , todo "query link compare - characters in same location as item1's origin"
         , test "empty result" <|
             \() ->
                 Expect.equal [] <|

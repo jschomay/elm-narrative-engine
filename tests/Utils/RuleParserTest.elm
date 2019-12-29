@@ -44,18 +44,19 @@ matchers =
         , test "stat =" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasStat "fear" EQ 5 ])
+                    (Ok <| Match "PLAYER" [ HasStat "fear" EQ <| SpecificStat 5 ])
                     (parseMatcher "PLAYER.fear=5")
         , test "stat >" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasStat "fear" GT 5 ])
+                    (Ok <| Match "PLAYER" [ HasStat "fear" GT <| SpecificStat 5 ])
                     (parseMatcher "PLAYER.fear>5")
         , test "stat <" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasStat "fear" LT 5 ])
+                    (Ok <| Match "PLAYER" [ HasStat "fear" LT <| SpecificStat 5 ])
                     (parseMatcher "PLAYER.fear<5")
+        , todo "stat compare"
         , test "link just id" <|
             \() ->
                 Expect.equal
@@ -120,8 +121,8 @@ matchers =
                             [ HasTag "tag3"
                             , HasLink "link2" (Match "C" [])
                             , HasLink "link1" (Match "B" [])
-                            , HasStat "stat2" GT 2
-                            , HasStat "stat1" EQ 1
+                            , HasStat "stat2" GT <| SpecificStat 2
+                            , HasStat "stat1" EQ <| SpecificStat 1
                             , HasTag "tag2"
                             , HasTag "tag1"
                             ]
@@ -140,7 +141,13 @@ matchers =
         , test "with spaces" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasTag "blinded", HasStat "fear" GT 2, HasLink "location" (Match "CAVE" []) ])
+                    (Ok <|
+                        Match "PLAYER"
+                            [ HasTag "blinded"
+                            , HasStat "fear" GT <| SpecificStat 2
+                            , HasLink "location" (Match "CAVE" [])
+                            ]
+                    )
                     (parseMatcher "PLAYER .location=CAVE .fear>2 .blinded")
         , test "multiline" <|
             \() ->

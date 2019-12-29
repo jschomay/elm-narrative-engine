@@ -184,14 +184,17 @@ queriesParser =
                     |= oneOf
                         [ succeed identity
                             |. symbol ">"
-                            |= (numberParser |> map (\n -> \key -> HasStat key GT n))
+                            -- TODO
+                            |= (numberParser |> map (\n -> \key -> HasStat key GT (SpecificStat n)))
                         , succeed identity
                             |. symbol "<"
-                            |= (numberParser |> map (\n -> \key -> HasStat key LT n))
+                            -- TODO
+                            |= (numberParser |> map (\n -> \key -> HasStat key LT (SpecificStat n)))
                         , succeed identity
                             |. symbol "="
                             |= oneOf
-                                [ numberParser |> map (\n -> \key -> HasStat key EQ n)
+                                -- TODO
+                                [ numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
                                 , symbol "$" |> map (\_ -> \key -> HasLink key (Match "$" []))
                                 , idParser |> map (\id -> \key -> HasLink key (Match id []))
                                 , succeed identity
