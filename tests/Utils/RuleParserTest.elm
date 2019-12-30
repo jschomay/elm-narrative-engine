@@ -60,12 +60,12 @@ matchers =
         , test "link just id" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasLink "location" (Match "CAVE" []) ])
+                    (Ok <| Match "PLAYER" [ HasLink "location" (SpecificLink <| Match "CAVE" []) ])
                     (parseMatcher "PLAYER.location=CAVE")
         , test "link with $" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasLink "location" (Match "$" []) ])
+                    (Ok <| Match "PLAYER" [ HasLink "location" (SpecificLink <| Match "$" []) ])
                     (parseMatcher "PLAYER.location=$")
         , test "$ as selector (needed for conditional text)" <|
             \() ->
@@ -75,27 +75,27 @@ matchers =
         , test "link missing parens" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasTag "dark", HasLink "location" (Match "CAVE" []) ])
+                    (Ok <| Match "PLAYER" [ HasTag "dark", HasLink "location" (SpecificLink <| Match "CAVE" []) ])
                     (parseMatcher "PLAYER.location=CAVE.dark")
         , test "link with subquery" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasLink "location" (Match "CAVE" [ HasTag "dark" ]) ])
+                    (Ok <| Match "PLAYER" [ HasLink "location" (SpecificLink <| Match "CAVE" [ HasTag "dark" ]) ])
                     (parseMatcher "PLAYER.location=(CAVE.dark)")
         , test "link with subquery with MatchAny" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasLink "location" (MatchAny [ HasTag "dark", HasTag "location" ]) ])
+                    (Ok <| Match "PLAYER" [ HasLink "location" (SpecificLink <| MatchAny [ HasTag "dark", HasTag "location" ]) ])
                     (parseMatcher "PLAYER.location=(*.location.dark)")
         , test "link with subquery and extra tag" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasTag "blinded", HasLink "location" (Match "CAVE" [ HasTag "dark" ]) ])
+                    (Ok <| Match "PLAYER" [ HasTag "blinded", HasLink "location" (SpecificLink <| Match "CAVE" [ HasTag "dark" ]) ])
                     (parseMatcher "PLAYER.location=(CAVE.dark).blinded")
         , test "link with nested subquery" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "PLAYER" [ HasLink "location" (MatchAny [ HasLink "homeTo" (Match "GOBLIN" []), HasTag "location" ]) ])
+                    (Ok <| Match "PLAYER" [ HasLink "location" (SpecificLink <| MatchAny [ HasLink "homeTo" (SpecificLink <| Match "GOBLIN" []), HasTag "location" ]) ])
                     (parseMatcher "PLAYER.location=(*.location.homeTo=GOBLIN)")
         , test "link super nested" <|
             \() ->
@@ -104,23 +104,25 @@ matchers =
                         Match "PLAYER"
                             [ HasTag "scared"
                             , HasLink "location"
-                                (MatchAny
-                                    [ HasTag "dark"
-                                    , HasLink "homeTo" (MatchAny [ HasTag "enemy" ])
-                                    , HasTag "location"
-                                    ]
+                                (SpecificLink <|
+                                    MatchAny
+                                        [ HasTag "dark"
+                                        , HasLink "homeTo" (SpecificLink <| MatchAny [ HasTag "enemy" ])
+                                        , HasTag "location"
+                                        ]
                                 )
                             ]
                     )
                     (parseMatcher "PLAYER.location=(*.location.homeTo=(*.enemy).dark).scared")
+        , todo "link with compare"
         , test "all together" <|
             \() ->
                 Expect.equal
                     (Ok <|
                         Match "A"
                             [ HasTag "tag3"
-                            , HasLink "link2" (Match "C" [])
-                            , HasLink "link1" (Match "B" [])
+                            , HasLink "link2" (SpecificLink <| Match "C" [])
+                            , HasLink "link1" (SpecificLink <| Match "B" [])
                             , HasStat "stat2" GT <| SpecificStat 2
                             , HasStat "stat1" EQ <| SpecificStat 1
                             , HasTag "tag2"
@@ -136,7 +138,7 @@ matchers =
         , test "not 2" <|
             \() ->
                 Expect.equal
-                    (Ok <| Match "TORCH" [ Not (HasLink "location" (Match "PLAYER" [])) ])
+                    (Ok <| Match "TORCH" [ Not (HasLink "location" (SpecificLink <| Match "PLAYER" [])) ])
                     (parseMatcher "TORCH.!location=PLAYER")
         , test "with spaces" <|
             \() ->
@@ -145,7 +147,7 @@ matchers =
                         Match "PLAYER"
                             [ HasTag "blinded"
                             , HasStat "fear" GT <| SpecificStat 2
-                            , HasLink "location" (Match "CAVE" [])
+                            , HasLink "location" (SpecificLink <| Match "CAVE" [])
                             ]
                     )
                     (parseMatcher "PLAYER .location=CAVE .fear>2 .blinded")
@@ -243,7 +245,7 @@ multiple =
             \() ->
                 Expect.equal
                     (Ok <|
-                        [ MatchAny [ HasLink "location" (Match "PLAYER" []), HasTag "light" ]
+                        [ MatchAny [ HasLink "location" (SpecificLink <| Match "PLAYER" []), HasTag "light" ]
                         , Match "CAVE" [ HasTag "dark" ]
                         ]
                     )

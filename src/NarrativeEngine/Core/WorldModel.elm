@@ -4,7 +4,7 @@ module NarrativeEngine.Core.WorldModel exposing
     , addTag, setStat, setLink
     , tag, stat, link
     , ChangeWorld(..), ChangeEntity(..), applyChanges
-    , EntityMatcher(..), StatMatcher(..), Query(..), query, replaceTrigger
+    , EntityMatcher(..), LinkMatcher(..), StatMatcher(..), Query(..), query, replaceTrigger
     , getStat, getLink
     )
 
@@ -38,7 +38,7 @@ These are useful for an "entity buider pattern".
 
 Queries are run against the world model to search for matching entities, or to assert that an entity has specific properties. This is useful to render a list of characters in a given location for example. The engine uses this when checking rules.
 
-@docs EntityMatcher, StatMatcher, Query, query, replaceTrigger
+@docs EntityMatcher, LinkMatcher, StatMatcher, Query, query, replaceTrigger
 
 You can get specific stats or links from an entity too.
 
@@ -294,12 +294,20 @@ type StatMatcher
     | CompareStat ID String
 
 
+{-| Links can either be a specific entity matcher, or you can supply an entity ID and
+a link key to do a comparison.
+-}
+type LinkMatcher
+    = SpecificLink EntityMatcher
+    | CompareLink ID String
+
+
 {-| Semantic queries for checking properties of an entity.
 -}
 type Query
     = HasTag String
     | HasStat String Order StatMatcher
-    | HasLink String EntityMatcher
+    | HasLink String LinkMatcher
     | Not Query
 
 
@@ -323,9 +331,11 @@ queryFn q store =
 
 Provide an entity matcher to get back a list of matching entities. This is most useful for "match any" style queries, but works with specifc queries as well, just keep in mind the result is always a list.
 
-    query (MatchAny [ HasTag "item" ]) worldModel -- [items...]
+    query (MatchAny [ HasTag "item" ]) worldModel
+    -- [items...]
 
-    query (Match "PLAYER" [ HasStat "brave" GT 5 ]) worldModel |> List.isEmpty -- True/False
+    query (Match "PLAYER" [ HasStat "brave" GT <| SpecificStat 5 ]) worldModel |> List.isEmpty
+    -- True/False
 
 Note that you should run `replaceTrigger` first if you have "$"'s in your matcher.
 
@@ -379,9 +389,11 @@ replaceTrigger trigger matcher =
     let
         replaceInQuery q =
             case q of
-                HasLink key (Match "$" queries) ->
-                    HasLink key (Match trigger queries)
+                HasLink key (SpecificLink (Match "$" queries)) ->
+                    HasLink key <| SpecificLink (Match trigger queries)
 
+                -- TODO replace for CompareLink too
+                -- TODO replace for CompareStat too
                 _ ->
                     q
 
@@ -455,10 +467,10 @@ hasStat key comparator statMatcher store entity =
 
 {-| Note, if the linked-to id doesn't exist in the world model, this will fail
 -}
-hasLink : String -> EntityMatcher -> WorldModel a -> NarrativeComponent a -> Bool
-hasLink key matcher store entity =
+hasLink : String -> LinkMatcher -> WorldModel a -> NarrativeComponent a -> Bool
+hasLink key linkMatcher store entity =
     let
-        assertMatch actualID =
+        assertMatch matcher actualID =
             case matcher of
                 Match expectedID qs ->
                     (expectedID == actualID)
@@ -467,7 +479,15 @@ hasLink key matcher store entity =
                 MatchAny qs ->
                     findSpecific actualID qs store |> List.isEmpty |> not
     in
-    entity.links
-        |> Dict.get key
-        |> Maybe.map assertMatch
-        |> Maybe.withDefault False
+    case linkMatcher of
+        SpecificLink entityMatcher ->
+            entity.links
+                |> Dict.get key
+                |> Maybe.map (assertMatch entityMatcher)
+                |> Maybe.withDefault False
+
+        CompareLink compareID compareKey ->
+            Dict.get compareID store
+                |> Maybe.andThen (.links >> Dict.get compareKey)
+                |> Maybe.map2 (==) (Dict.get key entity.links)
+                |> Maybe.withDefault False

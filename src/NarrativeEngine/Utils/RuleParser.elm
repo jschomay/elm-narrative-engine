@@ -195,11 +195,11 @@ queriesParser =
                             |= oneOf
                                 -- TODO
                                 [ numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
-                                , symbol "$" |> map (\_ -> \key -> HasLink key (Match "$" []))
-                                , idParser |> map (\id -> \key -> HasLink key (Match id []))
+                                , symbol "$" |> map (\_ -> \key -> HasLink key (SpecificLink <| Match "$" []))
+                                , idParser |> map (\id -> \key -> HasLink key (SpecificLink <| Match id []))
                                 , succeed identity
                                     |. symbol "("
-                                    |= (matcherParser |> map (\matcher -> \key -> HasLink key matcher))
+                                    |= (matcherParser |> map (\matcher -> \key -> HasLink key <| SpecificLink matcher))
                                     |. symbol ")"
                                 ]
                         , succeed (\t -> HasTag t)
