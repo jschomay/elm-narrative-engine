@@ -140,7 +140,11 @@ matchers =
                             ]
                     )
                     (parseMatcher "PLAYER.location=(*.location.homeTo=(*.enemy).dark).scared")
-        , todo "link with compare"
+        , test "link compare" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasLink "location" (CompareLink "ENEMY" "home_world") ])
+                    (parseMatcher "PLAYER.location=(link ENEMY.home_world)")
 
         -- other
         , test "all together" <|

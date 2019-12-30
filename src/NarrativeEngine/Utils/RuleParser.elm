@@ -188,7 +188,7 @@ queriesParser =
             else
                 Loop <| queryConstructor propName :: acc
 
-        parseCompare kind mapper =
+        compareParser kind mapper =
             succeed mapper
                 |. keyword ("(" ++ kind)
                 |. chompWhile ((==) ' ')
@@ -211,7 +211,7 @@ queriesParser =
                         [ succeed identity
                             |. symbol ">"
                             |= oneOf
-                                [ parseCompare "stat"
+                                [ compareParser "stat"
                                     (\compareID compareKey key ->
                                         HasStat key GT (CompareStat compareID compareKey)
                                     )
@@ -220,7 +220,7 @@ queriesParser =
                         , succeed identity
                             |. symbol "<"
                             |= oneOf
-                                [ parseCompare "stat"
+                                [ compareParser "stat"
                                     (\compareID compareKey key ->
                                         HasStat key LT (CompareStat compareID compareKey)
                                     )
@@ -229,13 +229,20 @@ queriesParser =
                         , succeed identity
                             |. symbol "="
                             |= oneOf
-                                [ parseCompare "stat"
+                                [ numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
+                                , symbol "$" |> map (\_ -> \key -> HasLink key (SpecificLink <| Match "$" []))
+                                , idParser |> map (\id -> \key -> HasLink key (SpecificLink <| Match id []))
+                                , compareParser "stat"
                                     (\compareID compareKey key ->
                                         HasStat key EQ (CompareStat compareID compareKey)
                                     )
-                                , numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
-                                , symbol "$" |> map (\_ -> \key -> HasLink key (SpecificLink <| Match "$" []))
-                                , idParser |> map (\id -> \key -> HasLink key (SpecificLink <| Match id []))
+                                , compareParser "link"
+                                    (\compareID compareKey key ->
+                                        HasLink key (CompareLink compareID compareKey)
+                                    )
+
+                                -- this needs to come after the compare parsers
+                                -- because they also start with "("
                                 , succeed identity
                                     |. symbol "("
                                     |= (matcherParser |> map (\matcher -> \key -> HasLink key <| SpecificLink matcher))
