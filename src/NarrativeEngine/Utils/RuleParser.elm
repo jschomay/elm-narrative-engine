@@ -161,6 +161,23 @@ updateTargetParser =
         ]
 
 
+{-| Syntax to parse queries.
+
+Tags: `.tag1.tag2.tag2`
+
+Stats: `.stat1=1.stat2>0.stat3<-2`
+Showing equal, greater than and less than for positive and negative integers.
+
+Also you can do a comparison against another entity stats like: `.stat_4>(stat ID.other_stat).stat_5<(stat ID.other_stat).stat_6=(stat ID.other_stat)`
+
+Links: `.link1=ID.link2=(*.tag1)`
+Showing a direct link and a generic link with nested queries.
+
+Also you can do a comparison against another entity links like: `.link3=(link ID.other_link)`
+
+Any query segment can be prefixed with a `!` for not: `.!tag1.!stat>9.!link=ID`
+
+-}
 queriesParser : Parser (List Query)
 queriesParser =
     let
@@ -170,6 +187,15 @@ queriesParser =
 
             else
                 Loop <| queryConstructor propName :: acc
+
+        parseCompare kind mapper =
+            succeed mapper
+                |. keyword ("(" ++ kind)
+                |. chompWhile ((==) ' ')
+                |= idParser
+                |. symbol "."
+                |= propertyNameParser
+                |. symbol ")"
 
         helper acc =
             oneOf
@@ -184,17 +210,30 @@ queriesParser =
                     |= oneOf
                         [ succeed identity
                             |. symbol ">"
-                            -- TODO
-                            |= (numberParser |> map (\n -> \key -> HasStat key GT (SpecificStat n)))
+                            |= oneOf
+                                [ parseCompare "stat"
+                                    (\compareID compareKey key ->
+                                        HasStat key GT (CompareStat compareID compareKey)
+                                    )
+                                , numberParser |> map (\n -> \key -> HasStat key GT (SpecificStat n))
+                                ]
                         , succeed identity
                             |. symbol "<"
-                            -- TODO
-                            |= (numberParser |> map (\n -> \key -> HasStat key LT (SpecificStat n)))
+                            |= oneOf
+                                [ parseCompare "stat"
+                                    (\compareID compareKey key ->
+                                        HasStat key LT (CompareStat compareID compareKey)
+                                    )
+                                , numberParser |> map (\n -> \key -> HasStat key LT (SpecificStat n))
+                                ]
                         , succeed identity
                             |. symbol "="
                             |= oneOf
-                                -- TODO
-                                [ numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
+                                [ parseCompare "stat"
+                                    (\compareID compareKey key ->
+                                        HasStat key EQ (CompareStat compareID compareKey)
+                                    )
+                                , numberParser |> map (\n -> \key -> HasStat key EQ (SpecificStat n))
                                 , symbol "$" |> map (\_ -> \key -> HasLink key (SpecificLink <| Match "$" []))
                                 , idParser |> map (\id -> \key -> HasLink key (SpecificLink <| Match id []))
                                 , succeed identity

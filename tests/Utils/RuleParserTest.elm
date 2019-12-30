@@ -41,6 +41,8 @@ matchers =
                 Expect.equal
                     (Ok <| MatchAny [ HasTag "dark" ])
                     (parseMatcher "*.dark")
+
+        --stats
         , test "stat =" <|
             \() ->
                 Expect.equal
@@ -56,7 +58,31 @@ matchers =
                 Expect.equal
                     (Ok <| Match "PLAYER" [ HasStat "fear" LT <| SpecificStat 5 ])
                     (parseMatcher "PLAYER.fear<5")
-        , todo "stat compare"
+        , test "stat compare =" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasStat "strength" EQ (CompareStat "ENEMY" "armor") ])
+                    (parseMatcher "PLAYER.strength=(stat ENEMY.armor)")
+        , test "stat compare >" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasStat "strength" GT (CompareStat "ENEMY" "armor") ])
+                    (parseMatcher "PLAYER.strength>(stat ENEMY.armor)")
+        , test "stat compare <" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasStat "strength" LT (CompareStat "ENEMY" "armor") ])
+                    (parseMatcher "PLAYER.strength<(stat ENEMY.armor)")
+        , test "stat compare when compare id doesn't exist fails" <|
+            \() ->
+                shouldFail "compare id doesn't exist"
+                    (parseMatcher "PLAYER.strength>(ENEMY.armor)")
+        , test "stat compare missing parens fails" <|
+            \() ->
+                shouldFail "missing parens"
+                    (parseMatcher "PLAYER.strength>ENEMY.armor")
+
+        -- links
         , test "link just id" <|
             \() ->
                 Expect.equal
@@ -115,6 +141,8 @@ matchers =
                     )
                     (parseMatcher "PLAYER.location=(*.location.homeTo=(*.enemy).dark).scared")
         , todo "link with compare"
+
+        -- other
         , test "all together" <|
             \() ->
                 Expect.equal
