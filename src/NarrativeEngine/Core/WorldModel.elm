@@ -392,8 +392,12 @@ replaceTrigger trigger matcher =
                 HasLink key (SpecificLink (Match "$" queries)) ->
                     HasLink key <| SpecificLink (Match trigger queries)
 
-                -- TODO replace for CompareLink too
-                -- TODO replace for CompareStat too
+                HasStat key comparison (CompareStat "$" compareKey) ->
+                    HasStat key comparison (CompareStat trigger compareKey)
+
+                HasLink key (CompareLink "$" compareKey) ->
+                    HasLink key (CompareLink trigger compareKey)
+
                 _ ->
                     q
 

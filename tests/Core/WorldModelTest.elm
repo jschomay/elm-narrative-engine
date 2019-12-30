@@ -392,7 +392,14 @@ queryTests =
                 Match "$" [ HasLink "link" (SpecificLink <| Match "$" []) ]
                     |> replaceTrigger "myId"
                     |> Expect.equal (Match "myId" [ HasLink "link" (SpecificLink <| Match "myId" []) ])
-        , todo "nested $"
-        , todo "replacing $ (in compare link query)"
-        , todo "replacing $ (in compare stat query)"
+        , test "replacing $ (in compare link query)" <|
+            \() ->
+                Match "$" [ HasStat "stat" EQ (CompareStat "$" "otherStat") ]
+                    |> replaceTrigger "myId"
+                    |> Expect.equal (Match "myId" [ HasStat "stat" EQ (CompareStat "myId" "otherStat") ])
+        , test "replacing $ (in compare stat query)" <|
+            \() ->
+                Match "$" [ HasLink "link" (CompareLink "$" "otherLink") ]
+                    |> replaceTrigger "myId"
+                    |> Expect.equal (Match "myId" [ HasLink "link" (CompareLink "myId" "otherLink") ])
         ]
