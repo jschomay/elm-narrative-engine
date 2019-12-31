@@ -1,22 +1,44 @@
-module NarrativeEngine.Utils.EntityParser exposing (ParsedEntity, idParser, numberParser, parseEntity, parseMany, propertyNameParser)
+module NarrativeEngine.Utils.EntityParser exposing
+    ( ParsedWorldModel, ParsedEntity
+    , ExtendFn, parseMany, parseEntity
+    , idParser, numberParser, propertyNameParser
+    )
 
 {-| A helper module for easily creating entities.
 
-Syntax is `<entity id>.<props>`, given:
-
-  - Entity ids must start with a letter, then optionally have more letters, digits, or any of '\_', '-', ':', '#' or '+'.
-  - Props are separated by periods. Prop keys are alphanumeric and can include '\_', ':' and '#'. Tags are specified just as a key. Stats and links have a key then an '=' then an int or entity id respectively.
-
 Example:
 
-    CAVE_ENTRANCE.location.light_level=3
-    PLAYER.location=CAVE_ENTRANCE
+```text
+PLAYER.fear=1
+TORCH.item.illumination=7.current_location=PLAYER
+CAVE.location.dark
+```
 
-This makes an entity with id "CAVE\_ENTRANCE" that has a tag of "location" and a stat of "light\_level" with a value of 3. And another entity of id "PLAYER" with a link of "location" with a value of "CAVE\_ENTRANCE".
+Syntax is `<entity id>.<props>`, given:
+
+  - Entity ids must start with a letter, then optionally have more letters, digits, or any of `'_', '-', ':', '#' or '+'`.
+  - Props are separated by periods. Prop keys are alphanumeric and can include `'_', ':' and '#'`. Tags are specified just as a key. Stats and links have a key then a `'='` then an int or entity id respectively.
 
 (By convention, entity ids are capitalized and prop keys are snake case.)
 
 Note that `RuleParser` relies on some of the parsers in this module.
+
+
+## Parse result types
+
+@docs ParsedWorldModel, ParsedEntity
+
+
+## Parsers
+
+In general you should use `parseMany` at the top level of you application, and either use the result as your initial world model in your Model, or display the errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
+
+@docs ExtendFn, parseMany, parseEntity
+
+
+## Intermediate parsers (used in RuleParser)
+
+@docs idParser, numberParser, propertyNameParser
 
 -}
 
@@ -26,10 +48,14 @@ import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
+{-| The result of parsing an entity syntax string, which includes both the entity id and a narrative component.
+-}
 type alias ParsedEntity a =
     Result String ( ID, NarrativeComponent a )
 
 
+{-| The result of parsing a collection of entity syntax strings.
+-}
 type alias ParsedWorldModel a =
     Result ParseErrors (WorldModel a)
 
@@ -40,7 +66,7 @@ type alias ExtendFn a =
     a -> NarrativeComponent {} -> NarrativeComponent a
 
 
-{-| Parses a list of entities into a world model. The list of entities are tuples of the entity syntax for parsing, and the extra fields for that entity. You also need to provide an "extend function" to "merge" extra fields with the standard entity fields.
+{-| Parses a list of "entity definition" syntax strings into a world model. The list of entities are tuples of the "entity definition" syntax for parsing, and the extra fields for that entity. You also need to provide an "extend function" to "merge" extra fields with the standard entity fields.
 -}
 parseMany : ExtendFn a -> List ( String, a ) -> ParsedWorldModel a
 parseMany extendFn entities =
@@ -64,8 +90,7 @@ parseMany extendFn entities =
     List.foldl addParsedEntity (Ok Dict.empty) entities
 
 
-{-| Parses a single entity, represented as a string of entity syntax and a record of
-additional fields. The extend function is used to "merge" the additional fields into the standard entity record. (You can use `always identity` if you don't have any extra fields).
+{-| Parses a single "entity definition" syntax string along with a record of additional fields. The extend function is used to "merge" the additional fields into the standard entity record. (You can use `always identity` if you don't have any extra fields).
 -}
 parseEntity : ExtendFn a -> ( String, a ) -> ParsedEntity a
 parseEntity extendFn ( text, extraFields ) =
@@ -150,8 +175,10 @@ propertyNameParser =
         |> andThen notEmpty
 
 
-{-| Can't use `int` because a "." can follow the number ("X.a.b=1.c"), and `int`
-doesn't allow a digit followed by a ".". This also handles negatives.
+{-| Parses Ints.
+
+Can't use `Parser.int` directly because a "." can follow a number in entity strings ("ID.a\_stat=1.a\_tag"), and `int` doesn't allow a digit followed by a ".". This also handles negatives.
+
 -}
 numberParser : Parser Int
 numberParser =

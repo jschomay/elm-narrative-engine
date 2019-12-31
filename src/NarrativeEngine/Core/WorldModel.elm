@@ -8,7 +8,7 @@ module NarrativeEngine.Core.WorldModel exposing
     , getStat, getLink
     )
 
-{-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
+{-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Utils.EntityParser` for defining entities, updates, and queries.
 
 
 ## Types
@@ -286,16 +286,14 @@ type EntityMatcher
     | MatchAny (List Query)
 
 
-{-| Stats can either be a specific integer, or you can supply an entity ID and a stat
-key to do a comparison.
+{-| Stats can either be a specific integer, or you can supply an entity ID and a stat key to do a comparison.
 -}
 type StatMatcher
     = SpecificStat Int
     | CompareStat ID String
 
 
-{-| Links can either be a specific entity matcher, or you can supply an entity ID and
-a link key to do a comparison.
+{-| Links can either be a specific entity matcher, or you can supply an entity ID and a link key to do a comparison.
 -}
 type LinkMatcher
     = SpecificLink EntityMatcher

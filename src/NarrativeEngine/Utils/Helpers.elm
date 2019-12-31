@@ -1,22 +1,39 @@
-module NarrativeEngine.Utils.Helpers exposing (ParseErrors, deadEndsToString, notEmpty, parseErrorsView, parseMultiple)
+module NarrativeEngine.Utils.Helpers exposing
+    ( ParseErrors, parseErrorsView
+    , deadEndsToString, notEmpty, parseMultiple
+    )
+
+{-| A utility module supporting the parsers.
+
+@docs ParseErrors, parseErrorsView
+
+
+### Misc
+
+@docs deadEndsToString, notEmpty, parseMultiple
+
+-}
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Parser exposing (..)
 
 
+{-| Parse errors are a list of an identifier (which usually includes the raw source string) and a string representation of the raw parse errors.
+-}
 type alias ParseErrors =
     List ( String, String )
 
 
-{-| Generic helper to parse a list against a supplied parse function. Will be `Err`
-if any items fail to parse, or an `Ok` of the list of parsed results. Useful for parsing a rules conditions and changes for example.
+{-| Generic helper to parse a list against a supplied parse function. Will be `Err` if any items fail to parse, or an `Ok` of the list of parsed results. Useful for parsing a rule's conditions and changes for example.
 -}
 parseMultiple : (String -> Result String a) -> List String -> Result String (List a)
 parseMultiple parser strings =
     List.map parser strings |> sequence
 
 
+{-| A string parser that fails if the string is empty and succeeds otherwise.
+-}
 notEmpty : String -> Parser String
 notEmpty s =
     if String.isEmpty s then
@@ -81,10 +98,8 @@ sequence list =
         list
 
 
-
-{- Borrowed from https://github.com/elm/parser/pull/16 -}
-
-
+{-| A simple way to show errors. Borrowed from <https://github.com/elm/parser/pull/16>
+-}
 deadEndsToString : List DeadEnd -> String
 deadEndsToString deadEnds =
     let

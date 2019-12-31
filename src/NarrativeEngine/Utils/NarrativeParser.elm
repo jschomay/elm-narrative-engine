@@ -1,8 +1,64 @@
-module NarrativeEngine.Utils.NarrativeParser exposing (Narrative, parse, parseMany)
+module NarrativeEngine.Utils.NarrativeParser exposing (Narrative, Config, parse, parseMany)
 
 {-| This module is technically outside of the scope of the Narrative Engine, as it deals with content that is handled within your application code, but narrative content is so common that a useful syntax and parser is included here.
 
+Example:
+
+```text
+You shout at {$.name}{| again}.
+"{What do you want?|Why do you keep bothering me?|Leave me alone!}"
+{$.suspicious>3 & WARRANT.location=PLAYER?"Stop!---You're under arrest!"|"Never mind."}
+```
+
 The syntax is inspired by Ink (<https://github.com/inkle/ink/blob/master/Documentation/WritingWithInk.md#6-variable-text>).
+
+
+## Syntax
+
+
+### Continuation marks
+
+`The door creaks open, and you see... --- Nothing at all!`
+
+Breaks up your narrative into multiple parts (at `---`) for you to render as desired.
+
+
+### Cycling text
+
+`You have tried this {one|two|three|too many} times.`
+
+Chooses the option separated by `|` corresponding to the `cycleIndex` (zero-indexed) in the `Config`. It repeats the final option after exhausting segments by default, or loops repeatedly with `{~a|b|c}` syntax or chooses a random index each time with `{?a|b|c}` syntax.
+
+The random index is based on the `cycleIndex` and the length of the trigger word and is only quasi random.
+
+Empty segments are allowed - `{|a||b|}` has three empty segments, beginning, middle and end.
+
+
+### Conditional text
+
+`You feel{PLAYER.happy_level>5? happy| sad}.`
+
+You can use any query syntax from `NarrativeEngine.Utils.RuleParser.parseMatcher`. If it succeeds, it will show the text to the left of `|`, if it fails, it will show the text to the right of the `|`.
+
+`$` will be replaced with the `trigger` in the `Config`.
+
+You can have multiple queries separated by `&` before the `?`. Any white space after the `?` and around the `|` will be considered part of the text to display.
+
+You can leave out the `|` and right side text if you don't want to show any alternative text if the query doesn't pass.
+
+
+### Custom functions
+
+`The stranger's name is {STRANGER.get_name}.`
+
+Uses `propKeywords` in the `Config` to attempt to run a function (in this case the function keyed with `get_name`) with the entity ID. You can define any kind of function you want, from a simple property lookup (especially useful when using the Entity Component System pattern) to generating a list of items in the supplied location.
+
+You can also use `$.get_name` which will replace `$` with the `trigger` in `Config`.
+
+
+## Parsing
+
+@docs Narrative, Config, parse, parseMany
 
 -}
 
@@ -26,13 +82,9 @@ type alias Narrative =
 
 Includes the following keys:
 
-`cycleIndex` - an integer starting at 0 indicating which index of cycle text should be used. Applies to all cycle texts and sticks on the last one. Ex: "{one|two}{| and three}" with a cycleIndex of 0 would produce "one" while an cycleIndex of 1 would produce "two and three" (note that empty segments are allowed).
+`cycleIndex` - an integer starting at 0 indicating which index of cycle text should be used (used for all cycles in the narrative string).
 
-You can indicate a looping cycle like `{~Mon|Tue|Wednes|Thurs|Fri|Satur|Sun}day` which would loop through all the days in the week repeatedly.
-
-You can return a random index in the cycle with `{?Heads|Tails}`. The random index is based on the `cycleIndex` and the length of the trigger word and is only quasi random.
-
-`propKeywords` - a dictionary of valid keywords to match against, and the corresponding functions that will take an entity ID and return a property as a Result. For example "{stranger.description}" could be matched with a keyword of "description" and a corresponding function that takes "stranger" and returns a description. If it returns and Err, the match will fail. You can use this in creative ways, for example, to print a list of items in a room.
+`propKeywords` - a dictionary of valid keywords to match against, and the corresponding functions that will take an entity ID and return a string as a Result. If it returns an `Err`, the match will fail.
 
 `worldModel` - the full world model. Used to query against for conditional text.
 
@@ -67,7 +119,7 @@ parse config text =
             [ "ERROR could not parse: " ++ text ]
 
 
-{-| Call this as soon as possible and deal with errors appropriately to ensure you will have no parsing errors later.
+{-| Call this as soon as possible and deal with errors appropriately to ensure you will have no parsing errors later. You can display the errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
 
 The provided dictionary should have keys to identify the correlating narrative content values.
 
@@ -133,7 +185,7 @@ type CycleType
 
 {-| Parses text that looks like "{a|b|c}".
 
-Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option by default, or repeats with `{~a|b|c}` syntax or chooses a random index with `{?|a|b|c}` syntax..
+Chooses the option separated by "|" corresponding to the `cycleIndex` in the config (zero-indexed). It sticks on the final option by default, or repeats with `{~a|b|c}` syntax or chooses a random index with `{?|a|b|c}` syntax.
 
 Note that empty options are valid, like "{|a||}" which has 3 empty segments.
 

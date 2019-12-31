@@ -1,6 +1,9 @@
 module NarrativeEngine.Debug exposing (State, debugBar, init, setLastInteractionId, setLastMatchedRuleId, updateSearch)
 
 {-| A helper module to display a useful debugging tool during development.
+
+@docs State, debugBar, init, setLastInteractionId, setLastMatchedRuleId, updateSearch
+
 -}
 
 import Dict

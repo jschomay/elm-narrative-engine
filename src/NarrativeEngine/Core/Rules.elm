@@ -8,7 +8,7 @@ Rules are weighted based on how specific they are, so you can "override" a more 
 
 It is possible to create generic rules (using `MatchAny`) to control basic story logic, and more specific rules to flesh out the story.
 
-See how the rules are defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
+See how the rules are defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Utils.RuleParser` to define rules more easily.
 
 @docs Rule, RuleID, Rules, findMatchingRule, weight
 

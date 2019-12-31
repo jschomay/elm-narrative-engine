@@ -1,8 +1,44 @@
-module NarrativeEngine.Utils.RuleParser exposing (ParsedChanges, ParsedMatcher, ParsedRule, ParsedRules, parseChanges, parseMatcher, parseRule, parseRules)
+module NarrativeEngine.Utils.RuleParser exposing
+    ( ParsedMatcher, parseMatcher
+    , ParsedChanges, parseChanges
+    , StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
+    )
 
-{-| A helper module for parsing queries and rules.
+{-| A helper module for easily authoring entity matchers and world changes for rules and queries.
 
-Example ... TODO
+Example:
+
+```text
+Entity matchers:
+PLAYER.current_location=(*.dark).fear<5
+CAVE.dark.!explored
+*.enemy.current_location=CAVE
+
+Change world:
+PLAYER.current_location=$.fear+1
+CAVE.explored
+(*.enemy).blinded
+```
+
+Tags: `.tag1.tag2.tag2`
+
+Stats: `.stat1=1.stat2>0.stat3<-2`
+Showing equal, greater than and less than for positive and negative integers.
+
+Also you can do a comparison against another entity stats like: `.stat_4>(stat ID.other_stat).stat_5<(stat ID.other_stat).stat_6=(stat ID.other_stat)`
+
+Links: `.link1=ID.link2=(*.tag1)`
+Showing a direct link and a generic link with nested queries.
+
+Also you can do a comparison against another entity links like: `.link3=(link ID.other_link)`
+
+Any query segment can be prefixed with a `!` for not: `.!tag1.!stat>9.!link=ID`
+
+@docs ParsedMatcher, parseMatcher
+
+@docs ParsedChanges, parseChanges
+
+@docs StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
 
 -}
 
@@ -14,23 +50,31 @@ import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
+{-| The result of parsing a collection of `StringRule`s.
+-}
 type alias ParsedRules a =
     Result ParseErrors (Rules a)
 
 
+{-| The result of parsing a `StringRule`.
+-}
 type alias ParsedRule a =
     Result String (Rule a)
 
 
+{-| The result of parsing an "entity matcher" syntax string.
+-}
 type alias ParsedMatcher =
     Result String EntityMatcher
 
 
+{-| The result of parsing a "change world" syntax string.
+-}
 type alias ParsedChanges =
     Result String ChangeWorld
 
 
-{-| The rule shape, but with Strings of matcher and changes syntax.
+{-| The rule shape, but with "entity matcher" and "change world" syntax strings.
 -}
 type alias StringRule a =
     { a
@@ -46,7 +90,7 @@ type alias ExtendFn a =
     StringRule a -> Rule {} -> Rule a
 
 
-{-| Takes a dictionary of rules defined with matcher and changes syntax and parses into complete rules.
+{-| Takes a dictionary of rules defined with "entity matcher" and "change world" syntax and parses into `NarrativeEngine.Core.Rules.Rules`.
 
 You must include a function for extended fields (see `parseRule` for more details), which will be called with each rule that gets parsed.
 
@@ -81,7 +125,7 @@ parseRules extendFn rules =
     Dict.foldl addParsedRule (Ok Dict.empty) rules
 
 
-{-| Parses a rule defined with "matcher" and "changes" syntax into a complete rule.
+{-| Parse a rule defined with "entity matcher" and "change world" syntax into a `NarrativeEngine.Core.Rules.Rule`.
 
 Since rules are extensible records, you must supply a function that extends the base rule. For example, if you include a "soundEffect" field on your rule, you can build a new rule record from the parsed rule and your original rule. If you do not use extra fields, just pass `always identity`.
 
@@ -102,18 +146,24 @@ parseRule extendFn ({ trigger, conditions, changes } as initialRule) =
         (parseMultiple parseChanges changes)
 
 
+{-| Parse an "entity matcher" syntax string.
+-}
 parseMatcher : String -> ParsedMatcher
 parseMatcher text =
     run (matcherParser |. end) text
         |> Result.mapError Helpers.deadEndsToString
 
 
+{-| Parse a "change world" syntax string.
+-}
 parseChanges : String -> ParsedChanges
 parseChanges text =
     run (changesParser |. end) text
         |> Result.mapError Helpers.deadEndsToString
 
 
+{-| Parse an "entity matcher" syntax string.
+-}
 matcherParser : Parser EntityMatcher
 matcherParser =
     let
@@ -136,8 +186,7 @@ changesParser =
         |= changeEntityParser
 
 
-{-| A valid id, or "\*" for `MatchAny` or "$" to indicate the id should be replaced
-with a "trigger" (useful in conditional narratives for example).
+{-| A valid id, or "\*" for `MatchAny` or "$" to indicate the id should be replaced with a "trigger" (useful in conditional narratives for example).
 -}
 selectorParser : Parser (List Query -> EntityMatcher)
 selectorParser =
