@@ -311,6 +311,15 @@ changeEntityParser =
         toUpdateEntity acc propName updateConstructor =
             Loop <| updateConstructor propName :: acc
 
+        lookupParser mapper =
+            succeed mapper
+                |. keyword "(link"
+                |. chompWhile ((==) ' ')
+                |= oneOf [ token "$" |> map (always "$"), idParser ]
+                |. symbol "."
+                |= propertyNameParser
+                |. symbol ")"
+
         helper acc =
             oneOf
                 [ succeed identity
@@ -334,9 +343,8 @@ changeEntityParser =
                                     |= oneOf
                                         [ numberParser |> map (\n -> \key -> SetStat key n)
                                         , symbol "$" |> map (\_ -> \key -> SetLink key <| SpecificLinkTarget "$")
-
-                                        -- TODO LookUpLinkTarget
                                         , idParser |> map (\id -> \key -> SetLink key <| SpecificLinkTarget id)
+                                        , lookupParser (\lookupID lookupKey key -> SetLink key <| LookUpLinkTarget lookupID lookupKey)
                                         ]
                                 , succeed (\t -> AddTag t)
                                 ]

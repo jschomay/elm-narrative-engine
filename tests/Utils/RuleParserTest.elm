@@ -73,14 +73,6 @@ matchers =
                 Expect.equal
                     (Ok <| Match "PLAYER" [ HasStat "strength" LT (CompareStat "ENEMY" "armor") ])
                     (parseMatcher "PLAYER.strength<(stat ENEMY.armor)")
-        , test "stat compare when compare id doesn't exist fails" <|
-            \() ->
-                shouldFail "compare id doesn't exist"
-                    (parseMatcher "PLAYER.strength>(ENEMY.armor)")
-        , test "stat compare missing parens fails" <|
-            \() ->
-                shouldFail "missing parens"
-                    (parseMatcher "PLAYER.strength>ENEMY.armor")
 
         -- links
         , test "link just id" <|
@@ -210,7 +202,11 @@ changes =
                 Expect.equal
                     (Ok <| Update "PLAYER" [ SetLink "location" <| SpecificLinkTarget "CAVE" ])
                     (parseChanges "PLAYER.location=CAVE")
-        , todo "link look up"
+        , test "link look up" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Update "PLAYER" [ SetLink "location" <| LookUpLinkTarget "SUSPECT" "hidehout" ])
+                    (parseChanges "PLAYER.location=(link SUSPECT.hidehout)")
         , test "set stat" <|
             \() ->
                 Expect.equal
@@ -264,7 +260,11 @@ changes =
                 Expect.equal
                     (Ok <| Update "PLAYER" [ SetLink "location" <| SpecificLinkTarget "$" ])
                     (parseChanges "PLAYER.location=$")
-        , todo "update lookup link to trigger"
+        , test "update lookup link to trigger" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Update "PLAYER" [ SetLink "location" <| LookUpLinkTarget "$" "hidehout" ])
+                    (parseChanges "PLAYER.location=(link $.hidehout)")
         , test "UpdateAll" <|
             \() ->
                 Expect.equal
