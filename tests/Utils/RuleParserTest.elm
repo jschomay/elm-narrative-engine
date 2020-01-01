@@ -73,6 +73,11 @@ matchers =
                 Expect.equal
                     (Ok <| Match "PLAYER" [ HasStat "strength" LT (CompareStat "ENEMY" "armor") ])
                     (parseMatcher "PLAYER.strength<(stat ENEMY.armor)")
+        , test "stat compare < with $" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasStat "strength" LT (CompareStat "$" "armor") ])
+                    (parseMatcher "PLAYER.strength<(stat $.armor)")
 
         -- links
         , test "link just id" <|
@@ -137,6 +142,11 @@ matchers =
                 Expect.equal
                     (Ok <| Match "PLAYER" [ HasLink "location" (CompareLink "ENEMY" "home_world") ])
                     (parseMatcher "PLAYER.location=(link ENEMY.home_world)")
+        , test "link compare with $" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ HasLink "location" (CompareLink "$" "home_world") ])
+                    (parseMatcher "PLAYER.location=(link $.home_world)")
 
         -- other
         , test "all together" <|

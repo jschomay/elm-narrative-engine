@@ -241,7 +241,7 @@ queriesParser =
             succeed mapper
                 |. keyword ("(" ++ kind)
                 |. chompWhile ((==) ' ')
-                |= idParser
+                |= oneOf [ token "$" |> map (always "$"), idParser ]
                 |. symbol "."
                 |= propertyNameParser
                 |. symbol ")"

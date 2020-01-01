@@ -305,6 +305,9 @@ type EntityMatcher
 
 
 {-| Stats can either be a specific integer, or you can supply an entity ID and a stat key to do a comparison.
+
+Note that you can use `$` as the `ID` to reference the entity ID that triggered the rule (useful in conditional narrative content).
+
 -}
 type StatMatcher
     = SpecificStat Int
@@ -312,6 +315,9 @@ type StatMatcher
 
 
 {-| Links can either be a specific entity matcher, or you can supply an entity ID and a link key to do a comparison.
+
+Note that you can use `$` as the `ID` to reference the entity ID that triggered the rule (useful in conditional narrative content).
+
 -}
 type LinkMatcher
     = SpecificLink EntityMatcher
