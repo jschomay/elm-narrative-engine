@@ -208,8 +208,9 @@ changes =
         , test "link" <|
             \() ->
                 Expect.equal
-                    (Ok <| Update "PLAYER" [ SetLink "location" "CAVE" ])
+                    (Ok <| Update "PLAYER" [ SetLink "location" <| SpecificLinkTarget "CAVE" ])
                     (parseChanges "PLAYER.location=CAVE")
+        , todo "link look up"
         , test "set stat" <|
             \() ->
                 Expect.equal
@@ -233,7 +234,7 @@ changes =
                             [ AddTag "blinded"
                             , IncStat "fear" 2
                             , RemoveTag "safe"
-                            , SetLink "location" "CAVE"
+                            , SetLink "location" <| SpecificLinkTarget "CAVE"
                             ]
                     )
                     (parseChanges "PLAYER.location=CAVE.-safe.fear+2.blinded")
@@ -243,7 +244,7 @@ changes =
                     (Ok <|
                         Update "PLAYER"
                             [ AddTag "blinded"
-                            , SetLink "location" "CAVE"
+                            , SetLink "location" <| SpecificLinkTarget "CAVE"
                             ]
                     )
                     (parseChanges "PLAYER  .location=CAVE  .blinded")
@@ -261,8 +262,9 @@ changes =
         , test "update link to trigger" <|
             \() ->
                 Expect.equal
-                    (Ok <| Update "PLAYER" [ SetLink "location" "$" ])
+                    (Ok <| Update "PLAYER" [ SetLink "location" <| SpecificLinkTarget "$" ])
                     (parseChanges "PLAYER.location=$")
+        , todo "update lookup link to trigger"
         , test "UpdateAll" <|
             \() ->
                 Expect.equal

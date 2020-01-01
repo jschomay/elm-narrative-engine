@@ -114,12 +114,28 @@ storeTests =
             , test "SetLink" <|
                 \() ->
                     Expect.true "update didn't work"
-                        (applyChanges [ Update "item2" [ SetLink "heldBy" "character2" ] ] "trigger" worldModel
+                        (applyChanges [ Update "item2" [ SetLink "heldBy" <| SpecificLinkTarget "character2" ] ] "trigger" worldModel
                             |> assert "item2"
                                 [ HasLink "heldBy" <| SpecificLink <| Match "character2" []
                                 , Not (HasLink "heldBy" <| SpecificLink <| Match "character1" [])
                                 ]
                         )
+            , test "SetLink lookup" <|
+                \() ->
+                    Expect.true "update didn't work"
+                        (applyChanges [ Update "item2" [ SetLink "locatedIn" <| LookUpLinkTarget "item1" "origin" ] ] "trigger" worldModel
+                            |> assert "item2" [ HasLink "locatedIn" <| SpecificLink <| Match "location1" [] ]
+                        )
+            , test "SetLink lookup id doesn't exist" <|
+                \() ->
+                    -- should be noop
+                    Expect.equal worldModel
+                        (applyChanges [ Update "item2" [ SetLink "locatedIn" <| LookUpLinkTarget "badID" "origin" ] ] "trigger" worldModel)
+            , test "SetLink lookup key doesn't exist" <|
+                \() ->
+                    -- should be noop
+                    Expect.equal worldModel
+                        (applyChanges [ Update "item2" [ SetLink "locatedIn" <| LookUpLinkTarget "item1" "badKey" ] ] "trigger" worldModel)
             , test "RemoveTag when tag not present does nothing" <|
                 -- TODO should it do something else?
                 \() ->
@@ -136,7 +152,7 @@ storeTests =
                         (applyChanges
                             [ Update "item1"
                                 [ AddTag "extraSpecial"
-                                , SetLink "heldBy" "character1"
+                                , SetLink "heldBy" <| SpecificLinkTarget "character1"
                                 ]
                             ]
                             "trigger"
@@ -183,10 +199,16 @@ storeTests =
                 \() ->
                     Expect.true "update didn't work"
                         (applyChanges
-                            [ Update "character1" [ SetLink "locatedIn" "$" ] ]
+                            [ Update "character1" [ SetLink "locatedIn" <| SpecificLinkTarget "$" ] ]
                             "location2"
                             worldModel
                             |> assert "character1" [ HasLink "locatedIn" <| SpecificLink <| Match "location2" [] ]
+                        )
+            , test "update trigger (in link with look up)" <|
+                \() ->
+                    Expect.true "update didn't work"
+                        (applyChanges [ Update "item2" [ SetLink "locatedIn" <| LookUpLinkTarget "$" "origin" ] ] "item1" worldModel
+                            |> assert "item2" [ HasLink "locatedIn" <| SpecificLink <| Match "location1" [] ]
                         )
             , test "update trigger (in link with UpdateAll)" <|
                 \() ->
@@ -195,7 +217,7 @@ storeTests =
                         , assert "item2" [ HasLink "heldBy" <| SpecificLink <| Match "character2" [] ] >> Expect.true "update didn't work"
                         ]
                         (applyChanges
-                            [ UpdateAll [ HasTag "item" ] [ SetLink "heldBy" "$" ] ]
+                            [ UpdateAll [ HasTag "item" ] [ SetLink "heldBy" <| SpecificLinkTarget "$" ] ]
                             "character2"
                             worldModel
                         )

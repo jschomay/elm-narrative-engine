@@ -6,6 +6,7 @@ module NarrativeEngine.Core.WorldModel exposing
     , ChangeWorld(..), ChangeEntity(..), applyChanges
     , EntityMatcher(..), LinkMatcher(..), StatMatcher(..), Query(..), query, replaceTrigger
     , getStat, getLink
+    , LinkTarget(..)
     )
 
 {-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Utils.EntityParser` for defining entities, updates, and queries.
@@ -214,9 +215,6 @@ type ChangeWorld
 
 
 {-| Declarative statements for changing a property on an entity.
-
-Note that you can use `$` as the `ID` in `SetLink` to reference the entity ID that triggered the rule (useful for generic rules).
-
 -}
 type ChangeEntity
     = AddTag String
@@ -224,7 +222,19 @@ type ChangeEntity
     | SetStat String Int
     | IncStat String Int
     | DecStat String Int
-    | SetLink String ID
+    | SetLink String LinkTarget
+
+
+{-| Links can set to a specific entity or you can supply an entity and key to lookup a link.
+
+You can use `$` as the `ID` in both caes to reference the entity ID that triggered the rule (useful for generic rules).
+
+Caution, if the look up entity or link isn't found this will keep the original link.
+
+-}
+type LinkTarget
+    = SpecificLinkTarget ID
+    | LookUpLinkTarget ID String
 
 
 {-| Update the world model based on a list of changes. Also takes the id of the entity that triggered the rule to allow changes to use trigger matching (with `$`).
@@ -270,8 +280,16 @@ applyChanges entityUpdates trigger store =
                 DecStat key amount ->
                     update id (decStat key amount) updated_store
 
-                SetLink key linkID ->
+                SetLink key (SpecificLinkTarget linkID) ->
                     update id (setLink key (parseID linkID)) updated_store
+
+                SetLink key (LookUpLinkTarget linkID linkKey) ->
+                    updated_store
+                        |> Dict.get (parseID linkID)
+                        |> Maybe.andThen (.links >> Dict.get linkKey)
+                        |> Maybe.map (\targetID -> update id (setLink key targetID) updated_store)
+                        -- noop if entity or link key not found
+                        |> Maybe.withDefault updated_store
     in
     List.foldl applyUpdate store entityUpdates
 

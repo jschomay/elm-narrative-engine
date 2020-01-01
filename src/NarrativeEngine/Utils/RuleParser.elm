@@ -333,8 +333,10 @@ changeEntityParser =
                                     |. symbol "="
                                     |= oneOf
                                         [ numberParser |> map (\n -> \key -> SetStat key n)
-                                        , symbol "$" |> map (\_ -> \key -> SetLink key "$")
-                                        , idParser |> map (\id -> \key -> SetLink key id)
+                                        , symbol "$" |> map (\_ -> \key -> SetLink key <| SpecificLinkTarget "$")
+
+                                        -- TODO LookUpLinkTarget
+                                        , idParser |> map (\id -> \key -> SetLink key <| SpecificLinkTarget id)
                                         ]
                                 , succeed (\t -> AddTag t)
                                 ]
