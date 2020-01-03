@@ -3,10 +3,9 @@ module NarrativeEngine.Core.WorldModel exposing
     , emptyTags, emptyStats, emptyLinks
     , addTag, setStat, setLink
     , tag, stat, link
-    , ChangeWorld(..), ChangeEntity(..), applyChanges
+    , ChangeWorld(..), ChangeEntity(..), LinkTarget(..), applyChanges
     , EntityMatcher(..), LinkMatcher(..), StatMatcher(..), Query(..), query, replaceTrigger
     , getStat, getLink
-    , LinkTarget(..)
     )
 
 {-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Utils.EntityParser` for defining entities, updates, and queries.
@@ -32,7 +31,7 @@ These are useful for an "entity buider pattern".
 
 ## Updating entities
 
-@docs ChangeWorld, ChangeEntity, applyChanges
+@docs ChangeWorld, ChangeEntity, LinkTarget, applyChanges
 
 
 ## Querying the world model
@@ -227,7 +226,7 @@ type ChangeEntity
 
 {-| Links can set to a specific entity or you can supply an entity and key to lookup a link.
 
-You can use `$` as the `ID` in both caes to reference the entity ID that triggered the rule (useful for generic rules).
+You can use `$` as the `ID` in both cases to reference the entity ID that triggered the rule (useful for generic rules).
 
 Caution, if the look up entity or link isn't found this will keep the original link.
 

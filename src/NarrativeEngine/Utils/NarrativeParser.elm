@@ -2,7 +2,7 @@ module NarrativeEngine.Utils.NarrativeParser exposing (Narrative, Config, parse,
 
 {-| This module is technically outside of the scope of the Narrative Engine, as it deals with content that is handled within your application code, but narrative content is so common that a useful syntax and parser is included here.
 
-Example:
+Example syntax:
 
 ```text
 You shout at {$.name}{| again}.

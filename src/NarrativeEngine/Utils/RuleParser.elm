@@ -4,39 +4,94 @@ module NarrativeEngine.Utils.RuleParser exposing
     , StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
     )
 
-{-| A helper module for easily authoring entity matchers and world changes for rules and queries.
+{-| A helper module for easily authoring "entity matchers" and "world changes" for rules and queries.
 
-Example:
+
+## Entity matchers / queries
+
+Example syntax:
 
 ```text
-Entity matchers:
 PLAYER.current_location=(*.dark).fear<5
 CAVE.dark.!explored
 *.enemy.current_location=CAVE
+```
 
+These all will get parsed into `NarrativeEngine.WorldModel.EntityMatcher`s.
+
+The format is `<entity ID or * or $><one or more queries as defined below>`
+
+`*` will become a `MatchAny`, otherwise it will be a `Match`. `$` is passed through directly (to be replaced with the trigger ID eventually).
+
+Each query starts with a `.`. Query details follow.
+
+Any query segment can be prefixed with a `!` for not: `ID.!tag1.!stat>9.!link=ID2`
+
+
+### Tags
+
+`.tag1.tag2.tag2`
+
+Each tag becomes a `HasTag` with the value provided.
+
+
+### Stats
+
+Specific: `.stat1=1.stat2>0.stat3<-2`
+
+Each stat becomes a `HasStat` with the key and value provided using `SpecificStat`. You can use equals, greater than and less than, and positive and negative integers.
+
+Compare: `.stat_4>(stat ID.other_stat).stat_5<(stat ID.other_stat).stat_6=(stat ID.other_stat)`
+
+Each stat becomes a `HasStat` with the key provided and uses `CompareStat` with the ID and stat key to compare against supplied in the parens. You can use equals, greater than and less than.
+
+
+### Links
+
+Specific: `.link1=ID1.link2=(ID2.tag1).link3=(*.tag2)`
+
+Becomes a `HasLink` with the specified key and value as a `SpecificLink`. If you use parens you can add nested queries that apply to the target entity. You can also use `*` to `MatchAny` in nested queries.
+
+Compare: `.link4=(link ID3.other_link)`
+
+Becomes a `HasLink` with the specified key and a value of `CompareLink` with the id and link key supplied in the parens.
+
+@docs ParsedMatcher, parseMatcher
+
+
+## Changes syntax
+
+Example syntax:
+
+```text
 Change world:
 PLAYER.current_location=$.fear+1
 CAVE.explored
 (*.enemy).blinded
 ```
 
-Tags: `.tag1.tag2.tag2`
+These all will get parsed into `NarrativeEngine.WorldModel.ChangeWorld`s.
 
-Stats: `.stat1=1.stat2>0.stat3<-2`
-Showing equal, greater than and less than for positive and negative integers.
+The format is `<entity ID or * or $><one or more changes as defined below>`
 
-Also you can do a comparison against another entity stats like: `.stat_4>(stat ID.other_stat).stat_5<(stat ID.other_stat).stat_6=(stat ID.other_stat)`
+To `UpdateAll`, use a generic matcher in parens. Otherwise use an ID for a specific `Update`. `$` is passed through directly (to be replaced with the trigger ID eventually).
 
-Links: `.link1=ID.link2=(*.tag1)`
-Showing a direct link and a generic link with nested queries.
+Each change starts with a `.`.
 
-Also you can do a comparison against another entity links like: `.link3=(link ID.other_link)`
+Tags: `ID.tag1.-tag2` - add "tag1" remove "tag2"
 
-Any query segment can be prefixed with a `!` for not: `.!tag1.!stat>9.!link=ID`
+Stats: `ID.stat1=1.stat2+1.stat3-2` - set "stat1" to 1, increment "stat2" by 1 and decrement "stat3" by 2.
 
-@docs ParsedMatcher, parseMatcher
+Links: `ID.link1=ID2.link2=(link ID2.link1)` - set "link1" to "ID2", set "link2" to whatever "ID2" has for "link1" (No-op if the target id or link doesn't exit).
 
 @docs ParsedChanges, parseChanges
+
+
+## Rules syntax
+
+Rules are a combination of entity matchers and changes
+
+In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
 
 @docs StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
 

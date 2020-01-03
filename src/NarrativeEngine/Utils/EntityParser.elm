@@ -6,7 +6,7 @@ module NarrativeEngine.Utils.EntityParser exposing
 
 {-| A helper module for easily creating entities.
 
-Example:
+Example syntax:
 
 ```text
 PLAYER.fear=1
