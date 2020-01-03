@@ -1,15 +1,18 @@
 Follow along with development on the [development blog](http://blog.elmnarrativeengine.com/).
 
-## ?
+## 5.0.0
 
-Minor (but breaking) changes to support of the new query syntax and simplify the API.
+New syntax parsers, debug utils, streamline api, and minor new features.  Minor breaking changes.
 
-TODO - confirm all this!
-
-- Added Matcher/Query/Changes parsers
-- Added Narrative parsers
-- Removed assert, assertMatch, and query - replaced wtih a new version of query that handles all
-- `getLink` fixed to return Nothing if linked ID doesn't existin in store
+- Split up structure into `Core`, `Utils` and `Debug` (all nested under `NarrativeEngine` namespace)
+- Add Matcher/Query/Changes parsers
+- Add Narrative parsers
+- Add Entity parsers
+- Add "debugBar" util
+- Add "compare" link and stat queries
+- Add "lookup" link setter
+- Remove assert, assertMatch, and query - replaced with a new version of query that handles all three
+- `getLink` fixed to return Nothing if linked ID doesn't exist in store
 
 ## 4.0.0
 
