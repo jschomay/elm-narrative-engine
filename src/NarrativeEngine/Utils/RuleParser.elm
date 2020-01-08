@@ -89,7 +89,15 @@ Links: `ID.link1=ID2.link2=(link ID2.link1)` - set "link1" to "ID2", set "link2"
 
 ## Rules syntax
 
-Rules are a combination of entity matchers and changes
+      ON: *.line
+
+      IF: PLAYER.chapter=1
+          BROADWAY_STREET.leaving_broadway_street_station_plot=1
+
+      DO: BRIEFCASE.location=THIEF
+          BROADWAY_STREET.leaving_broadway_street_station_plot=2
+
+You can include spaces and newlines as desired. The `:` after each rule part is optional. You can also leave out the "IF" and/or "DO" parts.
 
 In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
 
@@ -145,60 +153,109 @@ type alias ExtendFn a =
     StringRule a -> Rule {} -> Rule a
 
 
-{-| Takes a dictionary of rules defined with "entity matcher" and "change world" syntax and parses into `NarrativeEngine.Core.Rules.Rules`.
+type alias ExtendFn_ a =
+    a -> Rule {} -> Rule a
 
-You must include a function for extended fields (see `parseRule` for more details), which will be called with each rule that gets parsed.
 
+{-| Parses a list of "rule" syntax strings. The dict of rules are tuples of the "rule" syntax for parsing, and the extra fields for that rule. You also need to provide an "extend function" to "merge" extra fields with the standard entity fields.
 -}
-parseRules : ExtendFn a -> Dict RuleID (StringRule a) -> ParsedRules a
+parseRules : ExtendFn_ a -> Dict RuleID ( String, a ) -> ParsedRules a
 parseRules extendFn rules =
     let
-        printRule { trigger, conditions, changes } =
-            "Trigger: "
-                ++ trigger
-                ++ "\nConditions: "
-                ++ String.join ", " conditions
-                ++ "\nChanges: "
-                ++ String.join ", " changes
-
         displayError k v e =
-            ( "Rule: " ++ k ++ "\n" ++ printRule v ++ " ", e )
+            ( "Rule: " ++ k ++ "\n" ++ Tuple.first v ++ " ", e )
 
-        addParsedRule id stringRule acc =
-            case parseRule extendFn stringRule of
+        addParsedRule id ruleSpec acc =
+            case parseRule extendFn ruleSpec of
                 Ok parsedRule ->
                     Result.map (Dict.insert id parsedRule) acc
 
                 Err err ->
                     case acc of
                         Ok _ ->
-                            Err [ displayError id stringRule err ]
+                            Err [ displayError id ruleSpec err ]
 
                         Err errors ->
-                            Err <| displayError id stringRule err :: errors
+                            Err <| displayError id ruleSpec err :: errors
     in
     Dict.foldl addParsedRule (Ok Dict.empty) rules
 
 
-{-| Parse a rule defined with "entity matcher" and "change world" syntax into a `NarrativeEngine.Core.Rules.Rule`.
+{-| Parses a single "rule" syntax string along with a record of additional fields. The extend function is used to "merge" the additional fields into the standard rule record. (You can use `always identity` if you don't have any extra fields).
+-}
+parseRule : ExtendFn_ a -> ( String, a ) -> ParsedRule a
+parseRule extendFn ( source, extraFields ) =
+    run (ruleParser |. end) source
+        |> Result.map (extendFn extraFields)
+        |> Result.mapError Helpers.deadEndsToString
 
-Since rules are extensible records, you must supply a function that extends the base rule. For example, if you include a "soundEffect" field on your rule, you can build a new rule record from the parsed rule and your original rule. If you do not use extra fields, just pass `always identity`.
+
+{-| Parses something like:
+
+      ON: *.line
+
+      IF: PLAYER.chapter=1
+          BROADWAY_STREET.leaving_broadway_street_station_plot=1
+
+      DO: BRIEFCASE.location=THIEF
+          BROADWAY_STREET.leaving_broadway_street_station_plot=2
+
+You can include spaces and newlines as desired. The `:` after each rule part is optional. You can also leave out the "IF" and/or "DO" parts.
 
 -}
-parseRule : ExtendFn a -> StringRule a -> ParsedRule a
-parseRule extendFn ({ trigger, conditions, changes } as initialRule) =
+ruleParser : Parser (Rule {})
+ruleParser =
     let
-        toRule trigger_ conditions_ changes_ =
-            { trigger = trigger_
-            , conditions = conditions_
-            , changes = changes_
+        toRule trigger conditions changes =
+            { trigger = trigger
+            , conditions = conditions
+            , changes = changes
             }
-                |> extendFn initialRule
+
+        triggerParser =
+            succeed identity
+                |. spaces
+                |. oneOf [ keyword "ON:", keyword "ON" ]
+                |. spaces
+                |= matcherParser
+                |. spaces
+
+        -- Note, this chomps the "DO(:) " if it finds it, so don't look for that after
+        -- this parser
+        conditionsParser =
+            succeed identity
+                -- chomps the "IF" if it is there, but if not, it will hit the "DO"
+                -- or end with `[]` before doing any entity matchers, so it can
+                -- ignore "IF" too
+                |. oneOf [ keyword "IF:", keyword "IF", succeed () ]
+                |. spaces
+                |= loop []
+                    (\acc ->
+                        oneOf
+                            [ oneOf [ keyword "DO:", keyword "DO", end ]
+                                |. spaces
+                                |> map (\_ -> Done <| List.reverse acc)
+                            , matcherParser
+                                |. spaces
+                                |> map (\condition -> Loop <| condition :: acc)
+                            ]
+                    )
+
+        changesParser_ =
+            loop []
+                (\acc ->
+                    oneOf
+                        [ end |> map (\_ -> Done <| List.reverse acc)
+                        , changesParser
+                            |. spaces
+                            |> map (\condition -> Loop <| condition :: acc)
+                        ]
+                )
     in
-    Result.map3 toRule
-        (parseMatcher trigger)
-        (parseMultiple parseMatcher conditions)
-        (parseMultiple parseChanges changes)
+    succeed toRule
+        |= triggerParser
+        |= conditionsParser
+        |= changesParser_
 
 
 {-| Parse an "entity matcher" syntax string.
@@ -304,7 +361,6 @@ queriesParser =
         helper acc =
             oneOf
                 [ succeed (toQuery acc)
-                    |. chompWhile ((==) ' ')
                     |. symbol "."
                     |= oneOf
                         [ symbol "!" |> map (always True)

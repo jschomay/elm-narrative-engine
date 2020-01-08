@@ -13,7 +13,7 @@ import Test exposing (..)
 all =
     describe "parsing rules"
         [ matchers
-        , changes
+        , changesTest
         , multiple
         , parseRuleTest
         , parseRulesTest
@@ -174,16 +174,9 @@ matchers =
                 Expect.equal
                     (Ok <| Match "TORCH" [ Not (HasLink "location" (SpecificLink <| Match "PLAYER" [])) ])
                     (parseMatcher "TORCH.!location=PLAYER")
-        , test "with spaces" <|
+        , test "spaces not allowed" <|
             \() ->
-                Expect.equal
-                    (Ok <|
-                        Match "PLAYER"
-                            [ HasTag "blinded"
-                            , HasStat "fear" GT <| SpecificStat 2
-                            , HasLink "location" (SpecificLink <| Match "CAVE" [])
-                            ]
-                    )
+                shouldFail "spaces not allowed"
                     (parseMatcher "PLAYER .location=CAVE .fear>2 .blinded")
         , test "multiline" <|
             \() ->
@@ -195,7 +188,7 @@ matchers =
         ]
 
 
-changes =
+changesTest =
     describe "changes"
         [ test "add tag" <|
             \() ->
@@ -311,21 +304,97 @@ multiple =
 
 
 parseRuleTest =
-    test "parseRule" <|
-        \() ->
-            Expect.equal
-                ({ trigger = Match "CAVE" []
-                 , conditions = []
-                 , changes = []
-                 }
-                    |> Ok
-                )
-                (parseRule (always identity)
-                    { trigger = "CAVE"
-                    , conditions = []
-                    , changes = []
-                    }
-                )
+    describe "rule parsing"
+        [ test "full example" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = MatchAny [ HasTag "line" ]
+                     , conditions =
+                        [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ]
+                        , Match "BROADWAY_STREET" [ HasStat "leaving_broadway_street_station_plot" EQ <| SpecificStat 1 ]
+                        ]
+                     , changes =
+                        [ Update "BRIEFCASE" [ SetLink "location" <| SpecificLinkTarget "THIEF" ]
+                        , Update "BROADWAY_STREET" [ SetStat "leaving_broadway_street_station_plot" 2 ]
+                        ]
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( """
+                          ON: *.line
+
+                          IF: PLAYER.chapter=1
+                              BROADWAY_STREET.leaving_broadway_street_station_plot=1
+
+                          DO: BRIEFCASE.location=THIEF
+                              BROADWAY_STREET.leaving_broadway_street_station_plot=2
+                          """
+                        , {}
+                        )
+                    )
+        , test "with minimal spaces" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = MatchAny [ HasTag "line" ]
+                     , conditions = [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ] ]
+                     , changes = [ Update "BRIEFCASE" [ SetLink "location" <| SpecificLinkTarget "THIEF" ] ]
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( """ON: *.line
+                             IF: PLAYER.chapter=1
+                             DO: BRIEFCASE.location=THIEF"""
+                        , {}
+                        )
+                    )
+        , test "no do" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = MatchAny [ HasTag "line" ]
+                     , conditions = [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ] ]
+                     , changes = []
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( """ON: *.line
+                             IF: PLAYER.chapter=1
+                          """
+                        , {}
+                        )
+                    )
+        , test "no if" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = MatchAny [ HasTag "line" ]
+                     , conditions = []
+                     , changes = [ Update "BRIEFCASE" [ SetLink "location" <| SpecificLinkTarget "THIEF" ] ]
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( """ON: *.line
+                             DO: BRIEFCASE.location=THIEF"""
+                        , {}
+                        )
+                    )
+        , test "no do and no if" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = MatchAny [ HasTag "line" ]
+                     , conditions = []
+                     , changes = []
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( "ON: *.line"
+                        , {}
+                        )
+                    )
+        ]
 
 
 parseRulesTest =
@@ -338,30 +407,30 @@ parseRulesTest =
                           , { trigger = Match "PLAYER" []
                             , conditions = []
                             , changes = []
+                            , extra = True
                             }
                           )
                         , ( "two"
                           , { trigger = Match "CAVE" []
                             , conditions = []
                             , changes = []
+                            , extra = False
                             }
                           )
                         ]
                 )
-                (parseRules (always identity) <|
+                (parseRules
+                    (\{ extra } rule ->
+                        { trigger = rule.trigger
+                        , conditions = rule.conditions
+                        , changes = rule.changes
+                        , extra = extra
+                        }
+                    )
+                 <|
                     Dict.fromList
-                        [ ( "one"
-                          , { trigger = "PLAYER"
-                            , conditions = []
-                            , changes = []
-                            }
-                          )
-                        , ( "two"
-                          , { trigger = "CAVE"
-                            , conditions = []
-                            , changes = []
-                            }
-                          )
+                        [ ( "one", ( "ON: PLAYER", { extra = True } ) )
+                        , ( "two", ( "ON: CAVE", { extra = False } ) )
                         ]
                 )
 
