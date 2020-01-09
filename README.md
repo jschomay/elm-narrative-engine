@@ -4,6 +4,7 @@ A tool for building interactive story games.
 
 ### Example: 
 
+
 ```elm
 worldModel =
     parseWorldModel
@@ -18,17 +19,17 @@ worldModel =
 rules =
     parseRules
         [ rule "entering dark places"
-            { trigger = "*.place.dark"
-            , conditions = []
-            , changes = []
-            , narrative = "It's too dark to go in there!"
-            }
+            """
+            ON: *.location.dark
+            """
+            "It's too dark to go in there!"
         , rule "entering the cave with a light source"
-            { trigger = "CAVE"
-            , conditions = [ "*.item.illumination>5.current_location=PLAYER" ]
-            , changes = [ "PLAYER.current_location=CAVE.fear+2" ]
-            , narrative = "You enter the cave, {PLAYER.fear>4? your heart pounding | bravely}..."
-            }
+            """
+            ON: CAVE
+            IF: *.item.illumination>5.current_location=PLAYER
+            DO: PLAYER.current_location=CAVE.fear+2
+            """
+            "You enter the cave, {PLAYER.fear>4? your heart pounding | bravely}..."
 
         -- etc...
         ]

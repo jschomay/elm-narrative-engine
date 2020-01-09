@@ -1,10 +1,12 @@
 module NarrativeEngine.Utils.RuleParser exposing
     ( ParsedMatcher, parseMatcher
     , ParsedChanges, parseChanges
-    , StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
+    , ExtendFn, ParsedRules, ParsedRule, parseRules, parseRule
     )
 
-{-| A helper module for easily authoring "entity matchers" and "world changes" for rules and queries.
+{-| A helper module for easily authoring rules and queries.
+
+See <https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm> for a full example.
 
 
 ## Entity matchers / queries
@@ -21,40 +23,73 @@ These all will get parsed into `NarrativeEngine.WorldModel.EntityMatcher`s.
 
 The format is `<entity ID or * or $><one or more queries as defined below>`
 
-`*` will become a `MatchAny`, otherwise it will be a `Match`. `$` is passed through directly (to be replaced with the trigger ID eventually).
+`*` will become a `MatchAny`, otherwise it will be a `Match` with the supplied ID. `$` is passed through directly (to be replaced with the trigger ID eventually).
+
+By convention IDs are capitalized and query keywords are snake case, but they don't have to be.
 
 Each query starts with a `.`. Query details follow.
-
-Any query segment can be prefixed with a `!` for not: `ID.!tag1.!stat>9.!link=ID2`
 
 
 ### Tags
 
-`.tag1.tag2.tag2`
+```text
+ID.tag1.tag2
+```
 
-Each tag becomes a `HasTag` with the value provided.
+becomes
+
+    Match "ID" [ HasTag "tag1", HasTag "tag2" ]
 
 
 ### Stats
 
-Specific: `.stat1=1.stat2>0.stat3<-2`
+```text
+ID.stat1=1.stat2>0.stat3<-2.stat_4>(stat ID1.other_stat).stat_5<(stat ID2.other_stat).stat_6=(stat ID3.other_stat)
+```
 
-Each stat becomes a `HasStat` with the key and value provided using `SpecificStat`. You can use equals, greater than and less than, and positive and negative integers.
+becomes
 
-Compare: `.stat_4>(stat ID.other_stat).stat_5<(stat ID.other_stat).stat_6=(stat ID.other_stat)`
-
-Each stat becomes a `HasStat` with the key provided and uses `CompareStat` with the ID and stat key to compare against supplied in the parens. You can use equals, greater than and less than.
+    Match "ID"
+        [ HasStat "stat1" EQ (SpecificStat 1)
+        , HasStat "stat2" GT (SpecificStat 0)
+        , HasStat "stat3" LT (SpecificStat -2)
+        , HasStat "stat_4" GT (CompareStat "ID1" "other_stat")
+        , HasStat "stat_5" LT (CompareStat "ID2" "other_stat")
+        , HasStat "stat_6" EQ (CompareStat "ID3" "other_stat")
+        ]
 
 
 ### Links
 
-Specific: `.link1=ID1.link2=(ID2.tag1).link3=(*.tag2)`
+```text
+ID.link1=ID1.link2=(ID2.tag1).link3=(*.tag2).link4=(link ID3.other_link)
+```
 
-Becomes a `HasLink` with the specified key and value as a `SpecificLink`. If you use parens you can add nested queries that apply to the target entity. You can also use `*` to `MatchAny` in nested queries.
+becomes
 
-Compare: `.link4=(link ID3.other_link)`
+    Match "ID"
+        [ HasLink "link1" (SpecificLink (Match "ID1" []))
+        , HasLink "link2" (SpecificLink (Match "ID2" [ HasTag "tag1" ]))
+        , HasLink "link3" (SpecificLink (MatchAny [ HasTag "tag2" ]))
+        , HasLink "link4" (CompareLink "ID3" "other_link")
+        ]
 
-Becomes a `HasLink` with the specified key and a value of `CompareLink` with the id and link key supplied in the parens.
+
+### Not
+
+Any query segment can be prefixed with a `!` for not
+
+```text
+*.!tag1.!stat>9.!link=ID2
+```
+
+becomes
+
+    MatchAny
+        [ Not (HasTag "tag1")
+        , Not (HasStat "stat" GT (SpecificStat 9))
+        , Not (HasLink "link" (SpecificLink (Match "ID2" [])))
+        ]
 
 @docs ParsedMatcher, parseMatcher
 
@@ -78,30 +113,75 @@ To `UpdateAll`, use a generic matcher in parens. Otherwise use an ID for a speci
 
 Each change starts with a `.`.
 
-Tags: `ID.tag1.-tag2` - add "tag1" remove "tag2"
 
-Stats: `ID.stat1=1.stat2+1.stat3-2` - set "stat1" to 1, increment "stat2" by 1 and decrement "stat3" by 2.
+### Tags
 
-Links: `ID.link1=ID2.link2=(link ID2.link1)` - set "link1" to "ID2", set "link2" to whatever "ID2" has for "link1" (No-op if the target id or link doesn't exit).
+```text
+ID.tag1.-tag2
+```
+
+becomes
+
+    Update "ID" [ AddTag "tag1", RemoveTag "tag2" ]
+
+
+### Stats
+
+```text
+ID.stat1=1.stat2+1.stat3-2
+```
+
+becomes
+
+    Update "ID"
+        [ SetStat "stat1" 1
+        , IncStat "stat2" 1
+        , DecStat "stat3" 2
+        ]
+
+
+### Links
+
+```text
+ID.link1=ID2.link2=(link ID2.link1)
+```
+
+becomes
+
+    Update "ID"
+        [ SetLink "link1" (SpecificLinkTarget "ID2")
+        , SetLink "link2" (LookUpLinkTarget "ID2" "link1")
+        ]
+
+
+### Update all
+
+```tex
+(*.tag1).tag2
+```
+
+becomes
+
+    UpdateAll [ HasTag "tag1" ] [ AddTag "tag2" ]
 
 @docs ParsedChanges, parseChanges
 
 
 ## Rules syntax
 
-      ON: *.line
+```text
+ON: *.line
 
-      IF: PLAYER.chapter=1
-          BROADWAY_STREET.leaving_broadway_street_station_plot=1
+IF: PLAYER.chapter=1
+    BROADWAY_STREET.leaving_broadway_street_station_plot=1
 
-      DO: BRIEFCASE.location=THIEF
-          BROADWAY_STREET.leaving_broadway_street_station_plot=2
+DO: BRIEFCASE.location=THIEF
+    BROADWAY_STREET.leaving_broadway_street_station_plot=2
+```
 
 You can include spaces and newlines as desired. The `:` after each rule part is optional. You can also leave out the "IF" and/or "DO" parts.
 
-In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
-
-@docs StringRule, ExtendFn, ParsedRules, ParsedRule, parseRule, parseRules
+@docs ExtendFn, ParsedRules, ParsedRule, parseRules, parseRule
 
 -}
 
@@ -113,13 +193,13 @@ import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
-{-| The result of parsing a collection of `StringRule`s.
+{-| The result of parsing many rules.
 -}
 type alias ParsedRules a =
     Result ParseErrors (Rules a)
 
 
-{-| The result of parsing a `StringRule`.
+{-| The result of parsing a "rule" syntax string.
 -}
 type alias ParsedRule a =
     Result String (Rule a)
@@ -137,29 +217,18 @@ type alias ParsedChanges =
     Result String ChangeWorld
 
 
-{-| The rule shape, but with "entity matcher" and "change world" syntax strings.
--}
-type alias StringRule a =
-    { a
-        | trigger : String
-        , conditions : List String
-        , changes : List String
-    }
-
-
-{-| A function that receives a potentially extended `StringRule a` and a record with the main rule fields, to build a `Rule a`. This is how you "bring over" any extra fields when parsing a rule.
+{-| A function for "merging" extra fields into a `Rule {}`.
 -}
 type alias ExtendFn a =
-    StringRule a -> Rule {} -> Rule a
-
-
-type alias ExtendFn_ a =
     a -> Rule {} -> Rule a
 
 
-{-| Parses a list of "rule" syntax strings. The dict of rules are tuples of the "rule" syntax for parsing, and the extra fields for that rule. You also need to provide an "extend function" to "merge" extra fields with the standard entity fields.
+{-| Parses multiple "rule" syntax strings. The rules are tuples of the "rule" syntax for parsing, and the extra fields for that rule. You also need to provide an "extend function" to "merge" extra fields into the standard rule fields.
+
+In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
+
 -}
-parseRules : ExtendFn_ a -> Dict RuleID ( String, a ) -> ParsedRules a
+parseRules : ExtendFn a -> Dict RuleID ( String, a ) -> ParsedRules a
 parseRules extendFn rules =
     let
         displayError k v e =
@@ -183,7 +252,7 @@ parseRules extendFn rules =
 
 {-| Parses a single "rule" syntax string along with a record of additional fields. The extend function is used to "merge" the additional fields into the standard rule record. (You can use `always identity` if you don't have any extra fields).
 -}
-parseRule : ExtendFn_ a -> ( String, a ) -> ParsedRule a
+parseRule : ExtendFn a -> ( String, a ) -> ParsedRule a
 parseRule extendFn ( source, extraFields ) =
     run (ruleParser |. end) source
         |> Result.map (extendFn extraFields)
