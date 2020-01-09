@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.Helpers exposing
+module NarrativeEngine.Syntax.Helpers exposing
     ( ParseErrors, parseErrorsView
     , deadEndsToString, notEmpty, parseMultiple
     )

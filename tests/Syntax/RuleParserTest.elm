@@ -1,11 +1,11 @@
-module Utils.RuleParserTest exposing (all)
+module Syntax.RuleParserTest exposing (all)
 
 import Dict
 import Expect
 import NarrativeEngine.Core.Rules exposing (..)
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers exposing (parseMultiple)
-import NarrativeEngine.Utils.RuleParser exposing (parseChanges, parseMatcher, parseRule, parseRules)
+import NarrativeEngine.Syntax.Helpers exposing (parseMultiple)
+import NarrativeEngine.Syntax.RuleParser exposing (parseChanges, parseMatcher, parseRule, parseRules)
 import Result
 import Test exposing (..)
 

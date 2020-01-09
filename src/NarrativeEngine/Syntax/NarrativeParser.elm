@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.NarrativeParser exposing (Narrative, Config, parse, parseMany)
+module NarrativeEngine.Syntax.NarrativeParser exposing (Narrative, Config, parse, parseMany)
 
 {-| This module is technically outside of the scope of the Narrative Engine, as it deals with content that is handled within your application code, but narrative content is so common that a useful syntax and parser is included here.
 
@@ -38,7 +38,7 @@ Empty segments are allowed - `{|a||b|}` has three empty segments, beginning, mid
 
 `You feel{PLAYER.happy_level>5? happy| sad}.`
 
-You can use any query syntax from `NarrativeEngine.Utils.RuleParser.parseMatcher`. If it succeeds, it will show the text to the left of `|`, if it fails, it will show the text to the right of the `|`.
+You can use any query syntax from `NarrativeEngine.Syntax.RuleParser.parseMatcher`. If it succeeds, it will show the text to the left of `|`, if it fails, it will show the text to the right of the `|`.
 
 `$` will be replaced with the `trigger` in the `Config`.
 
@@ -65,8 +65,8 @@ You can also use `$.get_name` which will replace `$` with the `trigger` in `Conf
 import Array
 import Dict exposing (Dict)
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers as Helpers exposing (ParseErrors, notEmpty, parseMultiple)
-import NarrativeEngine.Utils.RuleParser exposing (parseMatcher)
+import NarrativeEngine.Syntax.Helpers as Helpers exposing (ParseErrors, notEmpty, parseMultiple)
+import NarrativeEngine.Syntax.RuleParser exposing (parseMatcher)
 import Parser exposing (..)
 import Random
 import Result
@@ -119,7 +119,7 @@ parse config text =
             [ "ERROR could not parse: " ++ text ]
 
 
-{-| Call this as soon as possible and deal with errors appropriately to ensure you will have no parsing errors later. You can display the errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
+{-| Call this as soon as possible and deal with errors appropriately to ensure you will have no parsing errors later. You can display the errors with `NarrativeEngine.Syntax.Helpers.parseErrorsView`.
 
 The provided dictionary should have keys to identify the correlating narrative content values.
 

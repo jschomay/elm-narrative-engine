@@ -1,9 +1,9 @@
-module Utils.NarrativeParserTest exposing (all)
+module Syntax.NarrativeParserTest exposing (all)
 
 import Dict
 import Expect
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.NarrativeParser exposing (parse, parseMany)
+import NarrativeEngine.Syntax.NarrativeParser exposing (parse, parseMany)
 import Result
 import Test exposing (..)
 

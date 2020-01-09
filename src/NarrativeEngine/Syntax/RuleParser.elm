@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.RuleParser exposing
+module NarrativeEngine.Syntax.RuleParser exposing
     ( ParsedMatcher, parseMatcher
     , ParsedChanges, parseChanges
     , ExtendFn, ParsedRules, ParsedRule, parseRules, parseRule
@@ -188,8 +188,8 @@ You can include spaces and newlines as desired. The `:` after each rule part is 
 import Dict exposing (Dict)
 import NarrativeEngine.Core.Rules exposing (..)
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.EntityParser exposing (idParser, numberParser, propertyNameParser)
-import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
+import NarrativeEngine.Syntax.EntityParser exposing (idParser, numberParser, propertyNameParser)
+import NarrativeEngine.Syntax.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 
@@ -225,7 +225,7 @@ type alias ExtendFn a =
 
 {-| Parses multiple "rule" syntax strings. The rules are tuples of the "rule" syntax for parsing, and the extra fields for that rule. You also need to provide an "extend function" to "merge" extra fields into the standard rule fields.
 
-In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
+In general you should use `parseRules` at the top level of you application, and display any errors with `NarrativeEngine.Syntax.Helpers.parseErrorsView`.
 
 -}
 parseRules : ExtendFn a -> Dict RuleID ( String, a ) -> ParsedRules a

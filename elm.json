@@ -8,10 +8,10 @@
         "NarrativeEngine.Core.WorldModel",
         "NarrativeEngine.Core.Rules",
         "NarrativeEngine.Debug",
-        "NarrativeEngine.Utils.NarrativeParser",
-        "NarrativeEngine.Utils.EntityParser",
-        "NarrativeEngine.Utils.RuleParser",
-        "NarrativeEngine.Utils.Helpers"
+        "NarrativeEngine.Syntax.NarrativeParser",
+        "NarrativeEngine.Syntax.EntityParser",
+        "NarrativeEngine.Syntax.RuleParser",
+        "NarrativeEngine.Syntax.Helpers"
     ],
     "elm-version": "0.19.0 <= v < 0.20.0",
     "dependencies": {

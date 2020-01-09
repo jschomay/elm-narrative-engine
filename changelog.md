@@ -4,7 +4,7 @@ Follow along with development on the [development blog](http://blog.elmnarrative
 
 New syntax parsers, debug utils, streamline api, and minor new features.  Minor breaking changes.
 
-- Split up structure into `Core`, `Utils` and `Debug` (all nested under `NarrativeEngine` namespace)
+- Split up structure into `Core`, `Syntax` and `Debug` (all nested under `NarrativeEngine` namespace)
 - Add Matcher/Query/Changes parsers
 - Add Narrative parsers
 - Add Entity parsers

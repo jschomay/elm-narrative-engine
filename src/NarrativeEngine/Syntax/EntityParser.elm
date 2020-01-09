@@ -1,4 +1,4 @@
-module NarrativeEngine.Utils.EntityParser exposing
+module NarrativeEngine.Syntax.EntityParser exposing
     ( ParsedWorldModel, ParsedEntity
     , ExtendFn, parseMany, parseEntity
     , idParser, numberParser, propertyNameParser
@@ -31,7 +31,7 @@ Note that `RuleParser` relies on some of the parsers in this module.
 
 ## Parsers
 
-In general you should use `parseMany` at the top level of you application, and either use the result as your initial world model in your Model, or display the errors with `NarrativeEngine.Utils.Helpers.parseErrorsView`.
+In general you should use `parseMany` at the top level of you application, and either use the result as your initial world model in your Model, or display the errors with `NarrativeEngine.Syntax.Helpers.parseErrorsView`.
 
 @docs ExtendFn, parseMany, parseEntity
 
@@ -44,7 +44,7 @@ In general you should use `parseMany` at the top level of you application, and e
 
 import Dict
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.Helpers as Helpers exposing (..)
+import NarrativeEngine.Syntax.Helpers as Helpers exposing (..)
 import Parser exposing (..)
 
 

@@ -8,7 +8,8 @@ module NarrativeEngine.Core.WorldModel exposing
     , getStat, getLink
     )
 
-{-| See how the world model is defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Utils.EntityParser` for defining entities, updates, and queries.
+{-| See how the world model is defined in the [full working
+example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Syntax.EntityParser` for defining entities, updates, and queries.
 
 
 ## Types

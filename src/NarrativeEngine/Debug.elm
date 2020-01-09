@@ -57,7 +57,7 @@ setLastInteractionId id (State state) =
     State { state | lastInteractionId = id }
 
 
-{-| A minimal "debug bar" that you can place at the top or bottom of your screen. Shows the last matched rule id and last interaction id. Includes a search field to search/filter the current world model's state. Entities are displayed in the "entity syntax" described in `Utils.EntityParser`. This makes it easy to search for an entity by ID. You can also search for a tag to show all entities with that tag. You can also find all linked entities in a similar fashion. "." will show all entities. Clear the search field to hide matching entities.
+{-| A minimal "debug bar" that you can place at the top or bottom of your screen. Shows the last matched rule id and last interaction id. Includes a search field to search/filter the current world model's state. Entities are displayed in the "entity syntax" described in `Syntax.EntityParser`. This makes it easy to search for an entity by ID. You can also search for a tag to show all entities with that tag. You can also find all linked entities in a similar fashion. "." will show all entities. Clear the search field to hide matching entities.
 
 You must include the message that you use to call `updateSearch`, which will get triggered on each changed input. Also include the current world model, and current debug state.
 

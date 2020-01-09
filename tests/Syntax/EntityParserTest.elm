@@ -1,10 +1,10 @@
-module Utils.EntityParserTest exposing (all)
+module Syntax.EntityParserTest exposing (all)
 
 import Dict
 import Expect
 import NarrativeEngine.Core.WorldModel exposing (..)
-import NarrativeEngine.Utils.EntityParser as EntityParser
-import NarrativeEngine.Utils.Helpers exposing (parseMultiple)
+import NarrativeEngine.Syntax.EntityParser as EntityParser
+import NarrativeEngine.Syntax.Helpers exposing (parseMultiple)
 import Result
 import Test exposing (..)
 
