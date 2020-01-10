@@ -6,11 +6,12 @@ New syntax parsers, debug utils, streamline api, and minor new features.  Minor 
 
 - Split up structure into `Core`, `Syntax` and `Debug` (all nested under `NarrativeEngine` namespace)
 - Add Matcher/Query/Changes parsers
+- Add Rule parsers
 - Add Narrative parsers
 - Add Entity parsers
 - Add "debugBar" util
-- Add "compare" link and stat queries
-- Add "lookup" link setter
+- Add "Compare" link and stat queries
+- Add "Lookup" link setter
 - Remove assert, assertMatch, and query - replaced with a new version of query that handles all three
 - `getLink` fixed to return Nothing if linked ID doesn't exist in store
 
