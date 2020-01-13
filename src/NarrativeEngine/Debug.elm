@@ -105,11 +105,10 @@ debugBar msg worldModel (State { lastInteractionId, lastMatchedRuleId, searchTex
     in
     div
         [ style "color" "yellow"
+        , style "font-family" "Courier"
         , style "background" "black"
         , style "opacity" "0.9"
         , style "lineHeight" "1.5em"
-        , style "zIndex" "99"
-        , style "position" "absolute"
         ]
         [ text "Debug mode"
         , input
