@@ -36,7 +36,9 @@ rules =
 
 ```
 
-See https://github.com/jschomay/elm-interactive-story-starter for a full example.
+> Try it out in a live sandbox at https://ellie-app.com/7QdZzstKG6Fa1.
+
+You can also clone https://github.com/jschomay/elm-interactive-story-starter to play with it locally.
 
 ## Features
 
