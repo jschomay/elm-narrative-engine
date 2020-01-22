@@ -36,34 +36,31 @@ rules =
 
 ```
 
+See https://github.com/jschomay/elm-interactive-story-starter for a full example.
+
 ## Features
 
-### Flexible
+- **"Schemaless" world model** - define your world any way you like
+- **"Salience-based" and "quality-based" rule matching system** - craft immersive and reactive stories
+- **"View agnostic"** - build your views however you want
 
-- Define your world model any way you like
-- Build your views however you need
-- World model, rules, and narrative content can be imported from external sources
+Additional features:
 
-### Powerful
-
-- Designed with "salience-based" and "quality-based" narrative systems for immersive and responsive stories
-- Advanced querying system
-- Data-driven and declarative
+- Import all data from external sources (like a spreadsheet)
 - Simple and intuitive authoring syntax
-
-### Extendable
-
-- Use as a "narrative system" component alongside other game code
-- Use the Entity Component System pattern (via Extensible Records)
+- Advanced querying system
+- Embeddable in a larger code base 
+- Designed with the Entity-Component-System pattern
 
 
 ## Usage
 
-See the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm).
-
-The engine has two main parts: the world model, and the rules.  You can use the authoring syntax shown above to define both of these.
+The engine has two main parts: the world model, and the rules.  You can use the 
+authoring syntax shown above to define both of these.
 
 From there, you can query the world model as needed to build your view, and you can find the best matching rule when a player interacts with an entity given the current state of the world, to update the world and show side effects like story text.
+
+See the example link above for more context.
 
 
 ## More information

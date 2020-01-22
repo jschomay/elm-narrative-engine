@@ -2,7 +2,7 @@ Follow along with development on the [development blog](http://blog.elmnarrative
 
 ## 5.0.0
 
-New syntax parsers, debug utils, streamline api, and minor new features.  Minor breaking changes.
+New syntax parsers, debug utils, streamlined api, and minor new features.  Some breaking changes.
 
 - Split up structure into `Core`, `Syntax` and `Debug` (all nested under `NarrativeEngine` namespace)
 - Add Matcher/Query/Changes parsers
