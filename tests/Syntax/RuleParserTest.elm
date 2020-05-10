@@ -394,6 +394,20 @@ parseRuleTest =
                         , {}
                         )
                     )
+        , test "specific trigger (in quotes)" <|
+            \() ->
+                Expect.equal
+                    ({ trigger = SpecificTrigger "custom-trigger"
+                     , conditions = []
+                     , changes = []
+                     }
+                        |> Ok
+                    )
+                    (parseRule (always identity)
+                        ( """ON: "custom-trigger" """
+                        , {}
+                        )
+                    )
         ]
 
 

@@ -181,6 +181,14 @@ DO: BRIEFCASE.location=THIEF
 
 You can include spaces and newlines as desired. The `:` after each rule part is optional. You can also leave out the "IF" and/or "DO" parts.
 
+To create a `SpecificTrigger` rule instead of using and entity matcher as a trigger, use quotes arround the trigger string, like this:
+
+```text
+ON: "next-day"
+```
+
+Obviously, this only applies to the "ON:" line (which becomes the trigger).
+
 @docs ExtendFn, ParsedRules, ParsedRule, parseRules, parseRule
 
 -}
@@ -276,8 +284,7 @@ ruleParser : Parser (Rule {})
 ruleParser =
     let
         toRule trigger conditions changes =
-            -- TODO build trigger correctly
-            { trigger = EntityTrigger trigger
+            { trigger = trigger
             , conditions = conditions
             , changes = changes
             }
@@ -287,9 +294,17 @@ ruleParser =
                 |. spaces
                 |. oneOf [ keyword "ON:", keyword "ON" ]
                 |. spaces
-                -- TODO add triggerParser
-                |= matcherParser
+                |= oneOf
+                    [ specificTriggerParser |> map SpecificTrigger
+                    , matcherParser |> map EntityTrigger
+                    ]
                 |. spaces
+
+        specificTriggerParser =
+            succeed identity
+                |. token "\""
+                |= getChompedString (chompUntil "\"")
+                |. symbol "\""
 
         -- Note, this chomps the "DO(:) " if it finds it, so don't look for that after
         -- this parser
