@@ -276,7 +276,8 @@ ruleParser : Parser (Rule {})
 ruleParser =
     let
         toRule trigger conditions changes =
-            { trigger = trigger
+            -- TODO build trigger correctly
+            { trigger = EntityTrigger trigger
             , conditions = conditions
             , changes = changes
             }
@@ -286,6 +287,7 @@ ruleParser =
                 |. spaces
                 |. oneOf [ keyword "ON:", keyword "ON" ]
                 |. spaces
+                -- TODO add triggerParser
                 |= matcherParser
                 |. spaces
 

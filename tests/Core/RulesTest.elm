@@ -50,43 +50,43 @@ all =
             let
                 rules =
                     [ ( "specific for item1"
-                      , { trigger = Match "item1" []
+                      , { trigger = EntityTrigger <| Match "item1" []
                         , conditions = []
                         , changes = []
                         }
                       )
                     , ( "specific for item2"
-                      , { trigger = Match "item2" []
+                      , { trigger = EntityTrigger <| Match "item2" []
                         , conditions = []
                         , changes = []
                         }
                       )
                     , ( "specific with query"
-                      , { trigger = Match "character1" [ HasTag "friend" ]
+                      , { trigger = EntityTrigger <| Match "character1" [ HasTag "friend" ]
                         , conditions = []
                         , changes = []
                         }
                       )
                     , ( "generic"
-                      , { trigger = MatchAny [ HasTag "location" ]
+                      , { trigger = EntityTrigger <| MatchAny [ HasTag "location" ]
                         , conditions = []
                         , changes = []
                         }
                       )
                     , ( "won't match (specific)"
-                      , { trigger = Match "character1" [ HasTag "enemy" ]
+                      , { trigger = EntityTrigger <| Match "character1" [ HasTag "enemy" ]
                         , conditions = []
                         , changes = []
                         }
                       )
                     , ( "won't match (generic)"
-                      , { trigger = MatchAny [ HasTag "location", HasTag "locked" ]
+                      , { trigger = EntityTrigger <| MatchAny [ HasTag "location", HasTag "locked" ]
                         , conditions = []
                         , changes = []
                         }
                       )
-                    , ( "won't match (non-entity)"
-                      , { trigger = Match "storyEvent" []
+                    , ( "non-entity rule"
+                      , { trigger = SpecificTrigger "custom-trigger"
                         , conditions = []
                         , changes = []
                         }
@@ -116,8 +116,8 @@ all =
             , test "non-entity triggers" <|
                 \() ->
                     Expect.equal
-                        Nothing
-                        (findMatchingRule "storyEvent" rules store |> Maybe.map Tuple.first)
+                        (Just "non-entity rule")
+                        (findMatchingRule "custom-trigger" rules store |> Maybe.map Tuple.first)
             , test "trigger with no rule" <|
                 \() ->
                     Expect.equal
@@ -128,13 +128,13 @@ all =
             let
                 rules =
                     [ ( "does not match"
-                      , { trigger = Match "item1" []
+                      , { trigger = EntityTrigger <| Match "item1" []
                         , conditions = [ Match "character1" [ HasLink "location" <| SpecificLink <| Match "the moon" [] ] ]
                         , changes = []
                         }
                       )
                     , ( "does not match all conditions"
-                      , { trigger = Match "item1" []
+                      , { trigger = EntityTrigger <| Match "item1" []
                         , conditions =
                             [ Match "character1"
                                 [ HasLink "location" <| SpecificLink <| Match "location1" []
@@ -145,31 +145,31 @@ all =
                         }
                       )
                     , ( "expected"
-                      , { trigger = Match "item1" []
+                      , { trigger = EntityTrigger <| Match "item1" []
                         , conditions = [ Match "character1" [ HasLink "location" <| SpecificLink <| Match "location1" [] ] ]
                         , changes = []
                         }
                       )
                     , ( "trigger won't match"
-                      , { trigger = Match "character1" [ HasTag "non-existant" ]
+                      , { trigger = EntityTrigger <| Match "character1" [ HasTag "non-existant" ]
                         , conditions = [ Match "item1" [ HasTag "item" ] ]
                         , changes = []
                         }
                       )
                     , ( "generic"
-                      , { trigger = Match "location1" []
+                      , { trigger = EntityTrigger <| Match "location1" []
                         , conditions = [ MatchAny [ HasTag "friend" ] ]
                         , changes = []
                         }
                       )
                     , ( "generic does not match"
-                      , { trigger = Match "location1" []
+                      , { trigger = EntityTrigger <| Match "location1" []
                         , conditions = [ MatchAny [ HasTag "enemy" ] ]
                         , changes = []
                         }
                       )
                     , ( "match trigger"
-                      , { trigger = MatchAny [ HasTag "location" ]
+                      , { trigger = EntityTrigger <| MatchAny [ HasTag "location" ]
                         , conditions =
                             [ MatchAny [ HasLink "location" <| SpecificLink <| Match "$" [] ]
                             , Match "item2" [ HasLink "location" <| SpecificLink <| Match "$" [] ]
@@ -207,13 +207,13 @@ all =
                     let
                         rules =
                             [ ( "a"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = []
                                 , changes = []
                                 }
                               )
                             , ( "z"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = []
                                 , changes = []
                                 }
@@ -229,13 +229,13 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = []
                                 , changes = []
                                 }
                               )
                             , ( "expected"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = [ Match "character1" [ HasLink "location" <| SpecificLink <| Match "location1" [] ] ]
                                 , changes = []
                                 }
@@ -251,7 +251,7 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions =
                                     [ Match "character1"
                                         [ HasLink "location" <| SpecificLink <| Match "location1" []
@@ -261,7 +261,7 @@ all =
                                 }
                               )
                             , ( "expected"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions =
                                     [ Match "character1"
                                         [ HasLink "location" <| SpecificLink <| Match "location1" []
@@ -285,13 +285,13 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = []
                                 , changes = []
                                 }
                               )
                             , ( "expected"
-                              , { trigger = Match "item1" [ HasTag "item" ]
+                              , { trigger = EntityTrigger <| Match "item1" [ HasTag "item" ]
                                 , conditions = []
                                 , changes = []
                                 }
@@ -307,13 +307,13 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = MatchAny []
+                              , { trigger = EntityTrigger <| MatchAny []
                                 , conditions = []
                                 , changes = []
                                 }
                               )
                             , ( "expected"
-                              , { trigger = MatchAny [ HasTag "item" ]
+                              , { trigger = EntityTrigger <| MatchAny [ HasTag "item" ]
                                 , conditions = []
                                 , changes = []
                                 }
@@ -329,7 +329,7 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions =
                                     [ MatchAny [ HasTag "item" ]
                                     ]
@@ -337,7 +337,7 @@ all =
                                 }
                               )
                             , ( "expected"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions =
                                     [ Match "item2" [ HasTag "item" ]
                                     ]
@@ -355,7 +355,7 @@ all =
                     let
                         rules =
                             [ ( "z less specific"
-                              , { trigger = MatchAny [ HasTag "item" ]
+                              , { trigger = EntityTrigger <| MatchAny [ HasTag "item" ]
                                 , conditions =
                                     [ Match "character1"
                                         [ HasLink "location" <| SpecificLink <| Match "location1" []
@@ -368,7 +368,7 @@ all =
                                 }
                               )
                             , ( "expected"
-                              , { trigger = Match "item1" []
+                              , { trigger = EntityTrigger <| Match "item1" []
                                 , conditions = []
                                 , changes = []
                                 }

@@ -308,7 +308,7 @@ parseRuleTest =
         [ test "full example" <|
             \() ->
                 Expect.equal
-                    ({ trigger = MatchAny [ HasTag "line" ]
+                    ({ trigger = EntityTrigger <| MatchAny [ HasTag "line" ]
                      , conditions =
                         [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ]
                         , Match "BROADWAY_STREET" [ HasStat "leaving_broadway_street_station_plot" EQ <| SpecificStat 1 ]
@@ -336,7 +336,7 @@ parseRuleTest =
         , test "with minimal spaces" <|
             \() ->
                 Expect.equal
-                    ({ trigger = MatchAny [ HasTag "line" ]
+                    ({ trigger = EntityTrigger <| MatchAny [ HasTag "line" ]
                      , conditions = [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ] ]
                      , changes = [ Update "BRIEFCASE" [ SetLink "location" <| SpecificLinkTarget "THIEF" ] ]
                      }
@@ -352,7 +352,7 @@ parseRuleTest =
         , test "no do" <|
             \() ->
                 Expect.equal
-                    ({ trigger = MatchAny [ HasTag "line" ]
+                    ({ trigger = EntityTrigger <| MatchAny [ HasTag "line" ]
                      , conditions = [ Match "PLAYER" [ HasStat "chapter" EQ <| SpecificStat 1 ] ]
                      , changes = []
                      }
@@ -368,7 +368,7 @@ parseRuleTest =
         , test "no if" <|
             \() ->
                 Expect.equal
-                    ({ trigger = MatchAny [ HasTag "line" ]
+                    ({ trigger = EntityTrigger <| MatchAny [ HasTag "line" ]
                      , conditions = []
                      , changes = [ Update "BRIEFCASE" [ SetLink "location" <| SpecificLinkTarget "THIEF" ] ]
                      }
@@ -383,7 +383,7 @@ parseRuleTest =
         , test "no do and no if" <|
             \() ->
                 Expect.equal
-                    ({ trigger = MatchAny [ HasTag "line" ]
+                    ({ trigger = EntityTrigger <| MatchAny [ HasTag "line" ]
                      , conditions = []
                      , changes = []
                      }
@@ -404,14 +404,14 @@ parseRulesTest =
                 (Ok <|
                     Dict.fromList
                         [ ( "one"
-                          , { trigger = Match "PLAYER" []
+                          , { trigger = EntityTrigger <| Match "PLAYER" []
                             , conditions = []
                             , changes = []
                             , extra = True
                             }
                           )
                         , ( "two"
-                          , { trigger = Match "CAVE" []
+                          , { trigger = EntityTrigger <| Match "CAVE" []
                             , conditions = []
                             , changes = []
                             , extra = False

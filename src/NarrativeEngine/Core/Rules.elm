@@ -1,4 +1,4 @@
-module NarrativeEngine.Core.Rules exposing (Rule, RuleID, Rules, findMatchingRule, weight)
+module NarrativeEngine.Core.Rules exposing (Rule, RuleID, Trigger(..), Rules, findMatchingRule, weight)
 
 {-| Rules are a declarative way of describing meaningful events in your story.
 
@@ -10,7 +10,7 @@ It is possible to create generic rules (using `MatchAny`) to control basic story
 
 See how the rules are defined in the [full working example](https://github.com/jschomay/elm-narrative-engine/blob/master/src/Example.elm). Note that you can use the syntax and corresponding parsers defined in `NarrativeEngine.Syntax.RuleParser` to define rules more easily.
 
-@docs Rule, RuleID, Rules, findMatchingRule, weight
+@docs Rule, RuleID, Trigger, Rules, findMatchingRule, weight
 
 -}
 
@@ -30,25 +30,35 @@ type alias Rules a =
     Dict RuleID (Rule a)
 
 
-{-| A declarative rule describing the conditions in which it should apply. Specifically, it defines a trigger and a list of other conditions that must be present. All of these are described by `EntityMatcher`s. All rules are tested on each player interaction, and the highest weighted matching rule will be returned. You can then apply the specified changes.
+{-| A declarative rule describing the conditions in which it should apply. Specifically, it defines a trigger and a list of other conditions that must be present based on the current world model. All rules are tested on each player interaction, and the highest weighted matching rule will be returned. You can then apply the specified changes.
 
 Note that `Rule`s are extensible records, meaning that you can add other fields to them in your game. For example, you could add a `narrative` field to add a story text to use when the rule matches, or a `sound` to play, etc. All of these "side effects" would be handled in your game code. Alternatively, you could use the returned `RuleID` to lookup side effects in a separate data structure. This design follows the Entity Component System (ECS) design pattern.
 
 -}
 type alias Rule a =
     { a
-        | trigger : EntityMatcher
+        | trigger : Trigger
         , conditions : List EntityMatcher
         , changes : List ChangeWorld
     }
 
 
-{-| Finds the rule that best matches against the provided trigger (entity ID) and current world model. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
+{-| Describes what will trigger the rule. This can either be a specific string to match, or more frequently, an entity matcher.
+
+A `SpecificTrigger` is useful for programmatic events (like "new-day" or "wait") or to build ad-hoc interaction systems (like "ITEM1+ITEM2" or "drop-ITEM1"). An `EntityTrigger` can describe which entity interactions the rule should apply to, with all of the power of an `EntityMatcher`.
+
+-}
+type Trigger
+    = SpecificTrigger String
+    | EntityTrigger EntityMatcher
+
+
+{-| Finds the rule that best matches against the provided trigger and current world model. The trigger is usually an entity ID, but can be a generic string to attempt to match against a `SpecificTrigger`. If multiple rules match, this chooses the "best" match based on the most _specific_ rule. In general, the more conditions, the more specific.
 
 Call this any time the player "interacts" with an entity in your game, supplying the ID of the entity that was interacted with.
 
 -}
-findMatchingRule : WorldModel.ID -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
+findMatchingRule : String -> Rules a -> WorldModel b -> Maybe ( RuleID, Rule a )
 findMatchingRule trigger rules store =
     rules
         |> Dict.filter
@@ -62,21 +72,21 @@ findMatchingRule trigger rules store =
         |> List.head
 
 
-matchTrigger : WorldModel a -> WorldModel.ID -> EntityMatcher -> Bool
-matchTrigger store trigger matcher =
-    WorldModel.replaceTrigger trigger matcher
-        |> (\m ->
-                case m of
-                    Match id qs ->
-                        (id == trigger)
-                            && (WorldModel.query m store
-                                    |> List.isEmpty
-                                    |> not
-                               )
+matchTrigger : WorldModel a -> WorldModel.ID -> Trigger -> Bool
+matchTrigger store trigger triggerMatcher =
+    case triggerMatcher of
+        SpecificTrigger t ->
+            trigger == t
 
-                    MatchAny qs ->
-                        WorldModel.query (Match trigger qs) store |> List.isEmpty |> not
-           )
+        EntityTrigger ((Match id qs) as em) ->
+            (id == trigger)
+                && (WorldModel.query em store
+                        |> List.isEmpty
+                        |> not
+                   )
+
+        EntityTrigger (MatchAny qs) ->
+            WorldModel.query (Match trigger qs) store |> List.isEmpty |> not
 
 
 matchCondition : WorldModel.ID -> WorldModel a -> EntityMatcher -> Bool
@@ -115,10 +125,13 @@ weight { trigger, conditions } =
 
         triggerScore =
             case trigger of
-                Match _ _ ->
-                    100 + queryScore trigger
+                SpecificTrigger _ ->
+                    0
 
-                MatchAny _ ->
-                    0 + queryScore trigger
+                EntityTrigger ((Match _ _) as em) ->
+                    100 + queryScore em
+
+                EntityTrigger ((MatchAny _) as em) ->
+                    0 + queryScore em
     in
     conditionsScore + triggerScore
