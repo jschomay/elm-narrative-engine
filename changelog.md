@@ -1,8 +1,14 @@
 Follow along with development on the [development blog](http://blog.elmnarrativeengine.com/).
 
+## 6.0.0
+
+Minor change on `Rule` type, which now uses a `Trigger` type to allow for non-entity triggers.
+
+You will have to update your rules to use the new trigger. If you use the syntax parser to define your rules, you shouldn't need to change anything.
+
 ## 5.0.0
 
-New syntax parsers, debug utils, streamlined api, and minor new features.  Some breaking changes.
+New syntax parsers, debug utils, streamlined api, and minor new features. Some breaking changes.
 
 - Split up structure into `Core`, `Syntax` and `Debug` (all nested under `NarrativeEngine` namespace)
 - Add Matcher/Query/Changes parsers
@@ -17,7 +23,7 @@ New syntax parsers, debug utils, streamlined api, and minor new features.  Some 
 
 ## 4.0.0
 
-100% breaking changes!  Huge shifts in both api and concepts:
+100% breaking changes! Huge shifts in both api and concepts:
 
 - shift to full salience and property based systems!
 - shift to moving most functionality external to engine
@@ -42,14 +48,13 @@ Update for Elm 0.19!
 
 No api changes
 
-
 ## 3.0.0
 
-This version is a major architectural shift from previous versions, allowing for extreme flexibility.  Some notable changes include:
+This version is a major architectural shift from previous versions, allowing for extreme flexibility. Some notable changes include:
 
 - updated to Elm 0.18
 - top-level module namespace changed to `Engine`
-- the view layer has been completely removed from the engine.  The engine solely handles maintaining the story world state by matching interactions against rule sets.
+- the view layer has been completely removed from the engine. The engine solely handles maintaining the story world state by matching interactions against rule sets.
 - exposes many accessor functions for the client to use as needed
 - rules are now matched based on a weighting scale to pick a winner when multiple match
 - some new/different matchers and change world commands
@@ -59,14 +64,13 @@ This version is a major architectural shift from previous versions, allowing for
 - `chooseFrom` function to encode conditional choices in data
 - scenes are not just another condition rather than a grouping of rules
 
-
 ## 2.0.0
 
 This version adds some new features, fixes some bugs, and changes the public api significantly for design reasons (partially leading towards future versions).
 
 ### Changes
 
-- The format of story rules has changed significantly.  Instead of the infixed rule-building DSL of version 1.0.0 (`interactingWith`, `firstInteractionWith`, `everyTime`, `when`, `changesWorld`, `narrates`, `item`, `location` and `character`), rules now are defined as records:
+- The format of story rules has changed significantly. Instead of the infixed rule-building DSL of version 1.0.0 (`interactingWith`, `firstInteractionWith`, `everyTime`, `when`, `changesWorld`, `narrates`, `item`, `location` and `character`), rules now are defined as records:
 
       scene1 : List (Story.Rule MyItem MyLocation MyCharacter MyKnowledge)
       scene1 =
@@ -82,22 +86,21 @@ This version adds some new features, fixes some bugs, and changes the public api
             }
           ]
 
-
-- `MyScenes` type has been removed in favor of linking directly to your list of rules
-- Items and characters can now only be in one place at a time.  This means `addCharacter` and `addItem` were removed with `moveCharacter` and `placeItem` taking their place.  Also `removeCharacter` and `removeItem` only take a single argument now.
-- Interacting with a location now moves you there by default.
-- `withItem` now is an `InteractionMatcher` instead of a `ChangeWorldCommand`.  Use `withInventory` instead.
-- `nearProp` and `addProp` and `removeProp` are now `nearItem`, `placeItem` and `removeItem`.
-- `all` and `any` condition matchers removed.
-- `storyWorld` is now `world` and `setup` is now `startingState`.
-- `Element` is now `Interactable`
+* `MyScenes` type has been removed in favor of linking directly to your list of rules
+* Items and characters can now only be in one place at a time. This means `addCharacter` and `addItem` were removed with `moveCharacter` and `placeItem` taking their place. Also `removeCharacter` and `removeItem` only take a single argument now.
+* Interacting with a location now moves you there by default.
+* `withItem` now is an `InteractionMatcher` instead of a `ChangeWorldCommand`. Use `withInventory` instead.
+* `nearProp` and `addProp` and `removeProp` are now `nearItem`, `placeItem` and `removeItem`.
+* `all` and `any` condition matchers removed.
+* `storyWorld` is now `world` and `setup` is now `startingState`.
+* `Element` is now `Interactable`
 
 ### New features
 
-- Progressive narration - the narration field of a rule now takes a list of strings.  If a player clicks on the same story element multiple times, the engine will loop through each item in the list, repeating the final item.  This allows for a deeper story texture and more variety in narration.
+- Progressive narration - the narration field of a rule now takes a list of strings. If a player clicks on the same story element multiple times, the engine will loop through each item in the list, repeating the final item. This allows for a deeper story texture and more variety in narration.
 - Story rollback - the internal state of the story has changed to allow for "rolling back" to an earlier point in the story to try a different direction.
 - New "broad-scope" interaction matchers: `withAnyItem`, `withAnyLocation`, `withAnyCharacter` and `withAnything`.
 
 ## 1.0.0
 
-[Initial release](http://package.elm-lang.org/packages/jschomay/elm-narrative-engine/1.0.0).  Sample story [source code](https://github.com/jschomay/elm-interactive-story-starter/tree/a481a0d8a2662fe1b08a2cffff0334c9c1b74dec/src) and [playable link](http://blog.elmnarrativeengine.com/sample-stories/curse-of-the-tech-demo/).  See [demonstration video from ElmConf](http://youtube.com/watch?v=t8RSxzpw1Yw)
+[Initial release](http://package.elm-lang.org/packages/jschomay/elm-narrative-engine/1.0.0). Sample story [source code](https://github.com/jschomay/elm-interactive-story-starter/tree/a481a0d8a2662fe1b08a2cffff0334c9c1b74dec/src) and [playable link](http://blog.elmnarrativeengine.com/sample-stories/curse-of-the-tech-demo/). See [demonstration video from ElmConf](http://youtube.com/watch?v=t8RSxzpw1Yw)

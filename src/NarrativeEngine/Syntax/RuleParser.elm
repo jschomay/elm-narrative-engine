@@ -181,7 +181,7 @@ DO: BRIEFCASE.location=THIEF
 
 You can include spaces and newlines as desired. The `:` after each rule part is optional. You can also leave out the "IF" and/or "DO" parts.
 
-To create a `SpecificTrigger` rule instead of using and entity matcher as a trigger, use quotes arround the trigger string, like this:
+To create a `SpecificTrigger` rule instead of using an entity matcher as a trigger, use quotes arround the trigger string, like this:
 
 ```text
 ON: "next-day"
