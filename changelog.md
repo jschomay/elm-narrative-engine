@@ -1,5 +1,9 @@
 Follow along with development on the [development blog](http://blog.elmnarrativeengine.com/).
 
+## 6.0.1
+
+Bug fix where "\$"'s were not being replaced in queries that had a `Not`.
+
 ## 6.0.0
 
 Minor change on `Rule` type, which now uses a `Trigger` type to allow for non-entity triggers.
