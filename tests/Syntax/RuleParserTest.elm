@@ -178,6 +178,11 @@ matchers =
             \() ->
                 shouldFail "spaces not allowed"
                     (parseMatcher "PLAYER .location=CAVE .fear>2 .blinded")
+        , test "not with $" <|
+            \() ->
+                Expect.equal
+                    (Ok <| Match "PLAYER" [ Not <| HasLink "current_location" (SpecificLink <| Match "$" []) ])
+                    (parseMatcher "PLAYER.!current_location=$")
         , test "multiline" <|
             \() ->
                 shouldFail "newlines not allowed"

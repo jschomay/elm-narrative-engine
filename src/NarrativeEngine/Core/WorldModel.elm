@@ -420,6 +420,9 @@ replaceTrigger trigger matcher =
                 HasLink key (CompareLink "$" compareKey) ->
                     HasLink key (CompareLink trigger compareKey)
 
+                Not q1 ->
+                    Not <| replaceInQuery q1
+
                 _ ->
                     q
 

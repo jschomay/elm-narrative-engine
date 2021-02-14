@@ -59,6 +59,8 @@ worldModel =
             |> tag "location"
         , entity "location2"
             |> tag "location"
+        , entity "PLAYER"
+            |> link "current_location" "PLAYERS_HOME"
         ]
 
 
@@ -424,4 +426,10 @@ queryTests =
                 Match "$" [ HasLink "link" (CompareLink "$" "otherLink") ]
                     |> replaceTrigger "myId"
                     |> Expect.equal (Match "myId" [ HasLink "link" (CompareLink "myId" "otherLink") ])
+        , test "replacing $ (in link with Not)" <|
+            \() ->
+                Match "PLAYER" [ Not <| HasLink "current_location" (SpecificLink (Match "$" [])) ]
+                    |> replaceTrigger "PLAYERS_HOME"
+                    |> Expect.equal
+                        (Match "PLAYER" [ Not <| HasLink "current_location" (SpecificLink (Match "PLAYERS_HOME" [])) ])
         ]
