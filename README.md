@@ -1,8 +1,8 @@
 # Elm Narrative Engine
 
-A tool for building interactive story games.
+A tool for building non-linear interactive story games.
 
-### Example: 
+## Usage
 
 
 ```elm
@@ -34,39 +34,12 @@ rules =
         -- etc...
         ]
 
+
+inventoryView =
+    query "*.item.current_location=PLAYER" worldModel |> List.map item_view
 ```
 
-> Try it out in a live sandbox at https://ellie-app.com/7QdZzstKG6Fa1.
 
-You can also clone https://github.com/jschomay/elm-interactive-story-starter to play with it locally.
+Clone https://github.com/jschomay/elm-interactive-story-starter to get started.
 
-## Features
-
-- **"Schemaless" world model** - define your world any way you like
-- **"Salience-based" and "quality-based" rule matching system** - craft immersive and reactive stories
-- **"View agnostic"** - build your views however you want
-
-Additional features:
-
-- Import all data from external sources (like a spreadsheet)
-- Simple and intuitive authoring syntax
-- Advanced querying system
-- Embeddable in a larger code base 
-- Designed with the Entity-Component-System pattern
-
-
-## Usage
-
-The engine has two main parts: the world model, and the rules.  You can use the 
-authoring syntax shown above to define both of these.
-
-From there, you can query the world model as needed to build your view, and you can find the best matching rule when a player interacts with an entity given the current state of the world, to update the world and show side effects like story text.
-
-See the example link above for more context.
-
-
-## More information
-
-Read the [dev blog](http://blog.elmnarrativeengine.com)
-
-[Play sample stories made with the Elm Narrative Engine](http://blog.elmnarrativeengine.com/sample-stories/)
+See the [visual editor](https://elmnarrativeengine.com/) to easily author you content and import it into your custom game.
