@@ -42,4 +42,4 @@ inventoryView =
 
 Clone https://github.com/jschomay/elm-interactive-story-starter to get started.
 
-See the [visual editor](https://elmnarrativeengine.com/) to easily author you content and import it into your custom game.
+See the [visual editor](http://elmnarrativeengine.com/) to easily author you content and import it into your custom game.
